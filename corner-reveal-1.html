@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GSAP Polygon Reveal Animations</title>
+
+	<!-- GSAP -->
+	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			overflow-x: hidden;
+			background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+			color: #fff;
+		}
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 60px 20px;
+		}
+
+		header {
+			text-align: center;
+			padding: 80px 20px 40px;
+		}
+
+		h1 {
+			font-size: 3rem;
+			margin: 0 0 20px;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+
+		.subtitle {
+			font-size: 1.2rem;
+			color: #a0a0a0;
+			max-width: 600px;
+			margin: 0 auto;
+		}
+
+		.config-panel {
+			background: rgba(255, 255, 255, 0.05);
+			border-radius: 16px;
+			padding: 30px;
+			margin-bottom: 60px;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.config-panel h2 {
+			margin-top: 0;
+			font-size: 1.5rem;
+			color: #667eea;
+		}
+
+		.config-panel pre {
+			background: rgba(0, 0, 0, 0.3);
+			border-radius: 8px;
+			padding: 20px;
+			overflow-x: auto;
+			font-size: 0.9rem;
+			line-height: 1.6;
+		}
+
+		.config-panel code {
+			color: #a8dadc;
+		}
+
+		.demo-section {
+			margin-bottom: 100px;
+		}
+
+		.demo-section h2 {
+			font-size: 2rem;
+			margin-bottom: 10px;
+			color: #667eea;
+		}
+
+		.demo-section p {
+			color: #a0a0a0;
+			margin-bottom: 30px;
+		}
+
+		.demo-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+			gap: 40px;
+		}
+
+		.image-wrapper {
+			position: relative;
+			border-radius: 16px;
+			overflow: hidden;
+			background: rgba(255, 255, 255, 0.05);
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+		}
+
+		.image-wrapper img {
+			width: 100%;
+			height: 400px;
+			object-fit: cover;
+			display: block;
+			clip-path: polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%);
+		}
+
+		.image-label {
+			position: absolute;
+			bottom: 20px;
+			left: 20px;
+			background: rgba(0, 0, 0, 0.7);
+			padding: 10px 20px;
+			border-radius: 8px;
+			font-size: 0.9rem;
+			backdrop-filter: blur(10px);
+		}
+
+		.direction-badge {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			padding: 8px 16px;
+			border-radius: 20px;
+			font-size: 0.85rem;
+			font-weight: 600;
+		}
+
+		.scroll-hint {
+			text-align: center;
+			padding: 40px;
+			color: #a0a0a0;
+			font-size: 1.1rem;
+		}
+
+		.scroll-hint .arrow {
+			display: inline-block;
+			animation: bounce 2s infinite;
+			font-size: 2rem;
+			margin-top: 10px;
+		}
+
+		@keyframes bounce {
+			0%, 20%, 50%, 80%, 100% {
+				transform: translateY(0);
+			}
+			40% {
+				transform: translateY(-10px);
+			}
+			60% {
+				transform: translateY(-5px);
+			}
+		}
+
+		/* Responsive */
+		@media (max-width: 768px) {
+			h1 {
+				font-size: 2rem;
+			}
+
+			.demo-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.image-wrapper img {
+				height: 300px;
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<header>
+		<h1>GSAP Polygon Reveal Animations</h1>
+		<p class="subtitle">Beautiful image reveal effects using GSAP and CSS clip-path polygons</p>
+	</header>
+
+	<div class="container">
+		
+		<!-- Configuration Panel -->
+		<div class="config-panel">
+			<h2>🎛️ Animation Configuration</h2>
+			<p style="color: #a0a0a0; margin-bottom: 20px;">Easily customize your polygon reveal animations with this configuration object:</p>
+			<pre><code>const polygonConfig = {
+  // Animation direction: 'topLeft' or 'topRight'
+  direction: 'topLeft',
+  
+  // Scroll trigger settings
+  scrollTrigger: {
+    start: 'top 80%',    // When to start animation
+    end: 'bottom 20%',   // When to end animation
+    scrub: 1,            // Smooth scrubbing (1 second lag)
+    once: true           // Trigger only once
+  },
+  
+  // Duration in seconds (for non-scroll animations)
+  duration: 1.5,
+  
+  // Easing function
+  ease: 'power2.out'
+};</code></pre>
+		</div>
+
+		<!-- Scroll Hint -->
+		<div class="scroll-hint">
+			Scroll down to see the animations in action
+			<div class="arrow">↓</div>
+		</div>
+
+		<!-- Top Left Direction Demo -->
+		<section class="demo-section">
+			<h2>↖️ Top Left Reveal</h2>
+			<p>Images reveal from the top-left corner, expanding diagonally</p>
+			
+			<div class="demo-grid">
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" 
+						alt="Mountain landscape"
+						data-reveal="topLeft"
+					>
+					<span class="direction-badge">Top Left</span>
+					<span class="image-label">Mountain View</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80" 
+						alt="Forest path"
+						data-reveal="topLeft"
+					>
+					<span class="direction-badge">Top Left</span>
+					<span class="image-label">Forest Path</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80" 
+						alt="Misty forest"
+						data-reveal="topLeft"
+					>
+					<span class="direction-badge">Top Left</span>
+					<span class="image-label">Misty Forest</span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Spacer for scroll -->
+		<div style="height: 50vh;"></div>
+
+		<!-- Top Right Direction Demo -->
+		<section class="demo-section">
+			<h2>↗️ Top Right Reveal</h2>
+			<p>Images reveal from the top-right corner, expanding diagonally</p>
+			
+			<div class="demo-grid">
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80" 
+						alt="Lake view"
+						data-reveal="topRight"
+					>
+					<span class="direction-badge">Top Right</span>
+					<span class="image-label">Lake View</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80" 
+						alt="Misty mountains"
+						data-reveal="topRight"
+					>
+					<span class="direction-badge">Top Right</span>
+					<span class="image-label">Misty Mountains</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=800&q=80" 
+						alt="Waterfall"
+						data-reveal="topRight"
+					>
+					<span class="direction-badge">Top Right</span>
+					<span class="image-label">Waterfall</span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Mixed Demo -->
+		<div style="height: 50vh;"></div>
+
+		<section class="demo-section">
+			<h2>🎨 Mixed Directions</h2>
+			<p>Combining both directions for visual variety</p>
+			
+			<div class="demo-grid">
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&q=80" 
+						alt="Winter landscape"
+						data-reveal="topLeft"
+					>
+					<span class="direction-badge">Top Left</span>
+					<span class="image-label">Winter Scene</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80" 
+						alt="Beach sunset"
+						data-reveal="topRight"
+					>
+					<span class="direction-badge">Top Right</span>
+					<span class="image-label">Beach Sunset</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80" 
+						alt="Green hills"
+						data-reveal="topLeft"
+					>
+					<span class="direction-badge">Top Left</span>
+					<span class="image-label">Green Hills</span>
+				</div>
+
+				<div class="image-wrapper">
+					<img 
+						src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80" 
+						alt="Starry mountain"
+						data-reveal="topRight"
+					>
+					<span class="direction-badge">Top Right</span>
+					<span class="image-label">Starry Night</span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Additional scroll space -->
+		<div style="height: 100vh;"></div>
+
+	</div>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			// Register ScrollTrigger
+			gsap.registerPlugin(ScrollTrigger);
+
+			// ============================================
+			// POLYGON ANIMATION CONFIGURATION
+			// ============================================
+			const polygonConfig = {
+				// Available directions: 'topLeft', 'topRight'
+				defaultDirection: 'topLeft',
+				
+				// Scroll trigger settings
+				scrollTrigger: {
+					start: 'top 80%',    // When to start animation
+					end: 'bottom 20%',   // When to end animation
+					scrub: 1,            // Smooth scrubbing (1 second lag)
+					once: true           // Trigger only once
+				},
+				
+				// Duration in seconds (for non-scroll animations)
+				duration: 1.5,
+				
+				// Easing function
+				ease: 'power2.out'
+			};
+
+			// ============================================
+			// POLYGON PATTERNS FOR DIFFERENT DIRECTIONS
+			// ============================================
+			const polygonPatterns = {
+				// Reveal from top-left corner
+				topLeft: {
+					from: "polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+				
+				// Reveal from top-right corner
+				topRight: {
+					from: "polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+
+				// Additional patterns you can use
+				center: {
+					from: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+
+				bottomUp: {
+					from: "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				}
+			};
+
+			// ============================================
+			// ANIMATION FUNCTION
+			// ============================================
+			/**
+			 * Apply polygon reveal animation to an element
+			 * @param {HTMLElement} element - The element to animate
+			 * @param {string} direction - The direction of reveal ('topLeft', 'topRight', etc.)
+			 * @param {Object} config - Configuration object (optional)
+			 */
+			function applyPolygonReveal(element, direction, config = {}) {
+				// Get the pattern for the specified direction
+				const pattern = polygonPatterns[direction] || polygonPatterns[polygonConfig.defaultDirection];
+				
+				// Merge with default config
+				const animationConfig = {
+					...polygonConfig,
+					...config,
+					scrollTrigger: {
+						...polygonConfig.scrollTrigger,
+						...config.scrollTrigger,
+						trigger: element
+					}
+				};
+
+				// Set initial state
+				gsap.set(element, {
+					clipPath: pattern.from
+				});
+
+				// Apply animation
+				gsap.to(element, {
+					clipPath: pattern.to,
+					duration: animationConfig.duration,
+					ease: animationConfig.ease,
+					scrollTrigger: animationConfig.scrollTrigger
+				});
+			}
+
+			// ============================================
+			// INITIALIZE ALL REVEAL ANIMATIONS
+			// ============================================
+			function initPolygonReveals() {
+				// Find all images with data-reveal attribute
+				const revealImages = document.querySelectorAll('img[data-reveal]');
+				
+				revealImages.forEach((img) => {
+					const direction = img.getAttribute('data-reveal') || polygonConfig.defaultDirection;
+					applyPolygonReveal(img, direction);
+				});
+
+				console.log(`✅ Initialized ${revealImages.length} polygon reveal animations`);
+			}
+
+			// ============================================
+			// UTILITY: ADD REVEAL TO ELEMENTS PROGRAMMATICALLY
+			// ============================================
+			/**
+			 * Add polygon reveal to any element
+			 * @param {string|HTMLElement} selector - CSS selector or element
+			 * @param {string} direction - Direction of reveal
+			 * @param {Object} config - Optional config overrides
+			 */
+			window.addPolygonReveal = function(selector, direction, config = {}) {
+				const elements = typeof selector === 'string' 
+					? document.querySelectorAll(selector) 
+					: [selector];
+				
+				elements.forEach((el) => {
+					applyPolygonReveal(el, direction, config);
+				});
+			};
+
+			// ============================================
+			// INITIALIZE ON PAGE LOAD
+			// ============================================
+			initPolygonReveals();
+
+			// ============================================
+			// EXAMPLE: HOW TO USE THE API
+			// ============================================
+			/*
+			// Example 1: Add reveal to an element with custom config
+			addPolygonReveal('.my-image', 'topLeft', {
+				scrollTrigger: {
+					start: 'top 90%',
+					scrub: 0.5
+				},
+				duration: 2
+			});
+
+			// Example 2: Add reveal to multiple elements
+			addPolygonReveal('.gallery img', 'topRight');
+
+			// Example 3: Use different pattern
+			addPolygonReveal('.hero-image', 'center');
+			*/
+		});
+	</script>
+
+</body>
+
+</html>

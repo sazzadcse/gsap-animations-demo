@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>GSAP Mixed Vertical & Horizontal Scroll Demo</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<!-- GSAP -->
+	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: system-ui, sans-serif;
+			overflow-x: hidden;
+		}
+
+		/* ---------- GLOBAL PANELS ---------- */
+		.panel {
+			height: 100vh;
+			width: 100vw;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 3vw;
+			font-weight: 600;
+		}
+
+		.dark {
+			background: #111;
+			color: #fff;
+		}
+
+		.light {
+			background: #ddd;
+			color: #111;
+		}
+
+		.accent {
+			background: #ff6a00;
+			color: #fff;
+		}
+
+		/* ---------- HORIZONTAL SECTION ---------- */
+		.horizontal-section {
+			display: flex;
+			flex-wrap: nowrap;
+			height: 100vh;
+		}
+
+		.horizontal-section .panel {
+			min-width: 100vw;
+		}
+
+		/* ---------- VERTICAL STACK SECTION ---------- */
+		.vertical-stack {
+			position: relative;
+			height: 100vh;
+			overflow: hidden;
+		}
+
+		.vertical-stack .panel {
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- HERO -->
+	<section class="panel accent">Hero Section</section>
+	<section class="panel dark">Scroll Down ↓</section>
+
+	<!-- HORIZONTAL SCROLL -->
+	<section class="horizontal-section" id="horizontal-1">
+		<div class="panel light">Horizontal 1</div>
+		<div class="panel dark">Horizontal 2</div>
+		<div class="panel light">Horizontal 3</div>
+		<div class="panel dark">Horizontal 4</div>
+	</section>
+
+	<section class="panel accent">Spacer</section>
+
+	<!-- VERTICAL STEP SCROLL -->
+	<section class="vertical-stack" id="vertical-steps">
+		<div class="panel dark">Step 1</div>
+		<div class="panel light">Step 2</div>
+		<div class="panel dark">Step 3</div>
+		<div class="panel light">Step 4</div>
+	</section>
+
+	<section class="panel accent">More Content</section>
+
+	<!-- SECOND HORIZONTAL (REVERSE) -->
+	<section class="horizontal-section" id="horizontal-2">
+		<div class="panel dark">Reverse 1</div>
+		<div class="panel light">Reverse 2</div>
+		<div class="panel dark">Reverse 3</div>
+	</section>
+
+	<section class="panel accent">Footer</section>
+
+	<script>
+		gsap.registerPlugin( ScrollTrigger );
+
+		/* ================================
+			 GLOBAL CONFIG (CUSTOMIZE HERE)
+		================================ */
+		const CONFIG = {
+			horizontalSpeed: 1,     // scrub smoothness
+			verticalStepSpeed: 0.8, // duration per panel
+			easing: "power2.inOut",
+			horizontalDirection: 1, // 1 = left → right, -1 = right → left
+		};
+
+		/* ================================
+			 HORIZONTAL SCROLL FUNCTION
+		================================ */
+		function horizontalScroll ( section, direction = 1 ) {
+			const panels = gsap.utils.toArray( section.querySelectorAll( ".panel" ) );
+			const totalPanels = panels.length;
+
+			gsap.to( panels, {
+				xPercent: -100 * ( totalPanels - 1 ) * direction,
+				ease: "none",
+				scrollTrigger: {
+					trigger: section,
+					pin: true,
+					scrub: CONFIG.horizontalSpeed,
+					end: () => "+=" + window.innerWidth * totalPanels,
+				}
+			} );
+		}
+
+		/* ================================
+			 VERTICAL STEP SCROLL FUNCTION
+		================================ */
+		function verticalStepScroll ( section ) {
+			const panels = gsap.utils.toArray( section.querySelectorAll( ".panel" ) );
+
+			gsap.set( panels, {
+				yPercent: i => ( i === 0 ? 0 : 100 ),
+				zIndex: i => panels.length - i
+			} );
+
+			let tl = gsap.timeline( {
+				scrollTrigger: {
+					trigger: section,
+					pin: true,
+					scrub: true,
+					end: "+=" + panels.length * window.innerHeight,
+				}
+			} );
+
+			panels.forEach( ( panel, i ) => {
+				if ( i === 0 ) return;
+
+				tl.to( panel, {
+					yPercent: 0,
+					duration: CONFIG.verticalStepSpeed,
+					ease: CONFIG.easing
+				} );
+			} );
+		}
+
+		/* ================================
+			 INIT
+		================================ */
+		horizontalScroll(
+			document.querySelector( "#horizontal-1" ),
+			CONFIG.horizontalDirection
+		);
+
+		horizontalScroll(
+			document.querySelector( "#horizontal-2" ),
+			-CONFIG.horizontalDirection // reverse example
+		);
+
+		verticalStepScroll(
+			document.querySelector( "#vertical-steps" )
+		);
+
+	</script>
+
+</body>
+
+</html>

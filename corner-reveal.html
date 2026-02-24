@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CornerReveal - Interactive Demo</title>
+
+	<!-- GSAP -->
+	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			overflow-x: hidden;
+			background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+			color: #fff;
+		}
+
+		.container {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 40px 20px;
+		}
+
+		header {
+			text-align: center;
+			padding: 40px 20px;
+		}
+
+		h1 {
+			font-size: 2.5rem;
+			margin: 0 0 10px;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+
+		.subtitle {
+			font-size: 1.1rem;
+			color: #a0a0a0;
+		}
+
+		/* Control Panel */
+		.control-panel {
+			background: rgba(255, 255, 255, 0.05);
+			border-radius: 16px;
+			padding: 30px;
+			margin-bottom: 40px;
+			backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.control-panel h2 {
+			margin-top: 0;
+			font-size: 1.5rem;
+			color: #667eea;
+			margin-bottom: 25px;
+		}
+
+		.controls-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+			gap: 25px;
+		}
+
+		.control-group {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		.control-group label {
+			font-weight: 600;
+			color: #a0a0a0;
+			font-size: 0.9rem;
+		}
+
+		.control-group select,
+		.control-group input {
+			padding: 12px 16px;
+			border-radius: 8px;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			background: rgba(0, 0, 0, 0.3);
+			color: #fff;
+			font-size: 1rem;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.control-group select:hover,
+		.control-group input:hover {
+			border-color: #667eea;
+		}
+
+		.control-group select:focus,
+		.control-group input:focus {
+			outline: none;
+			border-color: #667eea;
+			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+		}
+
+		.control-group select option {
+			background: #1a1a2e;
+			color: #fff;
+		}
+
+		.custom-inputs {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+			opacity: 0.5;
+			pointer-events: none;
+			transition: opacity 0.3s ease;
+		}
+
+		.custom-inputs.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.custom-inputs input {
+			padding: 10px 12px;
+			font-size: 0.9rem;
+		}
+
+		/* Action Buttons */
+		.action-buttons {
+			display: flex;
+			gap: 15px;
+			margin-top: 25px;
+			flex-wrap: wrap;
+		}
+
+		.btn {
+			padding: 12px 24px;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.btn-primary {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: #fff;
+		}
+
+		.btn-primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+		}
+
+		.btn-secondary {
+			background: rgba(255, 255, 255, 0.1);
+			color: #fff;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.btn-secondary:hover {
+			background: rgba(255, 255, 255, 0.2);
+		}
+
+		/* Demo Area */
+		.demo-area {
+			background: rgba(255, 255, 255, 0.03);
+			border-radius: 16px;
+			padding: 40px;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.demo-area h2 {
+			margin-top: 0;
+			font-size: 1.5rem;
+			color: #667eea;
+			margin-bottom: 20px;
+		}
+
+		.image-container {
+			position: relative;
+			max-width: 800px;
+			margin: 0 auto;
+			border-radius: 16px;
+			overflow: hidden;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+		}
+
+		.image-container img {
+			width: 100%;
+			height: 500px;
+			object-fit: cover;
+			display: block;
+		}
+
+		.image-info {
+			position: absolute;
+			bottom: 20px;
+			left: 20px;
+			right: 20px;
+			background: rgba(0, 0, 0, 0.7);
+			padding: 15px 20px;
+			border-radius: 10px;
+			backdrop-filter: blur(10px);
+		}
+
+		.image-info h3 {
+			margin: 0 0 5px;
+			font-size: 1.1rem;
+		}
+
+		.image-info p {
+			margin: 0;
+			color: #a0a0a0;
+			font-size: 0.9rem;
+		}
+
+		/* Current Settings Display */
+		.settings-display {
+			background: rgba(0, 0, 0, 0.3);
+			border-radius: 10px;
+			padding: 20px;
+			margin-top: 30px;
+		}
+
+		.settings-display h3 {
+			margin: 0 0 15px;
+			color: #667eea;
+			font-size: 1.1rem;
+		}
+
+		.settings-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 15px;
+		}
+
+		setting-item {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+		}
+
+		.setting-item label {
+			color: #a0a0a0;
+			font-size: 0.85rem;
+		}
+
+		.setting-item span {
+			color: #fff;
+			font-weight: 600;
+			font-size: 1rem;
+		}
+
+		/* Scroll Space */
+		.scroll-space {
+			height: 200vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #a0a0a0;
+			font-size: 1.2rem;
+		}
+
+		/* Responsive */
+		@media (max-width: 768px) {
+			h1 {
+				font-size: 2rem;
+			}
+
+			.controls-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.image-container img {
+				height: 350px;
+			}
+
+			.action-buttons {
+				flex-direction: column;
+			}
+
+			.btn {
+				width: 100%;
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<header>
+		<h1>CornerReveal</h1>
+		<p class="subtitle">Interactive GSAP Corner Animation Demo</p>
+	</header>
+
+	<div class="container">
+		
+		<!-- Control Panel -->
+		<div class="control-panel">
+			<h2>🎛️ Animation Settings</h2>
+			
+			<div class="controls-grid">
+				<!-- Animation Direction -->
+				<div class="control-group">
+					<label for="direction">Animation Direction</label>
+					<select id="direction">
+						<option value="top-left">↖️ Top Left</option>
+						<option value="top-right">↗️ Top Right</option>
+						<option value="center">⬆️ Center</option>
+						<option value="bottom-left">↙️ Bottom Left</option>
+						<option value="bottom-right">↘️ Bottom Right</option>
+					</select>
+				</div>
+
+				<!-- Trigger Point -->
+				<div class="control-group">
+					<label for="triggerPoint">Trigger Point</label>
+					<select id="triggerPoint">
+						<option value="top top">Top Top</option>
+						<option value="top center">Top Center</option>
+						<option value="top bottom">Top Bottom</option>
+						<option value="center top">Center Top</option>
+						<option value="center center" selected>Center Center</option>
+						<option value="center bottom">Center Bottom</option>
+						<option value="bottom top">Bottom Top</option>
+						<option value="bottom center">Bottom Center</option>
+						<option value="bottom bottom">Bottom Bottom</option>
+						<option value="custom">Custom</option>
+					</select>
+				</div>
+
+				<!-- Custom Trigger Point -->
+				<div class="custom-inputs" id="customInputs">
+					<div class="control-group">
+						<label for="customTriggerStart">Trigger Start (%)</label>
+						<input type="number" id="customTriggerStart" value="80" min="0" max="100">
+					</div>
+					<div class="control-group">
+						<label for="customTriggerEnd">Trigger End (%)</label>
+						<input type="number" id="customTriggerEnd" value="20" min="0" max="100">
+					</div>
+				</div>
+
+				<!-- Animation Duration -->
+				<div class="control-group">
+					<label for="duration">Duration (seconds)</label>
+					<input type="number" id="duration" value="1.5" min="0.1" max="5" step="0.1">
+				</div>
+
+				<!-- Scrub -->
+				<div class="control-group">
+					<label for="scrub">Scrub (0 = instant, 1+ = smooth)</label>
+					<input type="number" id="scrub" value="1" min="0" max="3" step="0.1">
+				</div>
+
+				<!-- Easing -->
+				<div class="control-group">
+					<label for="easing">Easing Function</label>
+					<select id="easing">
+						<option value="power1.out">Power1 Out</option>
+						<option value="power2.out" selected>Power2 Out</option>
+						<option value="power3.out">Power3 Out</option>
+						<option value="power4.out">Power4 Out</option>
+						<option value="back.out(1.7)">Back Out</option>
+						<option value="elastic.out(1, 0.5)">Elastic Out</option>
+						<option value="bounce.out">Bounce Out</option>
+					</select>
+				</div>
+
+				<!-- Trigger Once -->
+				<div class="control-group">
+					<label for="triggerOnce">Trigger Once</label>
+					<select id="triggerOnce">
+						<option value="true">Yes</option>
+						<option value="false">No</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Action Buttons -->
+			<div class="action-buttons">
+				<button class="btn btn-primary" id="applyBtn">✨ Apply Animation</button>
+				<button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+				<button class="btn btn-secondary" id="scrollToDemoBtn">⬇️ Scroll to Demo</button>
+			</div>
+		</div>
+
+		<!-- Demo Area -->
+		<div class="demo-area" id="demoArea">
+			<h2>🎬 Live Preview</h2>
+			
+			<div class="image-container">
+				<img 
+					id="demoImage"
+					src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80" 
+					alt="Demo Image"
+				>
+				<div class="image-info">
+					<h3 id="imageTitle">Mountain View</h3>
+					<p id="imageDescription">Scroll down or click "Apply Animation" to see the effect</p>
+				</div>
+			</div>
+
+			<!-- Current Settings Display -->
+			<div class="settings-display">
+				<h3>📊 Current Settings</h3>
+				<div class="settings-grid">
+					<div class="setting-item">
+						<label>Direction</label>
+						<span id="currentDirection">top-left</span>
+					</div>
+					<div class="setting-item">
+						<label>Trigger Point</label>
+						<span id="currentTrigger">center center</span>
+					</div>
+					<div class="setting-item">
+						<label>Duration</label>
+						<span id="currentDuration">1.5s</span>
+					</div>
+					<div class="setting-item">
+						<label>Scrub</label>
+						<span id="currentScrub">1</span>
+					</div>
+					<div class="setting-item">
+						<label>Easing</label>
+						<span id="currentEasing">power2.out</span>
+					</div>
+					<div class="setting-item">
+						<label>Trigger Once</label>
+						<span id="currentOnce">true</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Scroll Space for Testing -->
+		<div class="scroll-space">
+			<div>
+				<p>📜 Scroll down to test scroll-based animations</p>
+				<p style="font-size: 0.9rem; margin-top: 10px;">Or use the "Apply Animation" button for instant preview</p>
+			</div>
+		</div>
+
+	</div>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			// Register ScrollTrigger
+			gsap.registerPlugin(ScrollTrigger);
+
+			// ============================================
+			// DOM ELEMENTS
+			// ============================================
+			const elements = {
+				direction: document.getElementById('direction'),
+				triggerPoint: document.getElementById('triggerPoint'),
+				customInputs: document.getElementById('customInputs'),
+				customTriggerStart: document.getElementById('customTriggerStart'),
+				customTriggerEnd: document.getElementById('customTriggerEnd'),
+				duration: document.getElementById('duration'),
+				scrub: document.getElementById('scrub'),
+				easing: document.getElementById('easing'),
+				triggerOnce: document.getElementById('triggerOnce'),
+				applyBtn: document.getElementById('applyBtn'),
+				resetBtn: document.getElementById('resetBtn'),
+				scrollToDemoBtn: document.getElementById('scrollToDemoBtn'),
+				demoImage: document.getElementById('demoImage'),
+				demoArea: document.getElementById('demoArea'),
+				imageTitle: document.getElementById('imageTitle'),
+				imageDescription: document.getElementById('imageDescription'),
+				currentDirection: document.getElementById('currentDirection'),
+				currentTrigger: document.getElementById('currentTrigger'),
+				currentDuration: document.getElementById('currentDuration'),
+				currentScrub: document.getElementById('currentScrub'),
+				currentEasing: document.getElementById('currentEasing'),
+				currentOnce: document.getElementById('currentOnce')
+			};
+
+			// ============================================
+			// POLYGON PATTERNS
+			// ============================================
+			const polygonPatterns = {
+				'top-left': {
+					from: "polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+				'top-right': {
+					from: "polygon(100% 0%, 100% 0%, 100% 0%, 100% 0%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+				'center': {
+					from: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+				'bottom-left': {
+					from: "polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				},
+				'bottom-right': {
+					from: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+					to: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+				}
+			};
+
+			// ============================================
+			// TRIGGER POINT MAPPINGS
+			// ============================================
+			const triggerPointMappings = {
+				'top top': { start: 'top 0%', end: 'bottom 100%' },
+				'top center': { start: 'top 50%', end: 'bottom 50%' },
+				'top bottom': { start: 'top 100%', end: 'bottom 0%' },
+				'center top': { start: 'center 0%', end: 'center 100%' },
+				'center center': { start: 'center 50%', end: 'center 50%' },
+				'center bottom': { start: 'center 100%', end: 'center 0%' },
+				'bottom top': { start: 'bottom 0%', end: 'top 100%' },
+				'bottom center': { start: 'bottom 50%', end: 'top 50%' },
+				'bottom bottom': { start: 'bottom 100%', end: 'top 0%' }
+			};
+
+			// Store current animation for cleanup
+			let currentAnimation = null;
+
+			// ============================================
+			// GET SETTINGS FROM UI
+			// ============================================
+			function getSettings() {
+				const triggerPoint = elements.triggerPoint.value;
+				let start, end;
+
+				if (triggerPoint === 'custom') {
+					start = `top ${elements.customTriggerStart.value}%`;
+					end = `bottom ${elements.customTriggerEnd.value}%`;
+				} else {
+					const mapping = triggerPointMappings[triggerPoint];
+					start = mapping.start;
+					end = mapping.end;
+				}
+
+				return {
+					direction: elements.direction.value,
+					triggerPoint: triggerPoint,
+					start: start,
+					end: end,
+					duration: parseFloat(elements.duration.value),
+					scrub: parseFloat(elements.scrub.value),
+					ease: elements.easing.value,
+					once: elements.triggerOnce.value === 'true'
+				};
+			}
+
+			// ============================================
+			// UPDATE SETTINGS DISPLAY
+			// ============================================
+			function updateSettingsDisplay(settings) {
+				elements.currentDirection.textContent = settings.direction;
+				elements.currentTrigger.textContent = settings.triggerPoint === 'custom' 
+					? `${elements.customTriggerStart.value}% / ${elements.customTriggerEnd.value}%` 
+					: settings.triggerPoint;
+				elements.currentDuration.textContent = settings.duration + 's';
+				elements.currentScrub.textContent = settings.scrub;
+				elements.currentEasing.textContent = settings.ease;
+				elements.currentOnce.textContent = settings.once;
+			}
+
+			// ============================================
+			// APPLY POLYGON REVEAL ANIMATION
+			// ============================================
+			function applyCornerReveal() {
+				const settings = getSettings();
+				const pattern = polygonPatterns[settings.direction];
+
+				// Kill any existing animation
+				if (currentAnimation) {
+					currentAnimation.kill();
+				}
+
+				// Kill any existing ScrollTrigger
+				ScrollTrigger.getAll().forEach(trigger => {
+					if (trigger.trigger === elements.demoImage) {
+						trigger.kill();
+					}
+				});
+
+				// Reset clip path
+				gsap.set(elements.demoImage, {
+					clipPath: pattern.from
+				});
+
+				// Create animation
+				if (settings.scrub > 0) {
+					// Scroll-based animation
+					currentAnimation = gsap.to(elements.demoImage, {
+						clipPath: pattern.to,
+						duration: settings.duration,
+						ease: settings.ease,
+						scrollTrigger: {
+							trigger: elements.demoImage,
+							start: settings.start,
+							end: settings.end,
+							scrub: settings.scrub,
+							once: settings.once
+						}
+					});
+				} else {
+					// Instant animation (no scrub)
+					currentAnimation = gsap.to(elements.demoImage, {
+						clipPath: pattern.to,
+						duration: settings.duration,
+						ease: settings.ease,
+						scrollTrigger: {
+							trigger: elements.demoImage,
+							start: settings.start,
+							once: settings.once
+						}
+					});
+				}
+
+				// Update display
+				updateSettingsDisplay(settings);
+				elements.imageDescription.textContent = `Animation applied: ${settings.direction} reveal`;
+				elements.imageTitle.textContent = getDirectionName(settings.direction);
+
+				console.log('✅ Animation applied:', settings);
+			}
+
+			// ============================================
+			// GET DIRECTION NAME
+			// ============================================
+			function getDirectionName(direction) {
+				const names = {
+					'top-left': 'Top Left Reveal',
+					'top-right': 'Top Right Reveal',
+					'center': 'Center Reveal',
+					'bottom-left': 'Bottom Left Reveal',
+					'bottom-right': 'Bottom Right Reveal'
+				};
+				return names[direction] || direction;
+			}
+
+			// ============================================
+			// RESET ANIMATION
+			// ============================================
+			function resetAnimation() {
+				// Kill existing animations
+				if (currentAnimation) {
+					currentAnimation.kill();
+				}
+
+				ScrollTrigger.getAll().forEach(trigger => {
+					if (trigger.trigger === elements.demoImage) {
+						trigger.kill();
+					}
+				});
+
+				// Reset clip path
+				gsap.set(elements.demoImage, {
+					clipPath: "polygon(0% 0%, 0% 0%, 0% 0%, 0% 0%)"
+				});
+
+				// Reset display
+				elements.imageDescription.textContent = 'Scroll down or click "Apply Animation" to see the effect';
+				elements.imageTitle.textContent = 'Mountain View';
+
+				console.log('🔄 Animation reset');
+			}
+
+			// ============================================
+			// SCROLL TO DEMO
+			// ============================================
+			function scrollToDemo() {
+				elements.demoArea.scrollIntoView({ behavior: 'smooth' });
+			}
+
+			// ============================================
+			// EVENT LISTENERS
+			// ============================================
+			elements.applyBtn.addEventListener('click', applyCornerReveal);
+			elements.resetBtn.addEventListener('click', resetAnimation);
+			elements.scrollToDemoBtn.addEventListener('click', scrollToDemo);
+
+			// Toggle custom inputs
+			elements.triggerPoint.addEventListener('change', function() {
+				if (this.value === 'custom') {
+					elements.customInputs.classList.add('active');
+				} else {
+					elements.customInputs.classList.remove('active');
+				}
+			});
+
+			// ============================================
+			// INITIALIZE
+			// ============================================
+			// Apply default animation on load
+			setTimeout(() => {
+				applyCornerReveal();
+			}, 500);
+
+			console.log('🚀 PolygonReveal Demo initialized');
+		});
+	</script>
+
+</body>
+
+</html>
