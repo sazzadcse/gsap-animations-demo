@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masking Reveal - Interactive Demo</title>
+
+    <!-- GSAP -->
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-panel h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 25px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-group select:hover,
+        .control-group input:hover {
+            border-color: #667eea;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .control-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Demo Area */
+        .demo-area {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .demo-area h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .demo-item {
+            position: relative;
+            height: 400px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .demo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .demo-item .overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-item h3 {
+            margin: 0 0 5px;
+            font-size: 1.1rem;
+        }
+
+        .demo-item p {
+            margin: 0;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        /* Current Settings Display */
+        .settings-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .settings-display h3 {
+            margin: 0 0 15px;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setting-item label {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+
+        .setting-item span {
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* Scroll Space */
+        .scroll-space {
+            height: 200vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0a0a0;
+            font-size: 1.2rem;
+        }
+
+        /* Clip Path Classes */
+        .clip-horizontal {
+            clip-path: url(#clip-horizontal);
+        }
+
+        .clip-vertical {
+            clip-path: url(#clip-vertical);
+        }
+
+        .clip-box {
+            clip-path: url(#clip-box);
+        }
+
+        .clip-simple {
+            clip-path: url(#clip-simple);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header>
+        <h1>Masking Reveal</h1>
+        <p class="subtitle">Interactive GSAP SVG Masking Animation Demo</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>🎛️ Animation Settings</h2>
+            
+            <div class="controls-grid">
+                <!-- Animation Type -->
+                <div class="control-group">
+                    <label for="animationType">Animation Type</label>
+                    <select id="animationType">
+                        <option value="horizontal">↔️ Horizontal Strips</option>
+                        <option value="vertical">↕️ Vertical Strips</option>
+                        <option value="box">▦️ Grid Boxes</option>
+                        <option value="simple">▬ Simple Panels</option>
+                        <option value="all">🎨 All Types</option>
+                    </select>
+                </div>
+
+                <!-- Number of Horizontal Strips -->
+                <div class="control-group">
+                    <label for="horizontalStrips">Horizontal Strips Count</label>
+                    <input type="number" id="horizontalStrips" value="10" min="3" max="20" step="1">
+                </div>
+
+                <!-- Number of Vertical Strips -->
+                <div class="control-group">
+                    <label for="verticalStrips">Vertical Strips Count</label>
+                    <input type="number" id="verticalStrips" value="10" min="3" max="20" step="1">
+                </div>
+
+                <!-- Number of Grid Boxes -->
+                <div class="control-group">
+                    <label for="gridBoxes">Grid Boxes (N×N)</label>
+                    <input type="number" id="gridBoxes" value="10" min="3" max="15" step="1">
+                </div>
+
+                <!-- Number of Simple Panels -->
+                <div class="control-group">
+                    <label for="simplePanels">Simple Panels Count</label>
+                    <input type="number" id="simplePanels" value="3" min="2" max="6" step="1">
+                </div>
+
+                <!-- Stagger Direction -->
+                <div class="control-group">
+                    <label for="staggerDirection">Stagger Direction</label>
+                    <select id="staggerDirection">
+                        <option value="center">⬆️ From Center</option>
+                        <option value="start">⬅️ From Start</option>
+                        <option value="end">➡️ From End</option>
+                        <option value="edges">↔️ From Edges</option>
+                        <option value="random">🎲 Random</option>
+                    </select>
+                </div>
+
+                <!-- Trigger Point -->
+                <div class="control-group">
+                    <label for="triggerPoint">Trigger Point</label>
+                    <select id="triggerPoint">
+                        <option value="top top">Top Top</option>
+                        <option value="top center">Top Center</option>
+                        <option value="top bottom">Top Bottom</option>
+                        <option value="center top">Center Top</option>
+                        <option value="center center" selected>Center Center</option>
+                        <option value="center bottom">Center Bottom</option>
+                        <option value="bottom top">Bottom Top</option>
+                        <option value="bottom center">Bottom Center</option>
+                        <option value="bottom bottom">Bottom Bottom</option>
+                    </select>
+                </div>
+
+                <!-- Animation Duration -->
+                <div class="control-group">
+                    <label for="duration">Duration (s)</label>
+                    <input type="number" id="duration" value="1.5" min="0.1" max="5" step="0.1">
+                </div>
+
+                <!-- Stagger Amount -->
+                <div class="control-group">
+                    <label for="staggerAmount">Stagger Amount (s)</label>
+                    <input type="number" id="staggerAmount" value="0.8" min="0.1" max="3" step="0.1">
+                </div>
+
+                <!-- Scrub -->
+                <div class="control-group">
+                    <label for="scrub">Scrub (0 = instant, 1+ = smooth)</label>
+                    <input type="number" id="scrub" value="1" min="0" max="5" step="0.1">
+                </div>
+
+                <!-- Easing -->
+                <div class="control-group">
+                    <label for="easing">Easing Function</label>
+                    <select id="easing">
+                        <option value="power1.out">Power1 Out</option>
+                        <option value="power2.out" selected>Power2 Out</option>
+                        <option value="power3.out">Power3 Out</option>
+                        <option value="power4.out">Power4 Out</option>
+                        <option value="back.out(1.7)">Back Out</option>
+                        <option value="elastic.out(1, 0.5)">Elastic Out</option>
+                        <option value="bounce.out">Bounce Out</option>
+                        <option value="sine.inOut">Sine InOut</option>
+                    </select>
+                </div>
+
+                <!-- Trigger Once -->
+                <div class="control-group">
+                    <label for="triggerOnce">Trigger Once</label>
+                    <select id="triggerOnce">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="applyBtn">✨ Apply Animation</button>
+                <button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+                <button class="btn btn-secondary" id="scrollToDemoBtn">⬇️ Scroll to Demo</button>
+            </div>
+        </div>
+
+        <!-- Demo Area -->
+        <div class="demo-area" id="demoArea">
+            <h2>🎬 Live Preview</h2>
+            
+            <div class="demo-grid">
+                <div class="demo-item" id="demo1">
+                    <img 
+                        id="image1"
+                        src="https://images.unsplash.com/photo-1497910091122-9f8a7746eb33?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE2ODk5NTYxNjl8&ixlib=rb-4.0.3&q=85"
+                        alt="Demo Image 1"
+                        class="clip-horizontal"
+                    >
+                    <div class="overlay">
+                        <h3 id="title1">Horizontal Strips</h3>
+                        <p id="desc1">Scroll down or click "Apply Animation"</p>
+                    </div>
+                </div>
+
+                <div class="demo-item" id="demo2">
+                    <img 
+                        id="image2"
+                        src="https://images.unsplash.com/photo-1605450648855-63f9161b7ef7?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE2ODk5NTYxNjl8&ixlib=rb-4.0.3&q=85"
+                        alt="Demo Image 2"
+                        class="clip-vertical"
+                    >
+                    <div class="overlay">
+                        <h3 id="title2">Vertical Strips</h3>
+                        <p id="desc2">Scroll down or click "Apply Animation"</p>
+                    </div>
+                </div>
+
+                <div class="demo-item" id="demo3">
+                    <img 
+                        id="image3"
+                        src="https://images.unsplash.com/photo-1572252821143-035a024857ac?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE2ODk5NjUyMjZ8&ixlib=rb-4.0.3&q=85"
+                        alt="Demo Image 3"
+                        class="clip-box"
+                    >
+                    <div class="overlay">
+                        <h3 id="title3">Grid Boxes</h3>
+                        <p id="desc3">Scroll down or click "Apply Animation"</p>
+                    </div>
+                </div>
+
+                <div class="demo-item" id="demo4">
+                    <img 
+                        id="image4"
+                        src="https://images.unsplash.com/photo-1491485880348-85d48a9e5312?crop=entropy&cs=srgb&fm=jpg&ixid=M3wzMjM4NDZ8MHwxfHJhbmRvbXx8fHx8fHx8fDE2ODk5NjUyMjZ8&ixlib=rb-4.0.3&q=85"
+                        alt="Demo Image 4"
+                        class="clip-simple"
+                    >
+                    <div class="overlay">
+                        <h3 id="title4">Simple Panels</h3>
+                        <p id="desc4">Scroll down or click "Apply Animation"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Settings Display -->
+            <div class="settings-display">
+                <h3>📊 Current Settings</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label>Animation Type</label>
+                        <span id="currentType">horizontal</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Horizontal Strips</label>
+                        <span id="currentHorizontalStrips">10</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Vertical Strips</label>
+                        <span id="currentVerticalStrips">10</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Grid Boxes</label>
+                        <span id="currentGridBoxes">10×10</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Simple Panels</label>
+                        <span id="currentSimplePanels">3</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Stagger Direction</label>
+                        <span id="currentStagger">center</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Trigger Point</label>
+                        <span id="currentTrigger">center center</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Duration</label>
+                        <span id="currentDuration">1.5s</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Stagger Amount</label>
+                        <span id="currentStaggerAmount">0.8s</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Scrub</label>
+                        <span id="currentScrub">1</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Easing</label>
+                        <span id="currentEasing">power2.out</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Trigger Once</label>
+                        <span id="currentOnce">true</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Space for Testing -->
+        <div class="scroll-space">
+            <div>
+                <p>📜 Scroll down to test scroll-based animations</p>
+                <p style="font-size: 0.9rem; margin-top: 10px;">Or use the "Apply Animation" button for instant preview</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SVG Clip Paths (dynamically populated) -->
+    <svg width="0" height="0" style="height: 0; width: 0; position: absolute;">
+        <!-- Horizontal Strips -->
+        <clipPath id="clip-horizontal" clipPathUnits="objectBoundingBox"></clipPath>
+
+        <!-- Vertical Strips -->
+        <clipPath id="clip-vertical" clipPathUnits="objectBoundingBox"></clipPath>
+
+        <!-- Simple Panels -->
+        <clipPath id="clip-simple" clipPathUnits="objectBoundingBox"></clipPath>
+
+        <!-- Grid Boxes -->
+        <clipPath id="clip-box" clipPathUnits="objectBoundingBox"></clipPath>
+    </svg>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Register ScrollTrigger
+            gsap.registerPlugin(ScrollTrigger);
+
+            // ============================================
+            // DOM ELEMENTS
+            // ============================================
+            const elements = {
+                animationType: document.getElementById('animationType'),
+                horizontalStrips: document.getElementById('horizontalStrips'),
+                verticalStrips: document.getElementById('verticalStrips'),
+                gridBoxes: document.getElementById('gridBoxes'),
+                simplePanels: document.getElementById('simplePanels'),
+                staggerDirection: document.getElementById('staggerDirection'),
+                triggerPoint: document.getElementById('triggerPoint'),
+                duration: document.getElementById('duration'),
+                staggerAmount: document.getElementById('staggerAmount'),
+                scrub: document.getElementById('scrub'),
+                easing: document.getElementById('easing'),
+                triggerOnce: document.getElementById('triggerOnce'),
+                applyBtn: document.getElementById('applyBtn'),
+                resetBtn: document.getElementById('resetBtn'),
+                scrollToDemoBtn: document.getElementById('scrollToDemoBtn'),
+                demoArea: document.getElementById('demoArea'),
+                image1: document.getElementById('image1'),
+                image2: document.getElementById('image2'),
+                image3: document.getElementById('image3'),
+                image4: document.getElementById('image4'),
+                title1: document.getElementById('title1'),
+                title2: document.getElementById('title2'),
+                title3: document.getElementById('title3'),
+                title4: document.getElementById('title4'),
+                desc1: document.getElementById('desc1'),
+                desc2: document.getElementById('desc2'),
+                desc3: document.getElementById('desc3'),
+                desc4: document.getElementById('desc4'),
+                currentType: document.getElementById('currentType'),
+                currentHorizontalStrips: document.getElementById('currentHorizontalStrips'),
+                currentVerticalStrips: document.getElementById('currentVerticalStrips'),
+                currentGridBoxes: document.getElementById('currentGridBoxes'),
+                currentSimplePanels: document.getElementById('currentSimplePanels'),
+                currentStagger: document.getElementById('currentStagger'),
+                currentTrigger: document.getElementById('currentTrigger'),
+                currentDuration: document.getElementById('currentDuration'),
+                currentStaggerAmount: document.getElementById('currentStaggerAmount'),
+                currentScrub: document.getElementById('currentScrub'),
+                currentEasing: document.getElementById('currentEasing'),
+                currentOnce: document.getElementById('currentOnce')
+            };
+
+            // ============================================
+            // TRIGGER POINT MAPPINGS
+            // ============================================
+            const triggerPointMappings = {
+                'top top': { start: 'top 0%', end: 'bottom 100%' },
+                'top center': { start: 'top 50%', end: 'bottom 50%' },
+                'top bottom': { start: 'top 100%', end: 'bottom 0%' },
+                'center top': { start: 'center 0%', end: 'center 100%' },
+                'center center': { start: 'center 50%', end: 'center 50%' },
+                'center bottom': { start: 'center 100%', end: 'center 0%' },
+                'bottom top': { start: 'bottom 0%', end: 'top 100%' },
+                'bottom center': { start: 'bottom 50%', end: 'top 50%' },
+                'bottom bottom': { start: 'bottom 100%', end: 'top 0%' }
+            };
+
+            // Store current animations for cleanup
+            let currentAnimations = [];
+
+            // ============================================
+            // GET SETTINGS FROM UI
+            // ============================================
+            function getSettings() {
+                const triggerPoint = elements.triggerPoint.value;
+                const mapping = triggerPointMappings[triggerPoint];
+
+                return {
+                    animationType: elements.animationType.value,
+                    horizontalStrips: parseInt(elements.horizontalStrips.value),
+                    verticalStrips: parseInt(elements.verticalStrips.value),
+                    gridBoxes: parseInt(elements.gridBoxes.value),
+                    simplePanels: parseInt(elements.simplePanels.value),
+                    staggerDirection: elements.staggerDirection.value,
+                    triggerPoint: triggerPoint,
+                    start: mapping.start,
+                    end: mapping.end,
+                    duration: parseFloat(elements.duration.value),
+                    staggerAmount: parseFloat(elements.staggerAmount.value),
+                    scrub: parseFloat(elements.scrub.value),
+                    ease: elements.easing.value,
+                    once: elements.triggerOnce.value === 'true'
+                };
+            }
+
+            // ============================================
+            // UPDATE SETTINGS DISPLAY
+            // ============================================
+            function updateSettingsDisplay(settings) {
+                elements.currentType.textContent = settings.animationType;
+                elements.currentHorizontalStrips.textContent = settings.horizontalStrips;
+                elements.currentVerticalStrips.textContent = settings.verticalStrips;
+                elements.currentGridBoxes.textContent = `${settings.gridBoxes}×${settings.gridBoxes}`;
+                elements.currentSimplePanels.textContent = settings.simplePanels;
+                elements.currentStagger.textContent = settings.staggerDirection;
+                elements.currentTrigger.textContent = settings.triggerPoint;
+                elements.currentDuration.textContent = settings.duration + 's';
+                elements.currentStaggerAmount.textContent = settings.staggerAmount + 's';
+                elements.currentScrub.textContent = settings.scrub;
+                elements.currentEasing.textContent = settings.ease;
+                elements.currentOnce.textContent = settings.once;
+            }
+
+            // ============================================
+            // GET STAGGER CONFIG
+            // ============================================
+            function getStaggerConfig(direction, amount) {
+                const staggerConfig = {
+                    amount: amount,
+                    from: direction
+                };
+
+                if (direction === 'random') {
+                    return {
+                        each: amount / 10,
+                        from: 'random',
+                        ease: 'power1.inOut'
+                    };
+                }
+
+                if (direction === 'edges') {
+                    // Create alternating edges pattern
+                    return {
+                        each: amount / 10,
+                        from: 'center',
+                        ease: 'power1.inOut'
+                    };
+                }
+
+                return staggerConfig;
+            }
+
+            // ============================================
+            // GENERATE CLIP PATH DYNAMICALLY
+            // ============================================
+            function generateClipPath(type, count) {
+                const clipPath = document.getElementById(`clip-${type}`);
+                if (!clipPath) return;
+
+                // Clear existing rects
+                clipPath.innerHTML = '';
+
+                if (type === 'horizontal') {
+                    // Generate horizontal strips
+                    const height = 1 / count;
+                    for (let i = 0; i < count; i++) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('y', (i * height).toFixed(2));
+                        rect.setAttribute('height', (height + 0.01).toFixed(2));
+                        rect.setAttribute('width', '1');
+                        clipPath.appendChild(rect);
+                    }
+                } else if (type === 'vertical') {
+                    // Generate vertical strips
+                    const width = 1 / count;
+                    for (let i = 0; i < count; i++) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', (i * width).toFixed(2));
+                        rect.setAttribute('width', (width + 0.01).toFixed(2));
+                        rect.setAttribute('height', '1');
+                        clipPath.appendChild(rect);
+                    }
+                } else if (type === 'box') {
+                    // Generate grid boxes
+                    const size = 1 / count;
+                    for (let row = 0; row < count; row++) {
+                        for (let col = 0; col < count; col++) {
+                            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            rect.setAttribute('x', (col * size).toFixed(2));
+                            rect.setAttribute('y', (row * size).toFixed(2));
+                            rect.setAttribute('width', (size + 0.01).toFixed(2));
+                            rect.setAttribute('height', (size + 0.01).toFixed(2));
+                            clipPath.appendChild(rect);
+                        }
+                    }
+                } else if (type === 'simple') {
+                    // Generate simple panels
+                    const width = 1 / count;
+                    for (let i = 0; i < count; i++) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', (i * width).toFixed(2));
+                        rect.setAttribute('width', (width + 0.01).toFixed(2));
+                        rect.setAttribute('height', '1');
+                        clipPath.appendChild(rect);
+                    }
+                }
+            }
+
+            // ============================================
+            // APPLY MASKING ANIMATION TO CLIP PATH
+            // ============================================
+            function applyMaskingAnimation(clipPathId, settings) {
+                const clipPath = document.getElementById(clipPathId);
+                if (!clipPath) return null;
+
+                const q = gsap.utils.selector(clipPath);
+                const rects = q('*');
+
+                if (rects.length === 0) return null;
+
+                const tl = gsap.timeline();
+                const staggerConfig = getStaggerConfig(settings.staggerDirection, settings.staggerAmount);
+
+                // Phase 1: Scale Y from 0 to 1 (reveal)
+                tl.from(rects, {
+                    scaleY: 0,
+                    transformOrigin: "50% 50%",
+                    duration: settings.duration,
+                    ease: settings.ease,
+                    stagger: staggerConfig
+                });
+
+                // Phase 2: Scale X to 0 (collapse)
+                tl.to(rects, {
+                    scaleX: 0,
+                    ease: "sine.inOut",
+                    transformOrigin: "100% 50%",
+                    duration: settings.duration * 0.8,
+                    stagger: {
+                        amount: settings.staggerAmount,
+                        from: "end",
+                        ease: "power1.in"
+                    }
+                });
+
+                // Phase 3: Scale X back to 1 (restore)
+                tl.to(rects, {
+                    scaleX: 1,
+                    duration: settings.duration * 0.6,
+                    ease: settings.ease
+                });
+
+                return tl;
+            }
+
+            // ============================================
+            // APPLY ANIMATION
+            // ============================================
+            function applyAnimation() {
+                const settings = getSettings();
+
+                // Kill existing animations
+                currentAnimations.forEach(anim => {
+                    if (anim) anim.kill();
+                });
+                currentAnimations = [];
+
+                // Kill existing ScrollTriggers
+                ScrollTrigger.getAll().forEach(trigger => {
+                    trigger.kill();
+                });
+
+                // Generate clip paths dynamically based on settings
+                generateClipPath('horizontal', settings.horizontalStrips);
+                generateClipPath('vertical', settings.verticalStrips);
+                generateClipPath('box', settings.gridBoxes);
+                generateClipPath('simple', settings.simplePanels);
+
+                // Determine which animations to apply
+                const typesToApply = settings.animationType === 'all' 
+                    ? ['horizontal', 'vertical', 'box', 'simple']
+                    : [settings.animationType];
+
+                // Apply animations based on type
+                typesToApply.forEach((type, index) => {
+                    let clipPathId;
+                    let imageElement;
+                    let titleElement;
+                    let descElement;
+                    let count;
+
+                    switch(type) {
+                        case 'horizontal':
+                            clipPathId = 'clip-horizontal';
+                            imageElement = elements.image1;
+                            titleElement = elements.title1;
+                            descElement = elements.desc1;
+                            count = settings.horizontalStrips;
+                            break;
+                        case 'vertical':
+                            clipPathId = 'clip-vertical';
+                            imageElement = elements.image2;
+                            titleElement = elements.title2;
+                            descElement = elements.desc2;
+                            count = settings.verticalStrips;
+                            break;
+                        case 'box':
+                            clipPathId = 'clip-box';
+                            imageElement = elements.image3;
+                            titleElement = elements.title3;
+                            descElement = elements.desc3;
+                            count = settings.gridBoxes * settings.gridBoxes;
+                            break;
+                        case 'simple':
+                            clipPathId = 'clip-simple';
+                            imageElement = elements.image4;
+                            titleElement = elements.title4;
+                            descElement = elements.desc4;
+                            count = settings.simplePanels;
+                            break;
+                    }
+
+                    if (clipPathId && imageElement) {
+                        const tl = applyMaskingAnimation(clipPathId, settings);
+                        
+                        if (tl) {
+                            // Apply ScrollTrigger if scrub > 0
+                            if (settings.scrub > 0) {
+                                ScrollTrigger.create({
+                                    trigger: imageElement,
+                                    start: settings.start,
+                                    end: settings.end,
+                                    scrub: settings.scrub,
+                                    animation: tl,
+                                    once: settings.once
+                                });
+                            } else {
+                                // Instant animation
+                                ScrollTrigger.create({
+                                    trigger: imageElement,
+                                    start: settings.start,
+                                    once: settings.once,
+                                    onEnter: () => tl.play(),
+                                    onEnterBack: () => tl.reverse()
+                                });
+                            }
+
+                            currentAnimations.push(tl);
+
+                            // Update info text
+                            if (titleElement) {
+                                titleElement.textContent = `${getTypeName(type)} (${count} elements)`;
+                            }
+                            if (descElement) {
+                                descElement.textContent = `Animation: ${settings.staggerDirection} stagger`;
+                            }
+                        }
+                    }
+                });
+
+                // Update display
+                updateSettingsDisplay(settings);
+
+                console.log('✅ Animation applied:', settings);
+            }
+
+            // ============================================
+            // GET TYPE NAME
+            // ============================================
+            function getTypeName(type) {
+                const names = {
+                    'horizontal': 'Horizontal Strips',
+                    'vertical': 'Vertical Strips',
+                    'box': 'Grid Boxes',
+                    'simple': 'Simple Panels'
+                };
+                return names[type] || type;
+            }
+
+            // ============================================
+            // RESET ANIMATION
+            // ============================================
+            function resetAnimation() {
+                // Kill existing animations
+                currentAnimations.forEach(anim => {
+                    if (anim) anim.kill();
+                });
+                currentAnimations = [];
+
+                ScrollTrigger.getAll().forEach(trigger => {
+                    trigger.kill();
+                });
+
+                // Reset clip paths to default values
+                generateClipPath('horizontal', 10);
+                generateClipPath('vertical', 10);
+                generateClipPath('box', 10);
+                generateClipPath('simple', 3);
+
+                // Reset all clip paths
+                ['clip-horizontal', 'clip-vertical', 'clip-box', 'clip-simple'].forEach(id => {
+                    const clipPath = document.getElementById(id);
+                    if (clipPath) {
+                        const q = gsap.utils.selector(clipPath);
+                        gsap.set(q('*'), {
+                            scaleY: 1,
+                            scaleX: 1
+                        });
+                    }
+                });
+
+                // Reset info text
+                elements.title1.textContent = 'Horizontal Strips';
+                elements.title2.textContent = 'Vertical Strips';
+                elements.title3.textContent = 'Grid Boxes';
+                elements.title4.textContent = 'Simple Panels';
+                elements.desc1.textContent = 'Scroll down or click "Apply Animation"';
+                elements.desc2.textContent = 'Scroll down or click "Apply Animation"';
+                elements.desc3.textContent = 'Scroll down or click "Apply Animation"';
+                elements.desc4.textContent = 'Scroll down or click "Apply Animation"';
+
+                console.log('🔄 Animation reset');
+            }
+
+            // ============================================
+            // SCROLL TO DEMO
+            // ============================================
+            function scrollToDemo() {
+                elements.demoArea.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // ============================================
+            // EVENT LISTENERS
+            // ============================================
+            elements.applyBtn.addEventListener('click', applyAnimation);
+            elements.resetBtn.addEventListener('click', resetAnimation);
+            elements.scrollToDemoBtn.addEventListener('click', scrollToDemo);
+
+            // ============================================
+            // INITIALIZE
+            // ============================================
+            // Apply default animation on load
+            setTimeout(() => {
+                applyAnimation();
+            }, 500);
+
+            console.log('🚀 Masking Reveal Demo initialized');
+        });
+    </script>
+
+</body>
+
+</html>
