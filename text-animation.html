@@ -17,7 +17,7 @@
 
 		body {
 			margin: 0;
-			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',Roboto, sans-serif;
+			font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 			overflow-x: hidden;
 			background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 			color: #fff;
@@ -266,22 +266,21 @@
 			transform-origin: center center;
 		}
 
-		/* Invert Animation - Text Highlight with Background Position */
-		.ha-tm-text-invert {
-			position: relative;
-			display: inline-block;
-		}
-
+		/* Invert Animation - Mask Reveal */
 		.ha-tm-text-invert .ha-invert-line {
 			display: block;
 			position: relative;
-			background: linear-gradient(to right, #ffd700 50%, #1a1a2e 50%);
-			background-size: 200% 100%;
-			background-position: 100% 0;
-			-webkit-background-clip: text;
-			background-clip: text;
-			-webkit-text-fill-color: transparent;
-			color: transparent;
+			overflow: hidden;
+		}
+
+		.ha-tm-text-invert .ha-invert-mask {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 120%;
+			background: #1a1a2e89;
+			transform-origin: right center;
 		}
 
 		/* 3D Spin Animation */
@@ -382,7 +381,7 @@
 					<option value="lines">Lines (Text Move)</option>
 					<option value="reveal">Reveal</option>
 					<option value="scale">Scale</option>
-					<option value="invert">Invert</option>
+					<option value="invert" selected>Invert</option>
 					<option value="3dspin">3D Spin</option>
 				</select>
 			</div>
@@ -525,7 +524,7 @@
 				<label>Direction</label>
 				<select id="invertDirection">
 					<option value="leftToRight">Left To Right</option>
-					<option value="rightToLeft">Right To Left</option>
+					<option value="rightToLeft" selected>Right To Left</option>
 				</select>
 			</div>
 		</div>
@@ -556,7 +555,7 @@
 
 	<!-- Demo Section -->
 	<div class="demo-section" id="demoSection">
-		
+
 		<!-- Chars Demo -->
 		<div class="demo-block">
 			<div class="ha-tm-yes ha-tm-chars" data-mode="chars">
@@ -595,7 +594,9 @@
 		<!-- Invert Demo -->
 		<div class="demo-block">
 			<div class="ha-tm-yes ha-tm-text-invert" data-mode="invert">
-				<h2>Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation Invert Animation</h2>
+				<h2>Invert Animation Invert Animation Invert Animation<br>Invert Animation Invert Animation Invert
+					Animation<br>Invert Animation Invert Animation Invert Animation<br>Invert Animation Invert Animation
+					Invert Animation<br>Invert Animation Invert Animation Invert Animation</h2>
 			</div>
 		</div>
 
@@ -642,7 +643,7 @@
 
 		animationModeSelect.addEventListener('change', () => {
 			const mode = animationModeSelect.value;
-			
+
 			// Hide all mode-specific settings
 			wordsCharsSettings.style.display = 'none';
 			textMoveSettings.style.display = 'none';
@@ -652,7 +653,7 @@
 			spinSettings.style.display = 'none';
 
 			// Show only the selected mode's settings
-			switch(mode) {
+			switch (mode) {
 				case 'chars':
 				case 'words':
 					wordsCharsSettings.style.display = 'block';
@@ -744,7 +745,7 @@
 		function wrapForScale(element, breakBy) {
 			const text = element.textContent;
 			element.innerHTML = '';
-			
+
 			if (breakBy === 'chars') {
 				text.split('').forEach(char => {
 					const span = document.createElement('span');
@@ -776,53 +777,61 @@
 			}
 		}
 
-		// Helper function to wrap for invert (line by line with backgroundPositionX)
+		// Helper function to wrap for invert (line by line with mask)
 		function wrapForInvert(element) {
-			const text = element.textContent;
-			element.innerHTML = '';
-			
-			// Split by lines (using <br> as delimiter)
-			const lines = text.split(/<br\/?>/gi);
-			
-			lines.forEach((line, index) => {
-				const div = document.createElement('div');
-				div.className = 'ha-invert-line';
-				div.textContent = line.trim();
-				element.appendChild(div);
-				
-				// Add <br> between lines except for last
-				if (index < lines.length - 1) {
-					element.appendChild(document.createElement('br'));
-				}
+
+			const html = element.innerHTML;
+
+			element.innerHTML = "";
+
+			const lines = html.split(/<br\s*\/?>/gi);
+
+			lines.forEach((line) => {
+
+				const lineWrap = document.createElement("div");
+				lineWrap.className = "ha-invert-line";
+
+				const text = document.createElement("span");
+				text.className = "ha-invert-text";
+				text.innerHTML = line;
+
+				const mask = document.createElement("span");
+				mask.className = "ha-invert-mask";
+
+				lineWrap.appendChild(text);
+				lineWrap.appendChild(mask);
+
+				element.appendChild(lineWrap);
+
 			});
-			
-			return element.querySelectorAll('.ha-invert-line');
+
+			return element.querySelectorAll(".ha-invert-line");
 		}
 
 		// Helper function to wrap for 3D spin (flip effect with clone)
 		function wrapFor3DSpin(element, cloneColor = '#ffffff') {
 			const text = element.textContent;
 			const originalColor = getComputedStyle(element).color || '#ffffff';
-			
+
 			// Create wrapper
 			element.innerHTML = `<span class="ha-3d-wrapper"></span>`;
 			const wrapper = element.querySelector('.ha-3d-wrapper');
-			
+
 			// Create original text
 			const original = document.createElement('span');
 			original.className = 'ha-3d-original';
 			original.style.color = originalColor;
-			
+
 			// Create clone for flip effect with custom color
 			const clone = document.createElement('span');
 			clone.className = 'ha-3d-clone duplicate-text';
 			clone.style.color = cloneColor;
-			
+
 			// Split both into chars
 			const chars = text.split('');
 			const originalChars = [];
 			const cloneChars = [];
-			
+
 			chars.forEach((char) => {
 				// Original char
 				const origSpan = document.createElement('span');
@@ -830,7 +839,7 @@
 				origSpan.textContent = char === ' ' ? '\u00A0' : char;
 				original.appendChild(origSpan);
 				originalChars.push(origSpan);
-				
+
 				// Clone char
 				const cloneSpan = document.createElement('span');
 				cloneSpan.className = 'ha-spin-char ha-3d-element';
@@ -838,12 +847,23 @@
 				clone.appendChild(cloneSpan);
 				cloneChars.push(cloneSpan);
 			});
-			
+
 			wrapper.appendChild(original);
 			wrapper.appendChild(clone);
-			
+
 			return { wrapper, original, clone, originalChars, cloneChars };
 		}
+
+		// RGB to HSL conversion helper function
+		const RGBToHSL = (r, g, b) => {
+			r /= 255;
+			g /= 255;
+			b /= 255;
+			const l = Math.max(r, g, b);
+			const s = l - Math.min(r, g, b);
+			const h = s ? l === r ? (g - b) / s : l === g ? 2 + (b - r) / s : 4 + (r - g) / s : 0;
+			return [ 60 * h < 0 ? 60 * h + 360 : 60 * h, 100 * (s ? l <= 0.5 ? s / (2 * l - s) : s / (2 - (2 * l - s)) : 0), 100 * (2 * l - s) / 2 ];
+		};
 
 		// Get trigger point value
 		function getTriggerPoint() {
@@ -862,7 +882,7 @@
 				'bottom-center': 0.5,
 				'bottom-bottom': 1
 			};
-			return points[triggerPoint] || 0.5;
+			return points[ triggerPoint ] || 0.5;
 		}
 
 		// Get scroll trigger position
@@ -882,7 +902,7 @@
 				'bottom-center': 'bottom center',
 				'bottom-bottom': 'bottom bottom'
 			};
-			return positions[triggerPoint] || 'top center';
+			return positions[ triggerPoint ] || 'top center';
 		}
 
 		// Apply animation
@@ -916,7 +936,7 @@
 				};
 
 				// Prepare elements based on mode
-				switch(elementMode) {
+				switch (elementMode) {
 					case 'chars':
 						targets = splitChars(element.querySelector('h2, p'));
 						const transformXChars = parseInt(document.getElementById('transformX').value);
@@ -932,7 +952,7 @@
 							opacity: 0
 						});
 						break;
-	
+
 					case 'words':
 						targets = splitWords(element.querySelector('h2, p'));
 						const transformXWords = parseInt(document.getElementById('transformX').value);
@@ -954,14 +974,14 @@
 						const rotDir = document.getElementById('rotationDirection').value;
 						const rotValue = parseInt(document.getElementById('rotationValue').value);
 						const transformOrigin = document.getElementById('transformOrigin').value;
-						
+
 						Object.assign(animationConfig, {
-							[`${rotDir.toLowerCase()}Rotation`]: 0,
+							[ `${rotDir.toLowerCase()}Rotation` ]: 0,
 							opacity: 1
 						});
-						
+
 						gsap.set(targets, {
-							[`${rotDir.toLowerCase()}Rotation`]: rotValue,
+							[ `${rotDir.toLowerCase()}Rotation` ]: rotValue,
 							opacity: 0,
 							transformOrigin: transformOrigin
 						});
@@ -971,12 +991,12 @@
 						targets = splitForReveal(element.querySelector('h2, p'));
 						const revealDir = document.getElementById('revealDirection').value;
 						const revealY = parseInt(document.getElementById('revealY').value);
-						
+
 						Object.assign(animationConfig, {
 							y: 0,
 							opacity: 1
 						});
-						
+
 						gsap.set(targets, {
 							y: revealDir === 'topToBottom' ? revealY : -revealY,
 							opacity: 0
@@ -988,7 +1008,7 @@
 						targets = wrapForScale(element.querySelector('h2, p'), scaleBreakBy);
 						const scaleFrom = parseFloat(document.getElementById('scaleFrom').value);
 						const scaleTo = 1;
-						
+
 						// Set initial state
 						gsap.set(targets, {
 							opacity: 0,
@@ -996,7 +1016,7 @@
 							transformOrigin: '50% 50%',
 							force3D: true
 						});
-						
+
 						// Animation config for scale
 						const scaleConfig = {
 							opacity: 1,
@@ -1006,9 +1026,9 @@
 							ease: easing,
 							stagger: staggerDelay
 						};
-						
+
 						let scaleAnim;
-						
+
 						if (triggerMode === 'scroll') {
 							scaleAnim = gsap.to(targets, {
 								...scaleConfig,
@@ -1035,70 +1055,93 @@
 								gsap.to(targets, scaleConfig);
 							});
 							element.addEventListener('mouseleave', () => {
-								gsap.to(targets, { 
-									opacity: 0, 
+								gsap.to(targets, {
+									opacity: 0,
 									scale: scaleFrom,
-									duration: 0.3, 
-									stagger: staggerDelay 
+									duration: 0.3,
+									stagger: staggerDelay
 								});
 							});
 						}
-						
+
 						if (scaleAnim) animationInstances.push(scaleAnim);
 						return;
 
 					case 'invert':
-						const invertLines = wrapForInvert(element.querySelector('h2, p'));
-						targets = invertLines;
-						
-						// Set initial state - background at 100% (invisible)
-						gsap.set(targets, { backgroundPositionX: '100%' });
-						
-						// For each line, create individual scroll trigger (line by line sequential)
+						const textElement = element.querySelector('h2, p');
+
+						const invertLines = wrapForInvert(textElement);
+
+						const direction = document.getElementById('invertDirection').value || "rightToLeft";
+
 						invertLines.forEach((line, index) => {
-							let lineAnim;
-							
-							// Calculate staggered start position for each line
-							const startOffset = index * 10; // Each line starts 10% later
-							const startPos = `top ${85 + startOffset}%`;
-							
+
+							const mask = line.querySelector('.ha-invert-mask');
+
+							const origin = direction === "leftToRight"
+								? "left center"
+								: "right center";
+
+							gsap.set(mask, {
+								scaleX: 1,
+								transformOrigin: origin
+							});
+
+							let anim;
+
 							if (triggerMode === 'scroll' || triggerMode === 'playwithscroll') {
-								lineAnim = gsap.to(line, {
-									backgroundPositionX: 0,
-									ease: 'none',
+
+								anim = gsap.to(mask, {
+									scaleX: 0,
+									ease: "none",
 									scrollTrigger: {
 										trigger: line,
-										scrub: 1,
-										start: startPos,
-										end: 'bottom center'
+										start: getScrollTriggerPosition(),
+										end: "bottom center",
+										scrub: 1
 									}
 								});
-							} else if (triggerMode === 'pageload') {
-								lineAnim = gsap.to(line, {
-									backgroundPositionX: 0,
-									duration: 0.5,
-									delay: index * 0.2,
-									ease: 'none'
-								});
-							} else if (triggerMode === 'hover') {
-								line.addEventListener('mouseenter', () => {
-									gsap.to(line, {
-										backgroundPositionX: 0,
-										duration: 0.5,
-										ease: 'none'
-									});
-								});
-								line.addEventListener('mouseleave', () => {
-									gsap.to(line, {
-										backgroundPositionX: '100%',
-										duration: 0.5,
-										ease: 'none'
-									});
-								});
+
 							}
-							
-							if (lineAnim) animationInstances.push(lineAnim);
+
+							else if (triggerMode === 'pageload') {
+
+								anim = gsap.to(mask, {
+									scaleX: 0,
+									duration: animDuration,
+									delay: index * staggerDelay,
+									ease: easing
+								});
+
+							}
+
+							else if (triggerMode === 'hover') {
+
+								line.addEventListener("mouseenter", () => {
+
+									gsap.to(mask, {
+										scaleX: 0,
+										duration: 0.6,
+										ease: easing
+									});
+
+								});
+
+								line.addEventListener("mouseleave", () => {
+
+									gsap.to(mask, {
+										scaleX: 1,
+										duration: 0.4
+									});
+
+								});
+
+							}
+
+							if (anim) animationInstances.push(anim);
+
 						});
+
 						return;
 
 					case '3dspin':
@@ -1108,18 +1151,18 @@
 						const spinDuration = animDuration;
 						const spinStagger = { each: 0.03, ease: 'power1', from: 'start' };
 						const delay = animDelay;
-						
+
 						// Get element dimensions for transform origin
 						const spinEl = element.querySelector('h2, p');
 						const height = spinEl.offsetHeight;
 						const origin = `50% 50% -${height / 2}`;
-						
+
 						// Set initial states
 						gsap.set(spinData.wrapper, {
 							perspective: '600px',
 							whiteSpace: 'nowrap'
 						});
-						
+
 						// Set clone to be above original (yPercent: -100)
 						gsap.set(spinData.clone, {
 							yPercent: -100,
@@ -1128,23 +1171,23 @@
 							left: 0,
 							opacity: 0
 						});
-						
+
 						// Set clone chars initial rotation
 						gsap.set(spinData.cloneChars, {
 							rotationX: spinAxis === 'Y' ? -90 : -90,
 							transformOrigin: origin,
 							opacity: 0
 						});
-						
+
 						// Create flip timeline (like original code)
 						const flipTl = gsap.timeline();
-						
+
 						// Set clone chars to start position
 						flipTl.set(spinData.cloneChars, {
 							rotationX: spinAxis === 'Y' ? -90 : -90,
 							transformOrigin: origin
 						}, 0);
-						
+
 						// Animate original chars out (rotate and fade)
 						flipTl.to(spinData.originalChars, {
 							delay: delay,
@@ -1155,7 +1198,7 @@
 							stagger: spinStagger,
 							ease: 'power2.in'
 						}, 0);
-						
+
 						// Show clone chars and animate to 0 rotation
 						flipTl.to(spinData.cloneChars, {
 							duration: 0.001,
@@ -1163,7 +1206,7 @@
 							opacity: 1,
 							stagger: spinStagger
 						}, 0.001);
-						
+
 						flipTl.to(spinData.cloneChars, {
 							duration: spinDuration,
 							delay: delay,
@@ -1171,9 +1214,9 @@
 							stagger: spinStagger,
 							ease: 'power2.out'
 						}, 0);
-						
+
 						animationInstances.push(flipTl);
-						
+
 						if (triggerMode === 'scroll') {
 							const tl = gsap.timeline({
 								scrollTrigger: {
@@ -1203,7 +1246,7 @@
 								// Reset states
 								gsap.set(spinData.cloneChars, { rotationX: spinAxis === 'Y' ? -90 : -90, opacity: 0 });
 								gsap.set(spinData.originalChars, { rotationX: 0, opacity: 1 });
-								
+
 								// Animate
 								gsap.to(spinData.originalChars, {
 									duration: spinDuration,
@@ -1213,13 +1256,13 @@
 									stagger: spinStagger,
 									ease: 'power2.in'
 								});
-								
+
 								gsap.to(spinData.cloneChars, {
 									duration: 0.001,
 									opacity: 1,
 									stagger: spinStagger
 								});
-								
+
 								gsap.to(spinData.cloneChars, {
 									duration: spinDuration,
 									rotationX: 0,
@@ -1228,7 +1271,7 @@
 								});
 							});
 							element.addEventListener('mouseleave', () => {
-								gsap.to([spinData.originalChars, spinData.cloneChars], { opacity: 0, duration: 0.3 });
+								gsap.to([ spinData.originalChars, spinData.cloneChars ], { opacity: 0, duration: 0.3 });
 							});
 						}
 						return;
@@ -1290,7 +1333,7 @@
 			demoElements.forEach(element => {
 				const mode = element.dataset.mode;
 				const textElement = element.querySelector('h2, p');
-				
+
 				// Restore original text content
 				const originalTexts = {
 					'chars': 'Animated Characters',
@@ -1301,14 +1344,14 @@
 					'invert': 'Invert Animation',
 					'3dspin': '3D Spin Animation'
 				};
-				
-				if (textElement && originalTexts[mode]) {
-					textElement.innerHTML = originalTexts[mode];
+
+				if (textElement && originalTexts[ mode ]) {
+					textElement.innerHTML = originalTexts[ mode ];
 				}
-				
+
 				gsap.set(element, { clearProps: 'all' });
 				gsap.set(textElement, { clearProps: 'all' });
-				
+
 				// Clear inline styles
 				const children = textElement.querySelectorAll('*');
 				children.forEach(child => {
