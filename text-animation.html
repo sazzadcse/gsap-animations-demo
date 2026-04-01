@@ -310,6 +310,18 @@
 			-webkit-backface-visibility: hidden;
 		}
 
+		/* Smoky Reveal Animation */
+		.ha-tm-smoky-reveal .letter {
+			display: inline-block;
+			white-space: pre;
+		}
+
+		/* Alternative Reveal Animation */
+		.ha-tm-alt-reveal .letter {
+			display: inline-block;
+			white-space: pre;
+		}
+
 		/* Scroll Space */
 		.scroll-space {
 			height: 100vh;
@@ -383,6 +395,8 @@
 					<option value="scale">Scale</option>
 					<option value="invert" selected>Invert</option>
 					<option value="3dspin">3D Spin</option>
+					<option value="smokyreveal">Smoky Reveal</option>
+					<option value="altreveal">Alternative Reveal</option>
 				</select>
 			</div>
 			<div class="control-item">
@@ -549,6 +563,54 @@
 			</div>
 		</div>
 
+		<!-- Smoky Reveal Settings -->
+		<div class="control-group" id="smokyRevealSettings" style="display: none;">
+			<h4>Smoky Reveal Settings</h4>
+			<div class="control-item">
+				<label>Y Offset (px)</label>
+				<input type="number" id="smokyY" value="80" min="-500" max="500">
+			</div>
+			<div class="control-item">
+				<label>Scale From</label>
+				<input type="number" id="smokyScale" value="2.5" min="0" max="5" step="0.1">
+			</div>
+			<div class="control-item">
+				<label>Blur Amount (px)</label>
+				<input type="number" id="smokyBlur" value="15" min="0" max="50">
+			</div>
+			<div class="control-item">
+				<label>Stagger Delay (s)</label>
+				<input type="number" id="smokyStagger" value="0.04" min="0" max="1" step="0.01">
+			</div>
+			<div class="control-item">
+				<label>Stagger From</label>
+				<select id="smokyStaggerFrom">
+					<option value="start">Start</option>
+					<option value="end">End</option>
+					<option value="center">Center</option>
+					<option value="random" selected>Random</option>
+					<option value="edges">Edges</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Alternative Reveal Settings -->
+		<div class="control-group" id="altRevealSettings" style="display: none;">
+			<h4>Alternative Reveal Settings</h4>
+			<div class="control-item">
+				<label>Even Y Offset (px)</label>
+				<input type="number" id="altEvenY" value="-60" min="-500" max="500">
+			</div>
+			<div class="control-item">
+				<label>Odd Y Offset (px)</label>
+				<input type="number" id="altOddY" value="60" min="-500" max="500">
+			</div>
+			<div class="control-item">
+				<label>Letter Delay (s)</label>
+				<input type="number" id="altLetterDelay" value="0.04" min="0" max="1" step="0.01">
+			</div>
+		</div>
+
 		<button class="apply-btn" id="applyBtn">Apply Animation</button>
 		<button class="reset-btn" id="resetBtn">Reset All</button>
 	</div>
@@ -607,6 +669,20 @@
 			</div>
 		</div>
 
+		<!-- Smoky Reveal Demo -->
+		<div class="demo-block">
+			<div class="ha-tm-yes ha-tm-smoky-reveal" data-mode="smokyreveal">
+				<h2>Smoky Reveal Animation</h2>
+			</div>
+		</div>
+
+		<!-- Alternative Reveal Demo -->
+		<div class="demo-block">
+			<div class="ha-tm-yes ha-tm-alt-reveal" data-mode="altreveal">
+				<h2>Alternative Reveal Animation</h2>
+			</div>
+		</div>
+
 		<!-- Additional scroll space for testing -->
 		<div class="scroll-space">↓ Scroll to see more animations ↓</div>
 		<div class="scroll-space">Keep scrolling...</div>
@@ -640,6 +716,8 @@
 		const scaleSettings = document.getElementById('scaleSettings');
 		const invertSettings = document.getElementById('invertSettings');
 		const spinSettings = document.getElementById('spinSettings');
+		const smokyRevealSettings = document.getElementById('smokyRevealSettings');
+		const altRevealSettings = document.getElementById('altRevealSettings');
 
 		animationModeSelect.addEventListener('change', () => {
 			const mode = animationModeSelect.value;
@@ -651,6 +729,8 @@
 			scaleSettings.style.display = 'none';
 			invertSettings.style.display = 'none';
 			spinSettings.style.display = 'none';
+			smokyRevealSettings.style.display = 'none';
+			altRevealSettings.style.display = 'none';
 
 			// Show only the selected mode's settings
 			switch (mode) {
@@ -672,6 +752,12 @@
 					break;
 				case '3dspin':
 					spinSettings.style.display = 'block';
+					break;
+				case 'smokyreveal':
+					smokyRevealSettings.style.display = 'block';
+					break;
+				case 'altreveal':
+					altRevealSettings.style.display = 'block';
 					break;
 			}
 		});
@@ -852,6 +938,32 @@
 			wrapper.appendChild(clone);
 
 			return { wrapper, original, clone, originalChars, cloneChars };
+		}
+
+		// Helper function to split text for smoky reveal
+		function splitForSmokyReveal(element) {
+			const text = element.textContent;
+			element.innerHTML = '';
+			text.split('').forEach(char => {
+				const span = document.createElement('span');
+				span.className = 'letter';
+				span.textContent = char === ' ' ? '\u00A0' : char;
+				element.appendChild(span);
+			});
+			return element.querySelectorAll('.letter');
+		}
+
+		// Helper function to split text for alternative reveal
+		function splitForAltReveal(element) {
+			const text = element.textContent;
+			element.innerHTML = '';
+			text.split('').forEach(char => {
+				const span = document.createElement('span');
+				span.className = 'letter';
+				span.textContent = char === ' ' ? '\u00A0' : char;
+				element.appendChild(span);
+			});
+			return element.querySelectorAll('.letter');
 		}
 
 		// RGB to HSL conversion helper function
@@ -1275,6 +1387,175 @@
 							});
 						}
 						return;
+
+					case 'smokyreveal':
+						targets = splitForSmokyReveal(element.querySelector('h2, p'));
+						const smokyY = parseInt(document.getElementById('smokyY').value);
+						const smokyScale = parseFloat(document.getElementById('smokyScale').value);
+						const smokyBlur = parseInt(document.getElementById('smokyBlur').value);
+						const smokyStagger = parseFloat(document.getElementById('smokyStagger').value);
+						const smokyStaggerFrom = document.getElementById('smokyStaggerFrom').value;
+
+						// Set initial state
+						gsap.set(targets, {
+							y: smokyY,
+							scale: smokyScale,
+							filter: `blur(${smokyBlur}px)`,
+							opacity: 0.2
+						});
+
+						// Animation config for smoky reveal
+						const smokyConfig = {
+							y: 0,
+							scale: 1,
+							filter: 'blur(0px)',
+							opacity: 1,
+							duration: 1.1,
+							ease: 'power2.inout',
+							stagger: {
+								each: smokyStagger,
+								from: smokyStaggerFrom
+							}
+						};
+
+						let smokyAnim;
+
+						if (triggerMode === 'scroll') {
+							smokyAnim = gsap.to(targets, {
+								...smokyConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: getScrollTriggerPosition(),
+									toggleActions: 'play none none reverse'
+								}
+							});
+						} else if (triggerMode === 'pageload') {
+							smokyAnim = gsap.to(targets, smokyConfig);
+						} else if (triggerMode === 'playwithscroll') {
+							smokyAnim = gsap.to(targets, {
+								...smokyConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: 'top bottom',
+									end: 'bottom top',
+									scrub: 1
+								}
+							});
+						} else if (triggerMode === 'hover') {
+							gsap.set(targets, {
+								y: smokyY,
+								scale: smokyScale,
+								filter: `blur(${smokyBlur}px)`,
+								opacity: 0
+							});
+							element.addEventListener('mouseenter', () => {
+								gsap.to(targets, smokyConfig);
+							});
+							element.addEventListener('mouseleave', () => {
+								gsap.to(targets, {
+									y: smokyY,
+									scale: smokyScale,
+									filter: `blur(${smokyBlur}px)`,
+									opacity: 0,
+									duration: 0.5,
+									stagger: {
+										each: smokyStagger,
+										from: smokyStaggerFrom
+									}
+								});
+							});
+						}
+
+						if (smokyAnim) animationInstances.push(smokyAnim);
+						return;
+
+					case 'altreveal':
+						targets = splitForAltReveal(element.querySelector('h2, p'));
+						const altEvenY = parseInt(document.getElementById('altEvenY').value);
+						const altOddY = parseInt(document.getElementById('altOddY').value);
+						const altLetterDelay = parseFloat(document.getElementById('altLetterDelay').value);
+
+						// Set initial state and animate each letter
+						targets.forEach((letter, i) => {
+							const yValue = i % 2 === 0 ? altEvenY : altOddY;
+							gsap.set(letter, {
+								y: yValue,
+								opacity: 0
+							});
+						});
+
+						// Animation config for alternative reveal
+						const altConfig = {
+							y: 0,
+							opacity: 1,
+							duration: 1,
+							ease: 'power2.out'
+						};
+
+						let altAnim;
+
+						if (triggerMode === 'scroll') {
+							altAnim = gsap.to(targets, {
+								...altConfig,
+								delay: animDelay,
+								stagger: {
+									each: altLetterDelay
+								},
+								scrollTrigger: {
+									trigger: element,
+									start: getScrollTriggerPosition(),
+									toggleActions: 'play none none reverse'
+								}
+							});
+						} else if (triggerMode === 'pageload') {
+							altAnim = gsap.to(targets, {
+								...altConfig,
+								delay: animDelay,
+								stagger: {
+									each: altLetterDelay
+								}
+							});
+						} else if (triggerMode === 'playwithscroll') {
+							altAnim = gsap.to(targets, {
+								...altConfig,
+								delay: animDelay,
+								stagger: {
+									each: altLetterDelay
+								},
+								scrollTrigger: {
+									trigger: element,
+									start: 'top bottom',
+									end: 'bottom top',
+									scrub: 1
+								}
+							});
+						} else if (triggerMode === 'hover') {
+							gsap.set(targets, { clearProps: 'all' });
+							element.addEventListener('mouseenter', () => {
+								targets.forEach((letter, i) => {
+									const yValue = i % 2 === 0 ? altEvenY : altOddY;
+									gsap.set(letter, {
+										y: yValue,
+										opacity: 0
+									});
+								});
+								gsap.to(targets, {
+									...altConfig,
+									stagger: {
+										each: altLetterDelay
+									}
+								});
+							});
+							element.addEventListener('mouseleave', () => {
+								gsap.to(targets, {
+									opacity: 0,
+									duration: 0.3
+								});
+							});
+						}
+
+						if (altAnim) animationInstances.push(altAnim);
+						return;
 				}
 
 				// Apply animation based on trigger mode
@@ -1342,7 +1623,9 @@
 					'reveal': 'Reveal Animation',
 					'scale': 'Scale Animation Demo',
 					'invert': 'Invert Animation',
-					'3dspin': '3D Spin Animation'
+					'3dspin': '3D Spin Animation',
+					'smokyreveal': 'Smoky Reveal Animation',
+					'altreveal': 'Alternative Reveal Animation'
 				};
 
 				if (textElement && originalTexts[ mode ]) {
@@ -1381,6 +1664,14 @@
 			document.getElementById('spinFrom').value = 180;
 			document.getElementById('spinTextColor').value = '#ffffff';
 			document.getElementById('customTriggerValue').value = 80;
+			document.getElementById('smokyY').value = 80;
+			document.getElementById('smokyScale').value = 2.5;
+			document.getElementById('smokyBlur').value = 15;
+			document.getElementById('smokyStagger').value = 0.04;
+			document.getElementById('smokyStaggerFrom').value = 'random';
+			document.getElementById('altEvenY').value = -60;
+			document.getElementById('altOddY').value = 60;
+			document.getElementById('altLetterDelay').value = 0.04;
 
 			// Update UI
 			wordsCharsSettings.style.display = 'block';
@@ -1389,6 +1680,8 @@
 			scaleSettings.style.display = 'none';
 			invertSettings.style.display = 'none';
 			spinSettings.style.display = 'none';
+			smokyRevealSettings.style.display = 'none';
+			altRevealSettings.style.display = 'none';
 			customTriggerPoint.style.display = 'none';
 		}
 

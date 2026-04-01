@@ -1,0 +1,58 @@
+<script>
+
+    window.addEventListener("load", function () {
+
+        const elements = document.querySelectorAll(".alt-reveal");
+
+        elements.forEach(el => {
+
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+            let nodes = [];
+
+            while (walker.nextNode()) {
+                nodes.push(walker.currentNode);
+            }
+
+            nodes.forEach(node => {
+
+                const text = node.nodeValue;
+                const frag = document.createDocumentFragment();
+
+                text.split("").forEach(char => {
+
+                    if (char === " ") {
+                        frag.appendChild(document.createTextNode(" "));
+                        return;
+                    }
+
+                    const span = document.createElement("span");
+                    span.className = "letter";
+                    span.textContent = char;
+
+                    frag.appendChild(span);
+
+                });
+
+                node.parentNode.replaceChild(frag, node);
+
+            });
+
+            const letters = el.querySelectorAll(".letter");
+
+            letters.forEach((letter, i) => {
+
+                gsap.from(letter, {
+                    y: i % 2 === 0 ? -60 : 60,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power2.out",
+                    delay: i * 0.04
+                });
+
+            });
+
+        });
+
+    });
+
+</script>
