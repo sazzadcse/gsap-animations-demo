@@ -322,6 +322,17 @@
 			white-space: pre;
 		}
 
+		/* Popup Reveal Animation */
+		.ha-tm-popup-reveal .letter {
+			display: inline-block;
+			white-space: pre;
+		}
+
+		/* Mixing Reveal Animation */
+		.ha-tm-mixing-reveal .word {
+			display: inline-block;
+		}
+
 		/* Scroll Space */
 		.scroll-space {
 			height: 100vh;
@@ -397,6 +408,8 @@
 					<option value="3dspin">3D Spin</option>
 					<option value="smokyreveal">Smoky Reveal</option>
 					<option value="altreveal">Alternative Reveal</option>
+					<option value="popupreveal">Popup Reveal</option>
+					<option value="mixingreveal">Mixing Reveal</option>
 				</select>
 			</div>
 			<div class="control-item">
@@ -611,6 +624,56 @@
 			</div>
 		</div>
 
+		<!-- Popup Reveal Settings -->
+		<div class="control-group" id="popupRevealSettings" style="display: none;">
+			<h4>Popup Reveal Settings</h4>
+			<div class="control-item">
+				<label>Y Offset (px)</label>
+				<input type="number" id="popupY" value="50" min="-500" max="500">
+			</div>
+			<div class="control-item">
+				<label>Rotation (deg)</label>
+				<input type="number" id="popupRotation" value="40" min="-360" max="360">
+			</div>
+			<div class="control-item">
+				<label>Stagger Delay (s)</label>
+				<input type="number" id="popupStagger" value="0.04" min="0" max="1" step="0.01">
+			</div>
+			<div class="control-item">
+				<label>Stagger From</label>
+				<select id="popupStaggerFrom">
+					<option value="start">Start</option>
+					<option value="end">End</option>
+					<option value="center">Center</option>
+					<option value="random" selected>Random</option>
+					<option value="edges">Edges</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Mixing Reveal Settings -->
+		<div class="control-group" id="mixingRevealSettings" style="display: none;">
+			<h4>Mixing Reveal Settings</h4>
+			<div class="control-item">
+				<label>Blur Amount (px)</label>
+				<input type="number" id="mixingBlur" value="4" min="0" max="50">
+			</div>
+			<div class="control-item">
+				<label>Word Stagger Delay (s)</label>
+				<input type="number" id="mixingStagger" value="0.1" min="0" max="1" step="0.01">
+			</div>
+			<div class="control-item">
+				<label>Stagger From</label>
+				<select id="mixingStaggerFrom">
+					<option value="start">Start</option>
+					<option value="end">End</option>
+					<option value="center" selected>Center</option>
+					<option value="random">Random</option>
+					<option value="edges">Edges</option>
+				</select>
+			</div>
+		</div>
+
 		<button class="apply-btn" id="applyBtn">Apply Animation</button>
 		<button class="reset-btn" id="resetBtn">Reset All</button>
 	</div>
@@ -683,6 +746,22 @@
 			</div>
 		</div>
 
+		<!-- Popup Reveal Demo -->
+		<div class="demo-block">
+			<div class="ha-tm-yes ha-tm-popup-reveal" data-mode="popupreveal">
+				<h2>Popup Reveal Animation</h2>
+			</div>
+		</div>
+
+		<!-- Mixing Reveal Demo -->
+		<div class="demo-block">
+			<div class="ha-tm-yes ha-tm-mixing-reveal" data-mode="mixingreveal">
+				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper
+					mattis, pulvinar dapibus leo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit
+					tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>
+			</div>
+		</div>
+
 		<!-- Additional scroll space for testing -->
 		<div class="scroll-space">↓ Scroll to see more animations ↓</div>
 		<div class="scroll-space">Keep scrolling...</div>
@@ -718,6 +797,8 @@
 		const spinSettings = document.getElementById('spinSettings');
 		const smokyRevealSettings = document.getElementById('smokyRevealSettings');
 		const altRevealSettings = document.getElementById('altRevealSettings');
+		const popupRevealSettings = document.getElementById('popupRevealSettings');
+		const mixingRevealSettings = document.getElementById('mixingRevealSettings');
 
 		animationModeSelect.addEventListener('change', () => {
 			const mode = animationModeSelect.value;
@@ -731,6 +812,8 @@
 			spinSettings.style.display = 'none';
 			smokyRevealSettings.style.display = 'none';
 			altRevealSettings.style.display = 'none';
+			popupRevealSettings.style.display = 'none';
+			mixingRevealSettings.style.display = 'none';
 
 			// Show only the selected mode's settings
 			switch (mode) {
@@ -758,6 +841,12 @@
 					break;
 				case 'altreveal':
 					altRevealSettings.style.display = 'block';
+					break;
+				case 'popupreveal':
+					popupRevealSettings.style.display = 'block';
+					break;
+				case 'mixingreveal':
+					mixingRevealSettings.style.display = 'block';
 					break;
 			}
 		});
@@ -964,6 +1053,37 @@
 				element.appendChild(span);
 			});
 			return element.querySelectorAll('.letter');
+		}
+
+		// Helper function to split text for popup reveal
+		function splitForPopupReveal(element) {
+			const text = element.textContent;
+			element.innerHTML = '';
+			text.split('').forEach(char => {
+				const span = document.createElement('span');
+				span.className = 'letter';
+				span.textContent = char === ' ' ? '\u00A0' : char;
+				element.appendChild(span);
+			});
+			return element.querySelectorAll('.letter');
+		}
+
+		// Helper function to split text for mixing reveal (word by word)
+		function splitForMixingReveal(element) {
+			const text = element.textContent.trim();
+			element.innerHTML = '';
+			const words = text.split(/\s+/);
+			words.forEach((word, i) => {
+				const span = document.createElement('span');
+				span.className = 'word';
+				span.textContent = word;
+				element.appendChild(span);
+				// Add space after each word except last
+				if (i !== words.length - 1) {
+					element.appendChild(document.createTextNode(' '));
+				}
+			});
+			return element.querySelectorAll('.word');
 		}
 
 		// RGB to HSL conversion helper function
@@ -1556,6 +1676,163 @@
 
 						if (altAnim) animationInstances.push(altAnim);
 						return;
+
+					case 'popupreveal':
+						targets = splitForPopupReveal(element.querySelector('h2, p'));
+						const popupY = parseInt(document.getElementById('popupY').value);
+						const popupRotation = parseInt(document.getElementById('popupRotation').value);
+						const popupStagger = parseFloat(document.getElementById('popupStagger').value);
+						const popupStaggerFrom = document.getElementById('popupStaggerFrom').value;
+
+						// Set initial state
+						gsap.set(targets, {
+							y: popupY,
+							rotation: popupRotation,
+							scale: 0,
+							opacity: 0,
+							transformOrigin: '50% 50%'
+						});
+
+						// Animation config for popup reveal
+						const popupConfig = {
+							y: 0,
+							rotation: 0,
+							scale: 1,
+							opacity: 1,
+							duration: 0.5,
+							ease: 'back.out(1.7)',
+							stagger: {
+								each: popupStagger,
+								from: popupStaggerFrom
+							}
+						};
+
+						let popupAnim;
+
+						if (triggerMode === 'scroll') {
+							popupAnim = gsap.to(targets, {
+								...popupConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: getScrollTriggerPosition(),
+									toggleActions: 'play none none reverse'
+								}
+							});
+						} else if (triggerMode === 'pageload') {
+							popupAnim = gsap.to(targets, popupConfig);
+						} else if (triggerMode === 'playwithscroll') {
+							popupAnim = gsap.to(targets, {
+								...popupConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: 'top bottom',
+									end: 'bottom top',
+									scrub: 1
+								}
+							});
+						} else if (triggerMode === 'hover') {
+							gsap.set(targets, {
+								y: popupY,
+								rotation: popupRotation,
+								scale: 0,
+								opacity: 0,
+								transformOrigin: '50% 50%'
+							});
+							element.addEventListener('mouseenter', () => {
+								gsap.to(targets, popupConfig);
+							});
+							element.addEventListener('mouseleave', () => {
+								gsap.to(targets, {
+									y: popupY,
+									rotation: popupRotation,
+									scale: 0,
+									opacity: 0,
+									duration: 0.3,
+									stagger: {
+										each: popupStagger,
+										from: popupStaggerFrom
+									}
+								});
+							});
+						}
+
+						if (popupAnim) animationInstances.push(popupAnim);
+						return;
+
+					case 'mixingreveal':
+						targets = splitForMixingReveal(element.querySelector('h2, p'));
+						const mixingBlur = parseInt(document.getElementById('mixingBlur').value);
+						const mixingStagger = parseFloat(document.getElementById('mixingStagger').value);
+						const mixingStaggerFrom = document.getElementById('mixingStaggerFrom').value;
+
+						// Set initial state
+						gsap.set(targets, {
+							opacity: 0,
+							scale: 0,
+							filter: `blur(${mixingBlur}px)`
+						});
+
+						// Animation config for mixing reveal
+						const mixingConfig = {
+							opacity: 1,
+							scale: 1,
+							filter: 'blur(0px)',
+							duration: 1,
+							ease: 'power2.out',
+							stagger: {
+								each: mixingStagger,
+								from: mixingStaggerFrom
+							}
+						};
+
+						let mixingAnim;
+
+						if (triggerMode === 'scroll') {
+							mixingAnim = gsap.to(targets, {
+								...mixingConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: getScrollTriggerPosition(),
+									toggleActions: 'play none none reverse'
+								}
+							});
+						} else if (triggerMode === 'pageload') {
+							mixingAnim = gsap.to(targets, mixingConfig);
+						} else if (triggerMode === 'playwithscroll') {
+							mixingAnim = gsap.to(targets, {
+								...mixingConfig,
+								scrollTrigger: {
+									trigger: element,
+									start: 'top bottom',
+									end: 'bottom top',
+									scrub: 1
+								}
+							});
+						} else if (triggerMode === 'hover') {
+							gsap.set(targets, {
+								opacity: 0,
+								scale: 0,
+								filter: `blur(${mixingBlur}px)`
+							});
+							element.addEventListener('mouseenter', () => {
+								gsap.to(targets, mixingConfig);
+							});
+							element.addEventListener('mouseleave', () => {
+								gsap.to(targets, {
+									opacity: 0,
+									scale: 0,
+									filter: `blur(${mixingBlur}px)`,
+									duration: 0.5,
+									stagger: {
+										each: mixingStagger,
+										from: mixingStaggerFrom
+									}
+								});
+							});
+						}
+
+						if (mixingAnim) animationInstances.push(mixingAnim);
+						return;
 				}
 
 				// Apply animation based on trigger mode
@@ -1625,7 +1902,9 @@
 					'invert': 'Invert Animation',
 					'3dspin': '3D Spin Animation',
 					'smokyreveal': 'Smoky Reveal Animation',
-					'altreveal': 'Alternative Reveal Animation'
+					'altreveal': 'Alternative Reveal Animation',
+					'popupreveal': 'Popup Reveal Animation',
+					'mixingreveal': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.'
 				};
 
 				if (textElement && originalTexts[ mode ]) {
@@ -1672,6 +1951,13 @@
 			document.getElementById('altEvenY').value = -60;
 			document.getElementById('altOddY').value = 60;
 			document.getElementById('altLetterDelay').value = 0.04;
+			document.getElementById('popupY').value = 50;
+			document.getElementById('popupRotation').value = 40;
+			document.getElementById('popupStagger').value = 0.04;
+			document.getElementById('popupStaggerFrom').value = 'random';
+			document.getElementById('mixingBlur').value = 4;
+			document.getElementById('mixingStagger').value = 0.1;
+			document.getElementById('mixingStaggerFrom').value = 'center';
 
 			// Update UI
 			wordsCharsSettings.style.display = 'block';
@@ -1682,6 +1968,8 @@
 			spinSettings.style.display = 'none';
 			smokyRevealSettings.style.display = 'none';
 			altRevealSettings.style.display = 'none';
+			popupRevealSettings.style.display = 'none';
+			mixingRevealSettings.style.display = 'none';
 			customTriggerPoint.style.display = 'none';
 		}
 
