@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cards Stacked - GSAP Scroll Animation</title>
+    <link rel="stylesheet" href="cards-stacked.css" />
+  </head>
+  <body>
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-toggle" id="settingsToggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+        </svg>
+        <span>Settings</span>
+      </div>
+      <div class="settings-content" id="settingsContent">
+        <h3>Stacked Cards Settings</h3>
+
+        <div class="setting-group">
+          <label for="layoutSelect">Layout</label>
+          <select id="layoutSelect">
+            <option value="row-reverse">Left (Image Left, Content Right)</option>
+            <option value="column-reverse">Top (Image Top, Content Bottom)</option>
+            <option value="row" selected>Right (Content Left, Image Right)</option>
+            <option value="column">Bottom (Content Top, Image Bottom)</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label for="stackDirection">Stack Direction</label>
+          <select id="stackDirection">
+            <option value="horizontal">Horizontal</option>
+            <option value="vertical" selected>Vertical</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label for="triggerSelect">Trigger Point</label>
+          <select id="triggerSelect">
+            <option value="top top">Top - Top</option>
+            <option value="top center">Top - Center</option>
+            <option value="center top">Center - Top</option>
+            <option value="center center" selected>Center - Center</option>
+            <option value="center bottom">Center - Bottom</option>
+            <option value="bottom top">Bottom - Top</option>
+            <option value="bottom center">Bottom - Center</option>
+            <option value="bottom bottom">Bottom - Bottom</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        <div class="setting-group" id="customTriggerGroup" style="display: none;">
+          <label for="customTrigger">Custom Trigger</label>
+          <input type="text" id="customTrigger" value="top top+=100" placeholder="e.g., top top+=100" />
+        </div>
+
+        <div class="setting-group">
+          <label for="delayInput">Animation Delay (seconds)</label>
+          <input type="number" id="delayInput" value="0" min="0" max="5" step="0.1" />
+        </div>
+
+        <div class="setting-group">
+          <label for="easingSelect">Easing Function</label>
+          <select id="easingSelect">
+            <option value="power1.out">power1.out</option>
+            <option value="power2.out">power2.out</option>
+            <option value="power3.out" selected>power3.out</option>
+            <option value="power4.out">power4.out</option>
+            <option value="back.out(1.7)">back.out(1.7)</option>
+            <option value="elastic.out(1, 0.3)">elastic.out(1, 0.3)</option>
+            <option value="bounce.out">bounce.out</option>
+            <option value="circ.out">circ.out</option>
+            <option value="expo.out">expo.out</option>
+            <option value="sine.out">sine.out</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label for="stackOffsetInput">Stack Offset (px)</label>
+          <input type="number" id="stackOffsetInput" value="20" min="0" max="200" step="1" placeholder="e.g., 20" />
+        </div>
+
+        <div class="setting-group">
+          <label for="rotationInput">Rotation (deg)</label>
+          <input type="number" id="rotationInput" value="0" min="-180" max="180" step="1" placeholder="e.g., -80" />
+        </div>
+
+        <div class="setting-group">
+          <label for="transformOriginInput">Transform Origin</label>
+          <input type="text" id="transformOriginInput" value="" placeholder="e.g., top center, 50% -50%" />
+        </div>
+
+        <button id="applyBtn" class="apply-btn">Apply & Rebuild</button>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <section class="spacer-section">
+      <div class="spacer-content">
+        <h1>GSAP Stacked Cards Demo</h1>
+        <p>Scroll down to see the card stacking animation in action</p>
+        <span class="scroll-hint">↓ Scroll Down ↓</span>
+      </div>
+    </section>
+
+    <!-- Stacked Cards Wrapper -->
+    <div class="ha-card-stacked-wrapper" id="haCardStackedWrapper">
+      <div class="stacked-cards-container">
+        <!-- Card 1 -->
+        <div class="stacked-card" data-index="0">
+          <div class="card-content">
+            <span class="card-number">1</span>
+            <h2 class="card-title">Wildlife in Action: A Glimpse into Nature's Daily Drama</h2>
+            <p class="card-text">
+              Witness the fascinating lives of animals in their natural habitats,
+              from playful cubs to stealthy predators.
+            </p>
+            <a href="#" class="card-btn">Explore More</a>
+          </div>
+          <div class="card-media">
+            <img src="./images/hobbit.jpg" alt="">
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="stacked-card" data-index="1">
+          <div class="card-content">
+            <span class="card-number">2</span>
+            <h2 class="card-title">The Changing Seasons: Nature's Everlasting Cycle</h2>
+            <p class="card-text">
+              Experience the beauty of nature's transitions, from blooming spring
+              flowers to snowy winter landscapes.
+            </p>
+            <a href="#" class="card-btn">Explore More</a>
+          </div>
+          <div class="card-media">
+            <img src="./images/hobbit-1.jpg" alt="">
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="stacked-card" data-index="2">
+          <div class="card-content">
+            <span class="card-number">3</span>
+            <h2 class="card-title">Guardians of Nature: Protecting Our Planet's Future</h2>
+            <p class="card-text">
+              Learn about the importance of conservation and how we can work
+              together to preserve the beauty of nature for generations to come.
+            </p>
+            <a href="#" class="card-btn">Explore More</a>
+          </div>
+          <div class="card-media">
+            <img src="./images/hobbit-2.jpg" alt="">
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="stacked-card" data-index="3">
+          <div class="card-content">
+            <span class="card-number">4</span>
+            <h2 class="card-title">Astral Aesthetics: Portraits from the Infinite</h2>
+            <p class="card-text">
+              Experience the boundless beauty of the cosmos through striking
+              portraits that capture its infinite aesthetic appeal.
+            </p>
+            <a href="#" class="card-btn">Explore More</a>
+          </div>
+          <div class="card-media">
+            <img src="./images/hobbit-3.jpg" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacer -->
+    <section class="spacer-section">
+      <div class="spacer-content">
+        <h2>That's the magic!</h2>
+        <p>Adjust the settings panel to customize the animation behavior.</p>
+      </div>
+    </section>
+
+    <!-- GSAP Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="cards-stacked.js"></script>
+  </body>
+</html>

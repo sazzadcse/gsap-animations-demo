@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Scroll Slider v2 — Master Timeline</title>
+
+	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+	<style>
+		*{box-sizing:border-box;margin:0;padding:0}
+
+		body{
+			font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+			background:#080810;
+			color:#fff;
+			overflow-x:hidden;
+		}
+
+		.cp-toggle{
+			position:fixed;top:20px;right:20px;z-index:10001;
+			width:48px;height:48px;border-radius:50%;
+			background:#6c5ce7;border:none;color:#fff;font-size:22px;
+			cursor:pointer;box-shadow:0 4px 20px rgba(108,92,231,0.4);
+			transition:transform 0.3s;
+		}
+		.cp-toggle:hover{transform:scale(1.1)}
+
+		.control-panel{
+			position:fixed;top:0;right:-420px;width:400px;height:100vh;
+			background:#12121a;border-left:2px solid #6c5ce7;z-index:10000;
+			overflow-y:auto;padding:24px;
+			transition:right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+			font-size:13px;
+		}
+		.control-panel.open{right:0}
+		.control-panel h3{
+			font-size:18px;color:#6c5ce7;margin-bottom:20px;
+			padding-bottom:12px;border-bottom:1px solid #2a2a3a;
+		}
+		.cp-section{
+			margin-bottom:20px;padding:14px;background:#1a1a28;border-radius:8px;
+		}
+		.cp-section h4{
+			font-size:12px;color:#6c5ce7;margin-bottom:12px;
+			text-transform:uppercase;letter-spacing:1.5px;font-weight:700;
+		}
+		.cp-row{margin-bottom:10px}
+		.cp-row label{
+			display:block;font-size:11px;color:#8888aa;margin-bottom:4px;font-weight:600;
+		}
+		.cp-row select,
+		.cp-row input[type="number"],
+		.cp-row input[type="text"]{
+			width:100%;padding:7px 10px;background:#0e0e18;
+			border:1px solid #2a2a3a;border-radius:4px;color:#fff;font-size:13px;
+		}
+		.cp-row select:focus,
+		.cp-row input:focus{outline:none;border-color:#6c5ce7}
+		.cp-row input[type="checkbox"]{margin-right:6px;accent-color:#6c5ce7}
+		.cp-row-inline{display:flex;gap:8px}
+		.cp-row-inline .cp-row{flex:1}
+		.cp-apply{
+			width:100%;padding:12px;background:#6c5ce7;color:#fff;
+			border:none;border-radius:6px;font-size:14px;font-weight:700;
+			cursor:pointer;margin-top:8px;transition:background 0.3s;
+		}
+		.cp-apply:hover{background:#5a4bd1}
+		.cp-reset{
+			width:100%;padding:10px;background:transparent;color:#666;
+			border:1px solid #2a2a3a;border-radius:6px;font-size:13px;
+			cursor:pointer;margin-top:8px;transition:all 0.3s;
+		}
+		.cp-reset:hover{color:#fff;border-color:#555}
+
+		.repeater-item{
+			background:#14141f;border:1px solid #2a2a3a;border-radius:6px;
+			padding:12px;margin-bottom:10px;
+		}
+		.repeater-item .repeater-header{
+			display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+		}
+		.repeater-item .repeater-header span{font-size:12px;color:#6c5ce7;font-weight:700}
+		.repeater-remove{
+			width:24px;height:24px;border-radius:50%;background:#ff4757;
+			border:none;color:#fff;font-size:14px;cursor:pointer;
+			display:flex;align-items:center;justify-content:center;
+		}
+		.repeater-add{
+			width:100%;padding:10px;background:#1a1a28;color:#6c5ce7;
+			border:1px dashed #6c5ce7;border-radius:6px;font-size:13px;
+			cursor:pointer;margin-top:4px;transition:all 0.3s;
+		}
+		.repeater-add:hover{background:#222236}
+
+		.scroll-progress{
+			position:fixed;top:0;left:0;height:3px;
+			background:linear-gradient(90deg,#6c5ce7,#a29bfe);
+			z-index:9999;width:0%;
+		}
+
+		/* ===================== SLIDER ===================== */
+		.ss-wrapper{
+			position:relative;
+			overflow:hidden;
+			width:100%;
+			height:100vh;
+		}
+
+		.ss-track{
+			display:flex;
+			position:relative;
+		}
+		.ss-track.vertical{
+			flex-direction:column;
+		}
+
+		.ss-panel{
+			flex-shrink:0;
+			display:flex;
+			align-items:center;
+			justify-content:center;
+			padding:60px;
+			width:100vw;
+			height:100vh;
+		}
+		.ss-track.vertical .ss-panel{
+			width:100%;
+		}
+
+		.ss-panel-inner{
+			display:grid;
+			grid-template-columns:1fr 1fr;
+			gap:48px;
+			max-width:1100px;
+			width:100%;
+			align-items:center;
+		}
+
+		.ss-child{padding:24px}
+		.ss-child-badge{
+			display:inline-block;padding:5px 14px;
+			background:rgba(108,92,231,0.15);color:#a29bfe;
+			border-radius:20px;font-size:12px;font-weight:700;
+			margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;
+		}
+		.ss-child-title{
+			font-size:clamp(26px,3.5vw,46px);font-weight:800;
+			line-height:1.15;margin-bottom:16px;
+		}
+		.ss-child-text{font-size:15px;line-height:1.7;color:#8888aa;margin-bottom:20px}
+		.ss-child-btn{
+			display:inline-block;padding:12px 28px;
+			background:#6c5ce7;color:#fff;border:none;border-radius:8px;
+			font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;
+			transition:transform 0.3s,box-shadow 0.3s;
+		}
+		.ss-child-btn:hover{
+			transform:translateY(-2px);
+			box-shadow:0 8px 24px rgba(108,92,231,0.3);
+		}
+		.ss-child-image{
+			width:100%;border-radius:16px;overflow:hidden;
+			box-shadow:0 20px 60px rgba(0,0,0,0.4);
+		}
+		.ss-child-image img{width:100%;height:360px;object-fit:cover;display:block}
+		.ss-child-stats{display:flex;gap:28px;margin-top:18px}
+		.ss-stat{text-align:center}
+		.ss-stat-num{font-size:28px;font-weight:800;color:#6c5ce7}
+		.ss-stat-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px}
+		.ss-child-list{list-style:none;padding:0}
+		.ss-child-list li{
+			padding:7px 0;font-size:14px;color:#aaa;
+			border-bottom:1px solid rgba(255,255,255,0.04);
+			display:flex;align-items:center;gap:8px;
+		}
+		.ss-child-list li::before{content:"→";color:#6c5ce7;font-weight:700}
+		.ss-child-icon{
+			width:56px;height:56px;background:rgba(108,92,231,0.1);
+			border-radius:14px;display:flex;align-items:center;
+			justify-content:center;font-size:24px;margin-bottom:14px;
+		}
+
+		.ss-panel:nth-child(1){background:#0d0d1a}
+		.ss-panel:nth-child(2){background:#10102a}
+		.ss-panel:nth-child(3){background:#0a0a20}
+		.ss-panel:nth-child(4){background:#12122e}
+
+		.dir-label{
+			position:fixed;top:20px;left:20px;z-index:100;
+			padding:8px 16px;background:rgba(108,92,231,0.2);
+			color:#a29bfe;border-radius:20px;font-size:12px;
+			font-weight:700;text-transform:uppercase;letter-spacing:1px;
+			backdrop-filter:blur(8px);
+		}
+		.scroll-hint{
+			position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+			z-index:100;font-size:13px;color:rgba(255,255,255,0.35);
+			text-align:center;animation:hintPulse 3s infinite;
+		}
+		.scroll-hint .arrow{display:block;font-size:18px;margin-top:2px}
+		@keyframes hintPulse{0%,100%{opacity:0.3}50%{opacity:0.7}}
+
+		.spacer{
+			height:100vh;display:flex;align-items:center;justify-content:center;
+			font-size:20px;color:#333;background:#080810;
+		}
+	</style>
+</head>
+<body>
+
+	<div class="scroll-progress" id="scrollProgress"></div>
+	<button class="cp-toggle" id="cpToggle" title="Settings">⚙</button>
+		<div class="dir-label" id="dirLabel">Direction: Vertical</div>
+
+	<div class="control-panel" id="controlPanel">
+		<h3>Scroll Slider v2</h3>
+
+		<div class="cp-section">
+			<h4>Container</h4>
+			<div class="cp-row">
+				<label>Direction</label>
+				<select id="cpDirection">
+					<option value="horizontal">Horizontal</option>
+					<option value="vertical" selected>Vertical</option>
+				</select>
+			</div>
+			<div class="cp-row">
+				<label><input type="checkbox" id="cpPin" checked> Pin Container</label>
+			</div>
+			<div class="cp-row">
+				<label>Scroll Distance (px)</label>
+				<input type="number" id="cpDistance" value="4000" min="500" max="15000" step="100">
+			</div>
+			<div class="cp-row">
+				<label>Scrub (0 = instant, 1+ = smooth)</label>
+				<input type="number" id="cpScrub" value="1" min="0" max="3" step="0.1">
+			</div>
+		</div>
+
+		<div class="cp-section">
+			<h4>Child Animations (Repeater)</h4>
+			<p style="font-size:11px;color:#666;margin-bottom:12px">
+				Each row targets children by CSS selector. Enter = animates in, Exit = animates out.
+			</p>
+			<div id="repeaterContainer"></div>
+			<button class="repeater-add" id="addRepeater">+ Add Animation Rule</button>
+		</div>
+
+		<button class="cp-apply" id="cpApply">Apply &amp; Rebuild</button>
+		<button class="cp-reset" id="cpReset">Reset to Defaults</button>
+	</div>
+
+	<div class="scroll-hint" id="scrollHint">Scroll to explore<span class="arrow">↓</span></div>
+
+	<div class="spacer">↓ Scroll Down ↓</div>
+
+	<div class="ss-wrapper" id="ssWrapper">
+		<div class="ss-track" id="ssTrack">
+
+			<div class="ss-panel">
+				<div class="ss-panel-inner">
+					<div class="ss-child element-1" data-ss="hero-text">
+						<div class="ss-child-badge">Featured</div>
+						<div class="ss-child-title">Scroll-Linked Animations</div>
+						<div class="ss-child-text">Every child element enters and exits based on scroll position. A single master timeline drives the track movement and all child animations in perfect sync.</div>
+						<ul class="ss-child-list">
+							<li>Scrub-linked enter &amp; exit</li>
+							<li>CSS selector targeting</li>
+							<li>Per-child easing &amp; timing</li>
+							<li>Master timeline sync</li>
+						</ul>
+						<br><a href="#" class="ss-child-btn">Learn More</a>
+					</div>
+					<div class="ss-child element-2" data-ss="hero-image">
+						<div class="ss-child-image">
+							<img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop" alt="Code">
+						</div>
+						<div class="ss-child-stats">
+							<div class="ss-stat"><div class="ss-stat-num">GSAP</div><div class="ss-stat-label">Engine</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">60</div><div class="ss-stat-label">FPS</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">∞</div><div class="ss-stat-label">Control</div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="ss-panel">
+				<div class="ss-panel-inner">
+					<div class="ss-child element-3" data-ss="design-text">
+						<div class="ss-child-icon">🎨</div>
+						<div class="ss-child-title">Enter &amp; Exit Pairs</div>
+						<div class="ss-child-text">Each child has a separate enter animation (as it scrolls into view) and exit animation (as it leaves). Choose from offset, opacity, scale, and rotation.</div>
+						<ul class="ss-child-list">
+							<li>Custom X/Y offsets</li>
+							<li>Opacity fade control</li>
+							<li>Scale &amp; rotation</li>
+							<li>Independent easing per direction</li>
+						</ul>
+					</div>
+					<div class="ss-child element-4" data-ss="design-image">
+						<div class="ss-child-image">
+							<img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=500&fit=crop" alt="Design">
+						</div>
+						<div class="ss-child-stats">
+							<div class="ss-stat"><div class="ss-stat-num">16+</div><div class="ss-stat-label">Controls</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">2</div><div class="ss-stat-label">Directions</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">∞</div><div class="ss-stat-label">Combos</div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="ss-panel">
+				<div class="ss-panel-inner">
+					<div class="ss-child element-5" data-ss="perf-text">
+						<div class="ss-child-icon">⚡</div>
+						<div class="ss-child-title">Production Ready</div>
+						<div class="ss-child-text">GPU-accelerated transforms, minimal DOM mutations, and scrub-linked playback ensure butter-smooth 60fps on all devices.</div>
+						<div class="ss-child-stats">
+							<div class="ss-stat"><div class="ss-stat-num">&lt;15</div><div class="ss-stat-label">KB</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">A+</div><div class="ss-stat-label">Grade</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">100</div><div class="ss-stat-label">Lighthouse</div></div>
+						</div>
+						<br><a href="#" class="ss-child-btn">View Docs</a>
+					</div>
+					<div class="ss-child element-6" data-ss="perf-image">
+						<div class="ss-child-image">
+							<img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop" alt="Performance">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="ss-panel">
+				<div class="ss-panel-inner">
+					<div class="ss-child element-7" data-ss="cta-text">
+						<div class="ss-child-badge">New</div>
+						<div class="ss-child-title">Elementor Integration</div>
+						<div class="ss-child-text">One toggle in the Container's Advanced tab. A repeater lets you define animation rules per CSS selector — no code required.</div>
+						<ul class="ss-child-list">
+							<li>Container Advanced tab toggle</li>
+							<li>Selector-based repeater rows</li>
+							<li>Live preview in Elementor editor</li>
+							<li>Responsive disable option</li>
+						</ul>
+					</div>
+					<div class="ss-child element-8" data-ss="cta-image">
+						<div class="ss-child-image">
+							<img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=500&fit=crop" alt="Integration">
+						</div>
+						<div class="ss-child-stats">
+							<div class="ss-stat"><div class="ss-stat-num">1</div><div class="ss-stat-label">Toggle</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">0</div><div class="ss-stat-label">Code</div></div>
+							<div class="ss-stat"><div class="ss-stat-num">100%</div><div class="ss-stat-label">Visual</div></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="spacer">↑ Scroll Up to Review ↑</div>
+
+	<script>
+		gsap.registerPlugin(ScrollTrigger);
+
+		const DEFAULTS = {
+			direction: 'vertical',
+			pin: true,
+			distance: 4000,
+			scrub: 1,
+			childAnimations: [
+				{
+					selector: '.element-1',
+					enterFromX: 0, enterFromY: -80, enterFromOpacity: 0, enterFromScale: 0.9, enterFromRotate: 0,
+					enterDuration: 0.35, enterDelay: 0, enterEasing: 'power2.out',
+					exitToX: 0, exitToY: 80, exitToOpacity: 0, exitToScale: 0.9, exitToRotate: 0,
+					exitDuration: 0.35, exitEasing: 'power2.in',
+					enterPct: 5, exitPct: 60
+				},
+				{
+					selector: '.element-2',
+					enterFromX: 0, enterFromY: 80, enterFromOpacity: 0, enterFromScale: 0.85, enterFromRotate: 0,
+					enterDuration: 0.35, enterDelay: 0.02, enterEasing: 'power3.out',
+					exitToX: 0, exitToY: -80, exitToOpacity: 0, exitToScale: 0.85, exitToRotate: 0,
+					exitDuration: 0.35, exitEasing: 'power2.in',
+					enterPct: 8, exitPct: 58
+				},
+				{
+					selector: '.element-3',
+					enterFromX: -60, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.7, enterFromRotate: -15,
+					enterDuration: 0.35, enterDelay: 0, enterEasing: 'back.out(1.7)',
+					exitToX: 60, exitToY: 0, exitToOpacity: 0, exitToScale: 0.7, exitToRotate: 15,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 5, exitPct: 60
+				},
+				{
+					selector: '.element-4',
+					enterFromX: 100, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+					enterDuration: 0.35, enterDelay: 0.03, enterEasing: 'power2.out',
+					exitToX: -100, exitToY: 0, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 8, exitPct: 58
+				},
+				{
+					selector: '.element-5',
+					enterFromX: 0, enterFromY: -60, enterFromOpacity: 0, enterFromScale: 0.8, enterFromRotate: 0,
+					enterDuration: 0.35, enterDelay: 0, enterEasing: 'expo.out',
+					exitToX: 0, exitToY: 60, exitToOpacity: 0, exitToScale: 0.8, exitToRotate: 0,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 5, exitPct: 60
+				},
+				{
+					selector: '.element-6',
+					enterFromX: 80, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.9, enterFromRotate: 5,
+					enterDuration: 0.35, enterDelay: 0.03, enterEasing: 'power3.out',
+					exitToX: -80, exitToY: 0, exitToOpacity: 0, exitToScale: 0.9, exitToRotate: -5,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 8, exitPct: 58
+				},
+				{
+					selector: '.element-7',
+					enterFromX: 0, enterFromY: 100, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+					enterDuration: 0.35, enterDelay: 0, enterEasing: 'power2.out',
+					exitToX: 0, exitToY: -100, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 5, exitPct: 60
+				},
+				{
+					selector: '.element-8',
+					enterFromX: -60, enterFromY: 60, enterFromOpacity: 0, enterFromScale: 0.85, enterFromRotate: -8,
+					enterDuration: 0.35, enterDelay: 0.03, enterEasing: 'back.out(1.4)',
+					exitToX: 60, exitToY: -60, exitToOpacity: 0, exitToScale: 0.85, exitToRotate: 8,
+					exitDuration: 0.3, exitEasing: 'power2.in',
+					enterPct: 8, exitPct: 58
+				}
+			]
+		};
+
+		let config = JSON.parse(JSON.stringify(DEFAULTS));
+
+		const wrapper      = document.getElementById('ssWrapper');
+		const track        = document.getElementById('ssTrack');
+		const progressBar  = document.getElementById('scrollProgress');
+		const dirLabel     = document.getElementById('dirLabel');
+		const controlPanel = document.getElementById('controlPanel');
+
+		let masterST = null;
+
+		document.getElementById('cpToggle').addEventListener('click', () => {
+			controlPanel.classList.toggle('open');
+			document.getElementById('cpToggle').textContent = controlPanel.classList.contains('open') ? '✕' : '⚙';
+		});
+
+		const EASINGS = [
+			'power1.out','power1.inOut','power1.in',
+			'power2.out','power2.inOut','power2.in',
+			'power3.out','power3.inOut','power3.in',
+			'power4.out','power4.inOut','power4.in',
+			'back.out(1.7)','back.inOut','back.in',
+			'elastic.out(1,0.3)','elastic.inOut',
+			'bounce.out','bounce.inOut',
+			'expo.out','expo.inOut','expo.in',
+			'circ.out','circ.inOut','circ.in',
+			'sine.out','sine.inOut','sine.in'
+		];
+
+		function easingOptions(sel) {
+			return EASINGS.map(e => `<option value="${e}"${e===sel?' selected':''}>${e}</option>`).join('');
+		}
+
+		function buildRepeaterUI() {
+			const c = document.getElementById('repeaterContainer');
+			c.innerHTML = '';
+			config.childAnimations.forEach((row, i) => {
+				const el = document.createElement('div');
+				el.className = 'repeater-item';
+				el.innerHTML = `
+					<div class="repeater-header">
+						<span>Rule ${i+1}</span>
+						<button class="repeater-remove" data-index="${i}">×</button>
+					</div>
+					<div class="cp-row">
+						<label>CSS Selector</label>
+						<input type="text" data-field="selector" value="${row.selector}" placeholder='.element-1'>
+					</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>Enter Easing</label><select data-field="enterEasing">${easingOptions(row.enterEasing)}</select></div>
+						<div class="cp-row"><label>Exit Easing</label><select data-field="exitEasing">${easingOptions(row.exitEasing)}</select></div>
+					</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>Enter Duration (0–1)</label><input type="number" data-field="enterDuration" value="${row.enterDuration}" min="0.05" max="1" step="0.05"></div>
+						<div class="cp-row"><label>Exit Duration (0–1)</label><input type="number" data-field="exitDuration" value="${row.exitDuration}" min="0.05" max="1" step="0.05"></div>
+					</div>
+					<div class="cp-row"><label>Enter Delay</label><input type="number" data-field="enterDelay" value="${row.enterDelay}" min="0" max="1" step="0.01"></div>
+					<div style="font-size:10px;color:#6c5ce7;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Enter From</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>X (px)</label><input type="number" data-field="enterFromX" value="${row.enterFromX}" min="-500" max="500" step="10"></div>
+						<div class="cp-row"><label>Y (px)</label><input type="number" data-field="enterFromY" value="${row.enterFromY}" min="-500" max="500" step="10"></div>
+					</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>Opacity</label><input type="number" data-field="enterFromOpacity" value="${row.enterFromOpacity}" min="0" max="1" step="0.05"></div>
+						<div class="cp-row"><label>Scale</label><input type="number" data-field="enterFromScale" value="${row.enterFromScale}" min="0" max="5" step="0.05"></div>
+					</div>
+					<div class="cp-row"><label>Rotate (deg)</label><input type="number" data-field="enterFromRotate" value="${row.enterFromRotate}" min="-360" max="360" step="5"></div>
+					<div style="font-size:10px;color:#ff6b81;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Exit To</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>X (px)</label><input type="number" data-field="exitToX" value="${row.exitToX}" min="-500" max="500" step="10"></div>
+						<div class="cp-row"><label>Y (px)</label><input type="number" data-field="exitToY" value="${row.exitToY}" min="-500" max="500" step="10"></div>
+					</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>Opacity</label><input type="number" data-field="exitToOpacity" value="${row.exitToOpacity}" min="0" max="1" step="0.05"></div>
+						<div class="cp-row"><label>Scale</label><input type="number" data-field="exitToScale" value="${row.exitToScale}" min="0" max="5" step="0.05"></div>
+					</div>
+					<div class="cp-row"><label>Rotate (deg)</label><input type="number" data-field="exitToRotate" value="${row.exitToRotate}" min="-360" max="360" step="5"></div>
+					<div style="font-size:10px;color:#888;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Timing (% into panel range)</div>
+					<div class="cp-row-inline">
+						<div class="cp-row"><label>Enter Start %</label><input type="number" data-field="enterPct" value="${row.enterPct}" min="0" max="50" step="1"></div>
+						<div class="cp-row"><label>Exit Start %</label><input type="number" data-field="exitPct" value="${row.exitPct}" min="50" max="100" step="1"></div>
+					</div>`;
+				c.appendChild(el);
+			});
+			c.querySelectorAll('.repeater-remove').forEach(btn => {
+				btn.addEventListener('click', () => {
+					config.childAnimations.splice(parseInt(btn.dataset.index), 1);
+					buildRepeaterUI();
+				});
+			});
+		}
+
+		document.getElementById('addRepeater').addEventListener('click', () => {
+			const n = document.querySelectorAll('.ss-track .ss-child').length;
+			config.childAnimations.push({
+				selector: `.element-${n+1}`, enterFromX:0, enterFromY:60, enterFromOpacity:0, enterFromScale:1, enterFromRotate:0,
+				enterDuration:0.35, enterDelay:0, enterEasing:'power2.out',
+				exitToX:0, exitToY:-60, exitToOpacity:0, exitToScale:1, exitToRotate:0,
+				exitDuration:0.3, exitEasing:'power2.in', enterPct:5, exitPct:60
+			});
+			buildRepeaterUI();
+		});
+
+		function collectRepeaterValues() {
+			const numFields = ['enterFromX','enterFromY','enterFromOpacity','enterFromScale','enterFromRotate',
+				'enterDuration','enterDelay','enterPct','exitToX','exitToY','exitToOpacity','exitToScale','exitToRotate',
+				'exitDuration','exitPct'];
+			const rows = [];
+			document.querySelectorAll('.repeater-item').forEach(item => {
+				const row = {};
+				item.querySelectorAll('[data-field]').forEach(inp => {
+					row[inp.dataset.field] = numFields.includes(inp.dataset.field) ? parseFloat(inp.value) : inp.value;
+				});
+				if (row.selector) rows.push(row);
+			});
+			return rows;
+		}
+
+		function getPanelIndex(el, panels) {
+			const p = el.closest('.ss-panel');
+			return p ? panels.indexOf(p) : -1;
+		}
+
+		/* =========================================
+		   FULL CLEANUP — kills everything GSAP set
+		========================================= */
+		function fullCleanup() {
+			ScrollTrigger.getAll().forEach(st => st.kill());
+			masterST = null;
+
+			// Remove leftover pin-spacer divs from the DOM
+			document.querySelectorAll('.pin-spacer').forEach(sp => {
+				const parent = sp.parentNode;
+				if (!parent) return;
+				while (sp.firstChild) parent.insertBefore(sp.firstChild, sp);
+				parent.removeChild(sp);
+			});
+
+			// Strip ALL inline styles GSAP may have added
+			[wrapper, track, ...track.querySelectorAll('.ss-child')].forEach(el => {
+				gsap.killTweensOf(el);
+				el.removeAttribute('style');
+			});
+		}
+
+		/* =========================================
+		   BUILD SLIDER
+		========================================= */
+		function buildSlider() {
+			fullCleanup();
+
+			const isHorizontal = config.direction === 'horizontal';
+			const panels = gsap.utils.toArray('.ss-panel');
+			const N = panels.length;
+			const frac = 1 / N;
+
+			// Set layout classes
+			wrapper.className = 'ss-wrapper';
+			track.className = 'ss-track' + (isHorizontal ? '' : ' vertical');
+			dirLabel.textContent = 'Direction: ' + (isHorizontal ? 'Horizontal' : 'Vertical');
+
+			// Force synchronous reflow so dimensions are correct
+			void wrapper.offsetHeight;
+
+			// ---- master timeline (duration = 1 = full scroll range) ----
+			const tl = gsap.timeline();
+
+			if (isHorizontal) {
+				const max = -(track.scrollWidth - wrapper.offsetWidth);
+				tl.to(track, { x: max, ease: 'none', duration: 1 }, 0);
+			} else {
+				const max = -(track.scrollHeight - wrapper.offsetHeight);
+				tl.to(track, { y: max, ease: 'none', duration: 1 }, 0);
+			}
+
+			// ---- child animations ----
+			config.childAnimations.forEach(row => {
+				wrapper.querySelectorAll(row.selector).forEach(el => {
+					const pi = getPanelIndex(el, panels);
+					if (pi < 0) return;
+
+					const pStart = pi * frac;
+					const eStart = pStart + frac * (row.enterPct / 100);
+					const xStart = pStart + frac * (row.exitPct / 100);
+					const eDur   = frac * row.enterDuration;
+					const xDur   = frac * row.exitDuration;
+
+					// initial enter-from state
+					gsap.set(el, {
+						x: row.enterFromX, y: row.enterFromY,
+						opacity: row.enterFromOpacity,
+						scale: row.enterFromScale,
+						rotation: row.enterFromRotate,
+						force3D: true
+					});
+
+					// enter
+					tl.to(el, {
+						x:0, y:0, opacity:1, scale:1, rotation:0,
+						duration: eDur, ease: row.enterEasing
+					}, eStart + frac * row.enterDelay);
+
+					// exit
+					tl.to(el, {
+						x: row.exitToX, y: row.exitToY,
+						opacity: row.exitToOpacity,
+						scale: row.exitToScale,
+						rotation: row.exitToRotate,
+						duration: xDur, ease: row.exitEasing
+					}, xStart);
+				});
+			});
+
+			// ---- ScrollTrigger ----
+			masterST = ScrollTrigger.create({
+				trigger: wrapper,
+				animation: tl,
+				pin: config.pin,
+				scrub: config.scrub,
+				start: 'top top',
+				end: '+=' + config.distance,
+				onUpdate: self => { progressBar.style.width = (self.progress * 100) + '%'; }
+			});
+
+			ScrollTrigger.refresh();
+
+			// Ensure the viewport is at the wrapper so the new ST starts at progress 0
+			requestAnimationFrame(() => {
+				const wTop = wrapper.getBoundingClientRect().top + window.scrollY;
+				if (Math.abs(window.scrollY - wTop) > 5) {
+					window.scrollTo(0, wTop);
+				}
+			});
+		}
+
+		/* =========================================
+		   APPLY / RESET / INIT
+		========================================= */
+		function applySettings() {
+			config.direction = document.getElementById('cpDirection').value;
+			config.pin       = document.getElementById('cpPin').checked;
+			config.distance  = parseInt(document.getElementById('cpDistance').value);
+			config.scrub     = parseFloat(document.getElementById('cpScrub').value);
+			config.childAnimations = collectRepeaterValues();
+			buildSlider();
+		}
+
+		document.getElementById('cpApply').addEventListener('click', applySettings);
+
+		document.getElementById('cpReset').addEventListener('click', () => {
+			config = JSON.parse(JSON.stringify(DEFAULTS));
+			document.getElementById('cpDirection').value = config.direction;
+			document.getElementById('cpPin').checked     = config.pin;
+			document.getElementById('cpDistance').value   = config.distance;
+			document.getElementById('cpScrub').value      = config.scrub;
+			buildRepeaterUI();
+			buildSlider();
+		});
+
+		(function init() {
+			document.getElementById('cpDirection').value = config.direction;
+			document.getElementById('cpPin').checked     = config.pin;
+			document.getElementById('cpDistance').value   = config.distance;
+			document.getElementById('cpScrub').value      = config.scrub;
+			buildRepeaterUI();
+			buildSlider();
+		})();
+
+		let resizeTimer;
+		window.addEventListener('resize', () => {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(buildSlider, 300);
+		});
+	</script>
+
+</body>
+</html>
