@@ -1,815 +1,843 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GSAP Scroll Slider - Elementor Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Scroll Slider - Elementor Demo</title>
 
-	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
 
-	<style>
-		* {
-			box-sizing: border-box;
-			margin: 0;
-			padding: 0;
-		}
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-		body {
-			font-family: 'Segoe UI', system-ui, sans-serif;
-			background: #0a0a0a;
-			color: #fff;
-			overflow-x: hidden;
-		}
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow-x: hidden;
+        }
 
-		/* ===================== CONTROL PANEL ===================== */
-		.cp-toggle {
-			position: fixed;
-			top: 20px;
-			right: 20px;
-			z-index: 10001;
-			width: 48px;
-			height: 48px;
-			border-radius: 50%;
-			background: #ff4c04;
-			border: none;
-			color: #fff;
-			font-size: 22px;
-			cursor: pointer;
-			box-shadow: 0 4px 20px rgba(255,76,4,0.4);
-			transition: transform 0.3s;
-		}
-		.cp-toggle:hover { transform: scale(1.1); }
+        /* ===================== CONTROL PANEL ===================== */
+        .cp-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ff4c04;
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 76, 4, 0.4);
+            transition: transform 0.3s;
+        }
 
-		.control-panel {
-			position: fixed;
-			top: 0;
-			right: -400px;
-			width: 380px;
-			height: 100vh;
-			background: #1a1a1a;
-			border-left: 2px solid #ff4c04;
-			z-index: 10000;
-			overflow-y: auto;
-			padding: 24px;
-			transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-			font-size: 13px;
-		}
-		.control-panel.open { right: 0; }
+        .cp-toggle:hover {
+            transform: scale(1.1);
+        }
 
-		.control-panel h3 {
-			font-size: 18px;
-			color: #ff4c04;
-			margin-bottom: 20px;
-			padding-bottom: 12px;
-			border-bottom: 1px solid #333;
-		}
+        .control-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: #1a1a1a;
+            border-left: 2px solid #ff4c04;
+            z-index: 10000;
+            overflow-y: auto;
+            padding: 24px;
+            transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 13px;
+        }
 
-		.cp-section {
-			margin-bottom: 24px;
-			padding: 16px;
-			background: #222;
-			border-radius: 8px;
-		}
+        .control-panel.open {
+            right: 0;
+        }
 
-		.cp-section h4 {
-			font-size: 14px;
-			color: #ff4c04;
-			margin-bottom: 12px;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-		}
+        .control-panel h3 {
+            font-size: 18px;
+            color: #ff4c04;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #333;
+        }
 
-		.cp-row {
-			margin-bottom: 12px;
-		}
+        .cp-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #222;
+            border-radius: 8px;
+        }
 
-		.cp-row label {
-			display: block;
-			font-size: 12px;
-			color: #aaa;
-			margin-bottom: 4px;
-			font-weight: 600;
-		}
+        .cp-section h4 {
+            font-size: 14px;
+            color: #ff4c04;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-		.cp-row select,
-		.cp-row input[type="number"],
-		.cp-row input[type="text"],
-		.cp-row input[type="color"] {
-			width: 100%;
-			padding: 8px 10px;
-			background: #111;
-			border: 1px solid #333;
-			border-radius: 4px;
-			color: #fff;
-			font-size: 13px;
-		}
+        .cp-row {
+            margin-bottom: 12px;
+        }
 
-		.cp-row input[type="color"] {
-			height: 36px;
-			padding: 2px;
-			cursor: pointer;
-		}
+        .cp-row label {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
 
-		.cp-row select:focus,
-		.cp-row input:focus {
-			outline: none;
-			border-color: #ff4c04;
-		}
+        .cp-row select,
+        .cp-row input[type="number"],
+        .cp-row input[type="text"],
+        .cp-row input[type="color"] {
+            width: 100%;
+            padding: 8px 10px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+        }
 
-		.cp-row input[type="checkbox"] {
-			margin-right: 6px;
-			accent-color: #ff4c04;
-		}
+        .cp-row input[type="color"] {
+            height: 36px;
+            padding: 2px;
+            cursor: pointer;
+        }
 
-		.cp-apply {
-			width: 100%;
-			padding: 12px;
-			background: #ff4c04;
-			color: #fff;
-			border: none;
-			border-radius: 6px;
-			font-size: 14px;
-			font-weight: 700;
-			cursor: pointer;
-			margin-top: 8px;
-			transition: background 0.3s;
-		}
-		.cp-apply:hover { background: #e64400; }
+        .cp-row select:focus,
+        .cp-row input:focus {
+            outline: none;
+            border-color: #ff4c04;
+        }
 
-		.cp-reset {
-			width: 100%;
-			padding: 10px;
-			background: transparent;
-			color: #888;
-			border: 1px solid #333;
-			border-radius: 6px;
-			font-size: 13px;
-			cursor: pointer;
-			margin-top: 8px;
-			transition: all 0.3s;
-		}
-		.cp-reset:hover { color: #fff; border-color: #666; }
+        .cp-row input[type="checkbox"] {
+            margin-right: 6px;
+            accent-color: #ff4c04;
+        }
 
-		/* Per-widget animation rows */
-		.widget-anim-row {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			margin-bottom: 8px;
-			padding: 6px 8px;
-			background: #1a1a1a;
-			border-radius: 4px;
-		}
+        .cp-apply {
+            width: 100%;
+            padding: 12px;
+            background: #ff4c04;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.3s;
+        }
 
-		.widget-anim-row .widget-name {
-			flex: 1;
-			font-size: 11px;
-			color: #ccc;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
+        .cp-apply:hover {
+            background: #e64400;
+        }
 
-		.widget-anim-row select {
-			width: 120px;
-			padding: 4px 6px;
-			font-size: 11px;
-			background: #111;
-			border: 1px solid #333;
-			border-radius: 3px;
-			color: #fff;
-		}
+        .cp-reset {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
 
-		/* ===================== MAIN SLIDER ===================== */
-		.scroll-slider-wrapper {
-			position: relative;
-			height: 100vh;
-			overflow: hidden;
-		}
+        .cp-reset:hover {
+            color: #fff;
+            border-color: #666;
+        }
 
-		.scroll-slider-parent {
-			position: relative;
-			width: 100%;
-			height: 100%;
-			background: #1a1a2e;
-			transition: background-color 0.6s ease;
-		}
+        /* Per-widget animation rows */
+        .widget-anim-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
 
-		.scroll-slider-child {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			opacity: 0;
-			visibility: hidden;
-			padding: 60px;
-		}
+        .widget-anim-row .widget-name {
+            flex: 1;
+            font-size: 11px;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-		.scroll-slider-child.active {
-			opacity: 1;
-			visibility: visible;
-		}
+        .widget-anim-row select {
+            width: 120px;
+            padding: 4px 6px;
+            font-size: 11px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 3px;
+            color: #fff;
+        }
 
-		.child-inner {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 40px;
-			max-width: 1200px;
-			width: 100%;
-			align-items: center;
-		}
+        /* ===================== MAIN SLIDER ===================== */
+        .scroll-slider-wrapper {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-		.grandchild {
-			padding: 20px;
-		}
+        .scroll-slider-parent {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            transition: background-color 0.6s ease;
+        }
 
-		.grandchild-title {
-			font-size: clamp(28px, 4vw, 52px);
-			font-weight: 800;
-			line-height: 1.15;
-			margin-bottom: 20px;
-		}
+        .scroll-slider-child {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            padding: 60px;
+        }
 
-		.grandchild-text {
-			font-size: 16px;
-			line-height: 1.7;
-			color: #b0b0b0;
-			margin-bottom: 24px;
-		}
+        .scroll-slider-child.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
-		.grandchild-btn {
-			display: inline-block;
-			padding: 14px 32px;
-			background: #ff4c04;
-			color: #fff;
-			border: none;
-			border-radius: 8px;
-			font-size: 15px;
-			font-weight: 600;
-			cursor: pointer;
-			text-decoration: none;
-			transition: transform 0.3s, box-shadow 0.3s;
-		}
-		.grandchild-btn:hover {
-			transform: translateY(-2px);
-			box-shadow: 0 8px 24px rgba(255,76,4,0.3);
-		}
+        .child-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
 
-		.grandchild-image {
-			width: 100%;
-			border-radius: 16px;
-			overflow: hidden;
-			box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-		}
+        .grandchild {
+            padding: 20px;
+        }
 
-		.grandchild-image img {
-			width: 100%;
-			height: 400px;
-			object-fit: cover;
-			display: block;
-		}
+        .grandchild-title {
+            font-size: clamp(28px, 4vw, 52px);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
 
-		.grandchild-stats {
-			display: flex;
-			gap: 30px;
-			margin-top: 20px;
-		}
+        .grandchild-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #b0b0b0;
+            margin-bottom: 24px;
+        }
 
-		.stat-item {
-			text-align: center;
-		}
+        .grandchild-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #ff4c04;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
 
-		.stat-number {
-			font-size: 32px;
-			font-weight: 800;
-			color: #ff4c04;
-		}
+        .grandchild-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 76, 4, 0.3);
+        }
 
-		.stat-label {
-			font-size: 12px;
-			color: #888;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-		}
+        .grandchild-image {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
 
-		.grandchild-badge {
-			display: inline-block;
-			padding: 6px 16px;
-			background: rgba(255,76,4,0.15);
-			color: #ff4c04;
-			border-radius: 20px;
-			font-size: 13px;
-			font-weight: 600;
-			margin-bottom: 16px;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-		}
+        .grandchild-image img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            display: block;
+        }
 
-		.grandchild-icon {
-			width: 64px;
-			height: 64px;
-			background: rgba(255,76,4,0.1);
-			border-radius: 16px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 28px;
-			margin-bottom: 16px;
-		}
+        .grandchild-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
 
-		.grandchild-list {
-			list-style: none;
-			padding: 0;
-		}
+        .stat-item {
+            text-align: center;
+        }
 
-		.grandchild-list li {
-			padding: 8px 0;
-			font-size: 15px;
-			color: #ccc;
-			border-bottom: 1px solid rgba(255,255,255,0.05);
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
+        .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #ff4c04;
+        }
 
-		.grandchild-list li::before {
-			content: "→";
-			color: #ff4c04;
-			font-weight: 700;
-		}
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-		/* ===================== SCROLL INDICATOR ===================== */
-		.scroll-indicator {
-			position: fixed;
-			bottom: 40px;
-			left: 50%;
-			transform: translateX(-50%);
-			z-index: 100;
-			display: flex;
-			gap: 10px;
-			align-items: center;
-		}
+        .grandchild-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(255, 76, 4, 0.15);
+            color: #ff4c04;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-		.scroll-dot {
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			background: rgba(255,255,255,0.2);
-			cursor: pointer;
-			transition: all 0.4s;
-		}
+        .grandchild-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 76, 4, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
 
-		.scroll-dot.active {
-			background: #ff4c04;
-			box-shadow: 0 0 12px rgba(255,76,4,0.5);
-			transform: scale(1.2);
-		}
+        .grandchild-list {
+            list-style: none;
+            padding: 0;
+        }
 
-		.scroll-hint {
-			position: fixed;
-			bottom: 80px;
-			left: 50%;
-			transform: translateX(-50%);
-			z-index: 100;
-			font-size: 13px;
-			color: rgba(255,255,255,0.4);
-			text-align: center;
-			animation: fadeInOut 3s infinite;
-		}
+        .grandchild-list li {
+            padding: 8px 0;
+            font-size: 15px;
+            color: #ccc;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-		@keyframes fadeInOut {
-			0%, 100% { opacity: 0.3; }
-			50% { opacity: 0.8; }
-		}
+        .grandchild-list li::before {
+            content: "→";
+            color: #ff4c04;
+            font-weight: 700;
+        }
 
-		.scroll-hint .arrow {
-			display: block;
-			font-size: 20px;
-			margin-top: 4px;
-		}
+        /* ===================== SCROLL INDICATOR ===================== */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-		/* ===================== PROGRESS BAR ===================== */
-		.scroll-progress {
-			position: fixed;
-			top: 0;
-			left: 0;
-			height: 3px;
-			background: #ff4c04;
-			z-index: 9999;
-			width: 0%;
-			transition: width 0.1s;
-		}
+        .scroll-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.4s;
+        }
 
-		/* ===================== SPACER SECTIONS ===================== */
-		.spacer {
-			height: 100vh;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 24px;
-			color: #555;
-			background: #0a0a0a;
-		}
-	</style>
+        .scroll-dot.active {
+            background: #ff4c04;
+            box-shadow: 0 0 12px rgba(255, 76, 4, 0.5);
+            transform: scale(1.2);
+        }
+
+        .scroll-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            animation: fadeInOut 3s infinite;
+        }
+
+        @keyframes fadeInOut {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .scroll-hint .arrow {
+            display: block;
+            font-size: 20px;
+            margin-top: 4px;
+        }
+
+        /* ===================== PROGRESS BAR ===================== */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: #ff4c04;
+            z-index: 9999;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* ===================== SPACER SECTIONS ===================== */
+        .spacer {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #555;
+            background: #0a0a0a;
+        }
+    </style>
 </head>
 
 <body>
 
-	<!-- Progress Bar -->
-	<div class="scroll-progress" id="scrollProgress"></div>
+    <!-- Progress Bar -->
+    <div class="scroll-progress" id="scrollProgress"></div>
 
-	<!-- Control Panel Toggle -->
-	<button class="cp-toggle" id="cpToggle" title="Open Settings">⚙</button>
+    <!-- Control Panel Toggle -->
+    <button class="cp-toggle" id="cpToggle" title="Open Settings">⚙</button>
 
-	<!-- Control Panel -->
-	<div class="control-panel" id="controlPanel">
-		<h3>Scroll Slider Settings</h3>
+    <!-- Control Panel -->
+    <div class="control-panel" id="controlPanel">
+        <h3>Scroll Slider Settings</h3>
 
-		<!-- Global Settings -->
-		<div class="cp-section">
-			<h4>Global</h4>
+        <!-- Global Settings -->
+        <div class="cp-section">
+            <h4>Global</h4>
 
-			<div class="cp-row">
-				<label>Scroll Sensitivity</label>
-				<select id="cpSensitivity">
-					<option value="low">Low (Slow)</option>
-					<option value="medium" selected>Medium (Normal)</option>
-					<option value="high">High (Fast)</option>
-				</select>
-			</div>
+            <div class="cp-row">
+                <label>Scroll Sensitivity</label>
+                <select id="cpSensitivity">
+                    <option value="low">Low (Slow)</option>
+                    <option value="medium" selected>Medium (Normal)</option>
+                    <option value="high">High (Fast)</option>
+                </select>
+            </div>
 
-			<div class="cp-row">
-				<label>Transition Duration (seconds)</label>
-				<input type="number" id="cpDuration" value="0.8" min="0.2" max="3" step="0.1">
-			</div>
+            <div class="cp-row">
+                <label>Transition Duration (seconds)</label>
+                <input type="number" id="cpDuration" value="0.8" min="0.2" max="3" step="0.1">
+            </div>
 
-			<div class="cp-row">
-				<label>Easing</label>
-				<select id="cpEasing">
-					<option value="power2.inOut" selected>Power2 InOut</option>
-					<option value="power3.inOut">Power3 InOut</option>
-					<option value="power4.inOut">Power4 InOut</option>
-					<option value="power2.out">Power2 Out</option>
-					<option value="back.out(1.7)">Back Out</option>
-					<option value="elastic.out(1,0.3)">Elastic Out</option>
-					<option value="bounce.out">Bounce Out</option>
-					<option value="expo.out">Expo Out</option>
-					<option value="circ.out">Circ Out</option>
-				</select>
-			</div>
+            <div class="cp-row">
+                <label>Easing</label>
+                <select id="cpEasing">
+                    <option value="power2.inOut" selected>Power2 InOut</option>
+                    <option value="power3.inOut">Power3 InOut</option>
+                    <option value="power4.inOut">Power4 InOut</option>
+                    <option value="power2.out">Power2 Out</option>
+                    <option value="back.out(1.7)">Back Out</option>
+                    <option value="elastic.out(1,0.3)">Elastic Out</option>
+                    <option value="bounce.out">Bounce Out</option>
+                    <option value="expo.out">Expo Out</option>
+                    <option value="circ.out">Circ Out</option>
+                </select>
+            </div>
 
-			<div class="cp-row">
-				<label>
-					<input type="checkbox" id="cpEnableDisappear" checked>
-					Enable Disappear Animations on Scroll
-				</label>
-			</div>
+            <div class="cp-row">
+                <label>
+                    <input type="checkbox" id="cpEnableDisappear" checked>
+                    Enable Disappear Animations on Scroll
+                </label>
+            </div>
 
-			<div class="cp-row">
-				<label>
-					<input type="checkbox" id="cpLoop" checked>
-					Loop Slides
-				</label>
-			</div>
+            <div class="cp-row">
+                <label>
+                    <input type="checkbox" id="cpLoop" checked>
+                    Loop Slides
+                </label>
+            </div>
 
-			<div class="cp-row">
-				<label>
-					<input type="checkbox" id="cpShowDots" checked>
-					Show Navigation Dots
-				</label>
-			</div>
+            <div class="cp-row">
+                <label>
+                    <input type="checkbox" id="cpShowDots" checked>
+                    Show Navigation Dots
+                </label>
+            </div>
 
-			<div class="cp-row">
-				<label>
-					<input type="checkbox" id="cpShowHint" checked>
-					Show Scroll Hint
-				</label>
-			</div>
-		</div>
+            <div class="cp-row">
+                <label>
+                    <input type="checkbox" id="cpShowHint" checked>
+                    Show Scroll Hint
+                </label>
+            </div>
+        </div>
 
-		<!-- Slide Background Colors -->
-		<div class="cp-section">
-			<h4>Slide Background Colors</h4>
+        <!-- Slide Background Colors -->
+        <div class="cp-section">
+            <h4>Slide Background Colors</h4>
 
-			<div class="cp-row">
-				<label>Slide 1 Background</label>
-				<input type="color" id="cpBg1" value="#1a1a2e">
-			</div>
-			<div class="cp-row">
-				<label>Slide 2 Background</label>
-				<input type="color" id="cpBg2" value="#16213e">
-			</div>
-			<div class="cp-row">
-				<label>Slide 3 Background</label>
-				<input type="color" id="cpBg3" value="#0f3460">
-			</div>
-		</div>
+            <div class="cp-row">
+                <label>Slide 1 Background</label>
+                <input type="color" id="cpBg1" value="#1a1a2e">
+            </div>
+            <div class="cp-row">
+                <label>Slide 2 Background</label>
+                <input type="color" id="cpBg2" value="#16213e">
+            </div>
+            <div class="cp-row">
+                <label>Slide 3 Background</label>
+                <input type="color" id="cpBg3" value="#0f3460">
+            </div>
+        </div>
 
-		<!-- Slide 1 Widget Animations -->
-		<div class="cp-section">
-			<h4>Slide 1 — Widget Disappear Animations</h4>
-			<div id="cpSlide1Anims"></div>
-		</div>
+        <!-- Slide 1 Widget Animations -->
+        <div class="cp-section">
+            <h4>Slide 1 — Widget Disappear Animations</h4>
+            <div id="cpSlide1Anims"></div>
+        </div>
 
-		<!-- Slide 2 Widget Animations -->
-		<div class="cp-section">
-			<h4>Slide 2 — Widget Disappear Animations</h4>
-			<div id="cpSlide2Anims"></div>
-		</div>
+        <!-- Slide 2 Widget Animations -->
+        <div class="cp-section">
+            <h4>Slide 2 — Widget Disappear Animations</h4>
+            <div id="cpSlide2Anims"></div>
+        </div>
 
-		<!-- Slide 3 Widget Animations -->
-		<div class="cp-section">
-			<h4>Slide 3 — Widget Disappear Animations</h4>
-			<div id="cpSlide3Anims"></div>
-		</div>
+        <!-- Slide 3 Widget Animations -->
+        <div class="cp-section">
+            <h4>Slide 3 — Widget Disappear Animations</h4>
+            <div id="cpSlide3Anims"></div>
+        </div>
 
-		<!-- Appear Animations -->
-		<div class="cp-section">
-			<h4>Appear Animation (for incoming slide)</h4>
+        <!-- Appear Animations -->
+        <div class="cp-section">
+            <h4>Appear Animation (for incoming slide)</h4>
 
-			<div class="cp-row">
-				<label>Default Appear Animation</label>
-				<select id="cpAppearAnim">
-					<option value="fade" selected>Fade In</option>
-					<option value="slide-left">Slide From Right</option>
-					<option value="slide-right">Slide From Left</option>
-					<option value="slide-up">Slide From Bottom</option>
-					<option value="slide-down">Slide From Top</option>
-					<option value="zoom-in">Zoom In</option>
-					<option value="zoom-out">Zoom Out</option>
-					<option value="bounce">Bounce</option>
-					<option value="flip">Flip</option>
-				</select>
-			</div>
+            <div class="cp-row">
+                <label>Default Appear Animation</label>
+                <select id="cpAppearAnim">
+                    <option value="fade" selected>Fade In</option>
+                    <option value="slide-left">Slide From Right</option>
+                    <option value="slide-right">Slide From Left</option>
+                    <option value="slide-up">Slide From Bottom</option>
+                    <option value="slide-down">Slide From Top</option>
+                    <option value="zoom-in">Zoom In</option>
+                    <option value="zoom-out">Zoom Out</option>
+                    <option value="bounce">Bounce</option>
+                    <option value="flip">Flip</option>
+                </select>
+            </div>
 
-			<div class="cp-row">
-				<label>Appear Stagger (seconds)</label>
-				<input type="number" id="cpAppearStagger" value="0.1" min="0" max="1" step="0.05">
-			</div>
-		</div>
+            <div class="cp-row">
+                <label>Appear Stagger (seconds)</label>
+                <input type="number" id="cpAppearStagger" value="0.1" min="0" max="1" step="0.05">
+            </div>
+        </div>
 
-		<button class="cp-apply" id="cpApply">Apply Settings</button>
-		<button class="cp-reset" id="cpReset">Reset to Defaults</button>
-	</div>
+        <button class="cp-apply" id="cpApply">Apply Settings</button>
+        <button class="cp-reset" id="cpReset">Reset to Defaults</button>
+    </div>
 
-	<!-- Scroll Indicator Dots -->
-	<div class="scroll-indicator" id="scrollIndicator">
-		<div class="scroll-dot active" data-index="0"></div>
-		<div class="scroll-dot" data-index="1"></div>
-		<div class="scroll-dot" data-index="2"></div>
-	</div>
+    <!-- Scroll Indicator Dots -->
+    <div class="scroll-indicator" id="scrollIndicator">
+        <div class="scroll-dot active" data-index="0"></div>
+        <div class="scroll-dot" data-index="1"></div>
+        <div class="scroll-dot" data-index="2"></div>
+    </div>
 
-	<!-- Scroll Hint -->
-	<div class="scroll-hint" id="scrollHint">
-		Scroll to explore
-		<span class="arrow">↓</span>
-	</div>
+    <!-- Scroll Hint -->
+    <div class="scroll-hint" id="scrollHint">
+        Scroll to explore
+        <span class="arrow">↓</span>
+    </div>
 
-	<!-- Spacer before slider -->
-	<div class="spacer">↓ Scroll Down to Start ↓</div>
+    <!-- Spacer before slider -->
+    <div class="spacer">↓ Scroll Down to Start ↓</div>
 
-	<!-- ===================== MAIN SCROLL SLIDER ===================== -->
-	<div class="scroll-slider-wrapper" id="sliderWrapper">
-		<div class="scroll-slider-parent" id="sliderParent">
+    <!-- ===================== MAIN SCROLL SLIDER ===================== -->
+    <div class="scroll-slider-wrapper" id="sliderWrapper">
+        <div class="scroll-slider-parent" id="sliderParent">
 
-			<!-- SLIDE 1 -->
-			<div class="scroll-slider-child active" id="slide-0" data-bg="#1a1a2e">
-				<div class="child-inner">
-					<div class="grandchild" data-anim="slide-left" data-anim-duration="0.8">
-						<div class="grandchild-badge">Featured</div>
-						<div class="grandchild-title">Build Stunning Websites</div>
-						<div class="grandchild-text">Create immersive scroll experiences with GSAP-powered animations. Full control over every widget's entrance and exit.</div>
-						<ul class="grandchild-list">
-							<li>Scroll-triggered transitions</li>
-							<li>Per-widget animation control</li>
-							<li>Background color morphing</li>
-							<li>Seamless Elementor integration</li>
-						</ul>
-						<br>
-						<a href="#" class="grandchild-btn">Get Started</a>
-					</div>
-					<div class="grandchild" data-anim="fade" data-anim-duration="1">
-						<div class="grandchild-image">
-							<img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop" alt="Web Development">
-						</div>
-						<div class="grandchild-stats">
-							<div class="stat-item">
-								<div class="stat-number">3D</div>
-								<div class="stat-label">Parallax</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">60</div>
-								<div class="stat-label">FPS</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">∞</div>
-								<div class="stat-label">Possibilities</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+            <!-- SLIDE 1 -->
+            <div class="scroll-slider-child active" id="slide-0" data-bg="#1a1a2e">
+                <div class="child-inner">
+                    <div class="grandchild" data-anim="slide-left" data-anim-duration="0.8">
+                        <div class="grandchild-badge">Featured</div>
+                        <div class="grandchild-title">Build Stunning Websites</div>
+                        <div class="grandchild-text">Create immersive scroll experiences with GSAP-powered animations.
+                            Full control over every widget's entrance and exit.</div>
+                        <ul class="grandchild-list">
+                            <li>Scroll-triggered transitions</li>
+                            <li>Per-widget animation control</li>
+                            <li>Background color morphing</li>
+                            <li>Seamless Elementor integration</li>
+                        </ul>
+                        <br>
+                        <a href="#" class="grandchild-btn">Get Started</a>
+                    </div>
+                    <div class="grandchild" data-anim="fade" data-anim-duration="1">
+                        <div class="grandchild-image">
+                            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop"
+                                alt="Web Development">
+                        </div>
+                        <div class="grandchild-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">3D</div>
+                                <div class="stat-label">Parallax</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">60</div>
+                                <div class="stat-label">FPS</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">∞</div>
+                                <div class="stat-label">Possibilities</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-			<!-- SLIDE 2 -->
-			<div class="scroll-slider-child" id="slide-1" data-bg="#16213e">
-				<div class="child-inner">
-					<div class="grandchild" data-anim="zoom-out" data-anim-duration="0.7">
-						<div class="grandchild-icon">🎨</div>
-						<div class="grandchild-title">Design Without Limits</div>
-						<div class="grandchild-text">Assign unique disappear animations to each widget. Mix slides, fades, bounces, and zooms for captivating transitions.</div>
-						<ul class="grandchild-list">
-							<li>Slide animations (4 directions)</li>
-							<li>Fade with scale</li>
-							<li>Bounce & Elastic effects</li>
-							<li>Zoom In / Zoom Out</li>
-							<li>Flip & Rotate</li>
-						</ul>
-					</div>
-					<div class="grandchild" data-anim="slide-right" data-anim-duration="0.9">
-						<div class="grandchild-image">
-							<img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=500&fit=crop" alt="Design">
-						</div>
-						<div class="grandchild-stats">
-							<div class="stat-item">
-								<div class="stat-number">8+</div>
-								<div class="stat-label">Animations</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">100%</div>
-								<div class="stat-label">Customizable</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">0</div>
-								<div class="stat-label">Code Needed</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+            <!-- SLIDE 2 -->
+            <div class="scroll-slider-child" id="slide-1" data-bg="#16213e">
+                <div class="child-inner">
+                    <div class="grandchild" data-anim="zoom-out" data-anim-duration="0.7">
+                        <div class="grandchild-icon">🎨</div>
+                        <div class="grandchild-title">Design Without Limits</div>
+                        <div class="grandchild-text">Assign unique disappear animations to each widget. Mix slides,
+                            fades, bounces, and zooms for captivating transitions.</div>
+                        <ul class="grandchild-list">
+                            <li>Slide animations (4 directions)</li>
+                            <li>Fade with scale</li>
+                            <li>Bounce & Elastic effects</li>
+                            <li>Zoom In / Zoom Out</li>
+                            <li>Flip & Rotate</li>
+                        </ul>
+                    </div>
+                    <div class="grandchild" data-anim="slide-right" data-anim-duration="0.9">
+                        <div class="grandchild-image">
+                            <img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=500&fit=crop"
+                                alt="Design">
+                        </div>
+                        <div class="grandchild-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">8+</div>
+                                <div class="stat-label">Animations</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">100%</div>
+                                <div class="stat-label">Customizable</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">0</div>
+                                <div class="stat-label">Code Needed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-			<!-- SLIDE 3 -->
-			<div class="scroll-slider-child" id="slide-2" data-bg="#0f3460">
-				<div class="child-inner">
-					<div class="grandchild" data-anim="bounce" data-anim-duration="1">
-						<div class="grandchild-icon">🚀</div>
-						<div class="grandchild-title">Ready for Production</div>
-						<div class="grandchild-text">Optimized for performance with GPU-accelerated animations. Works perfectly on mobile, tablet, and desktop.</div>
-						<div class="grandchild-stats">
-							<div class="stat-item">
-								<div class="stat-number">&lt;30</div>
-								<div class="stat-label">KB Size</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">A+</div>
-								<div class="stat-label">Performance</div>
-							</div>
-							<div class="stat-item">
-								<div class="stat-number">100</div>
-								<div class="stat-label">Lighthouse</div>
-							</div>
-						</div>
-						<br>
-						<a href="#" class="grandchild-btn">View Documentation</a>
-					</div>
-					<div class="grandchild" data-anim="fade" data-anim-duration="0.8">
-						<div class="grandchild-image">
-							<img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop" alt="Production">
-						</div>
-					</div>
-				</div>
-			</div>
+            <!-- SLIDE 3 -->
+            <div class="scroll-slider-child" id="slide-2" data-bg="#0f3460">
+                <div class="child-inner">
+                    <div class="grandchild" data-anim="bounce" data-anim-duration="1">
+                        <div class="grandchild-icon">🚀</div>
+                        <div class="grandchild-title">Ready for Production</div>
+                        <div class="grandchild-text">Optimized for performance with GPU-accelerated animations. Works
+                            perfectly on mobile, tablet, and desktop.</div>
+                        <div class="grandchild-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">&lt;30</div>
+                                <div class="stat-label">KB Size</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">A+</div>
+                                <div class="stat-label">Performance</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">100</div>
+                                <div class="stat-label">Lighthouse</div>
+                            </div>
+                        </div>
+                        <br>
+                        <a href="#" class="grandchild-btn">View Documentation</a>
+                    </div>
+                    <div class="grandchild" data-anim="fade" data-anim-duration="0.8">
+                        <div class="grandchild-image">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop"
+                                alt="Production">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-		</div>
-	</div>
+        </div>
+    </div>
 
-	<!-- Spacer after slider -->
-	<div class="spacer">↑ Scroll Up to Review ↑</div>
+    <!-- Spacer after slider -->
+    <div class="spacer">↑ Scroll Up to Review ↑</div>
 
-	<script>
-		gsap.registerPlugin(ScrollTrigger);
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
 
-		/* ==============================
-		   DEFAULT CONFIGURATION
-		============================== */
-		const DEFAULTS = {
-			sensitivity: 'medium',
-			duration: 0.8,
-			easing: 'power2.inOut',
-			enableDisappear: true,
-			loop: true,
-			showDots: true,
-			showHint: true,
-			bgColors: ['#1a1a2e', '#16213e', '#0f3460'],
-			appearAnim: 'fade',
-			appearStagger: 0.1,
-			// per-widget: { slideIndex: { widgetIndex: animType } }
-			widgetAnims: {}
-		};
+        /* ==============================
+           DEFAULT CONFIGURATION
+        ============================== */
+        const DEFAULTS = {
+            sensitivity: 'medium',
+            duration: 0.8,
+            easing: 'power2.inOut',
+            enableDisappear: true,
+            loop: true,
+            showDots: true,
+            showHint: true,
+            bgColors: [ '#1a1a2e', '#16213e', '#0f3460' ],
+            appearAnim: 'fade',
+            appearStagger: 0.1,
+            // per-widget: { slideIndex: { widgetIndex: animType } }
+            widgetAnims: {}
+        };
 
-		let config = JSON.parse(JSON.stringify(DEFAULTS));
+        let config = JSON.parse(JSON.stringify(DEFAULTS));
 
-		/* ==============================
-		   SENSITIVITY MAP
-		============================== */
-		const SENSITIVITY = {
-			low: { scrollDistance: '300%' },
-			medium: { scrollDistance: '200%' },
-			high: { scrollDistance: '120%' }
-		};
+        /* ==============================
+           SENSITIVITY MAP
+        ============================== */
+        const SENSITIVITY = {
+            low: { scrollDistance: '300%' },
+            medium: { scrollDistance: '200%' },
+            high: { scrollDistance: '120%' }
+        };
 
-		/* ==============================
-		   ANIMATION PRESETS
-		============================== */
-		const ANIM_PRESETS = {
-			'fade': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 0 }
-			},
-			'slide-left': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1, rotateX: 0, x: -120 }
-			},
-			'slide-right': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 120 }
-			},
-			'slide-up': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: -100, scale: 1, rotateX: 0, x: 0 }
-			},
-			'slide-down': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 100, scale: 1, rotateX: 0, x: 0 }
-			},
-			'zoom-in': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 0.3, rotateX: 0, x: 0 }
-			},
-			'zoom-out': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1.8, rotateX: 0, x: 0 }
-			},
-			'bounce': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: -200, scale: 0.8, rotateX: 0, x: 0, ease: 'bounce.out' }
-			},
-			'flip': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1, rotateX: 90, x: 0 }
-			},
-			'none': {
-				from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
-				to:   { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 0 }
-			}
-		};
+        /* ==============================
+           ANIMATION PRESETS
+        ============================== */
+        const ANIM_PRESETS = {
+            'fade': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 0 }
+            },
+            'slide-left': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1, rotateX: 0, x: -120 }
+            },
+            'slide-right': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 120 }
+            },
+            'slide-up': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: -100, scale: 1, rotateX: 0, x: 0 }
+            },
+            'slide-down': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 100, scale: 1, rotateX: 0, x: 0 }
+            },
+            'zoom-in': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 0.3, rotateX: 0, x: 0 }
+            },
+            'zoom-out': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1.8, rotateX: 0, x: 0 }
+            },
+            'bounce': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: -200, scale: 0.8, rotateX: 0, x: 0, ease: 'bounce.out' }
+            },
+            'flip': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1, rotateX: 90, x: 0 }
+            },
+            'none': {
+                from: { opacity: 1, y: 0, scale: 1, rotateX: 0, x: 0 },
+                to: { opacity: 0, y: 0, scale: 1, rotateX: 0, x: 0 }
+            }
+        };
 
-		/* ==============================
-		   DOM REFERENCES
-		============================== */
-		const wrapper     = document.getElementById('sliderWrapper');
-		const parent      = document.getElementById('sliderParent');
-		const slides      = gsap.utils.toArray('.scroll-slider-child');
-		const dots        = gsap.utils.toArray('.scroll-dot');
-		const hint        = document.getElementById('scrollHint');
-		const indicator   = document.getElementById('scrollIndicator');
-		const progressBar = document.getElementById('scrollProgress');
-		const cpToggle    = document.getElementById('cpToggle');
-		const controlPanel= document.getElementById('controlPanel');
+        /* ==============================
+           DOM REFERENCES
+        ============================== */
+        const wrapper = document.getElementById('sliderWrapper');
+        const parent = document.getElementById('sliderParent');
+        const slides = gsap.utils.toArray('.scroll-slider-child');
+        const dots = gsap.utils.toArray('.scroll-dot');
+        const hint = document.getElementById('scrollHint');
+        const indicator = document.getElementById('scrollIndicator');
+        const progressBar = document.getElementById('scrollProgress');
+        const cpToggle = document.getElementById('cpToggle');
+        const controlPanel = document.getElementById('controlPanel');
 
-		let currentSlide  = 0;
-		let mainST        = null;
-		let isAnimating   = false;
+        let currentSlide = 0;
+        let mainST = null;
+        let isAnimating = false;
 
-		/* ==============================
-		   CONTROL PANEL TOGGLE
-		============================== */
-		cpToggle.addEventListener('click', () => {
-			controlPanel.classList.toggle('open');
-			cpToggle.textContent = controlPanel.classList.contains('open') ? '✕' : '⚙';
-		});
+        /* ==============================
+           CONTROL PANEL TOGGLE
+        ============================== */
+        cpToggle.addEventListener('click', () => {
+            controlPanel.classList.toggle('open');
+            cpToggle.textContent = controlPanel.classList.contains('open') ? '✕' : '⚙';
+        });
 
-		/* ==============================
-		   POPULATE WIDGET ANIMATION DROPDOWNS
-		============================== */
-		function populateWidgetAnims() {
-			slides.forEach((slide, si) => {
-				const container = document.getElementById(`cpSlide${si + 1}Anims`);
-				if (!container) return;
-				container.innerHTML = '';
+        /* ==============================
+           POPULATE WIDGET ANIMATION DROPDOWNS
+        ============================== */
+        function populateWidgetAnims() {
+            slides.forEach((slide, si) => {
+                const container = document.getElementById(`cpSlide${si + 1}Anims`);
+                if (!container) return;
+                container.innerHTML = '';
 
-				const widgets = slide.querySelectorAll('.grandchild');
-				widgets.forEach((w, wi) => {
-					const name = w.querySelector('.grandchild-title')?.textContent?.substring(0, 30) || `Widget ${wi + 1}`;
-					const currentAnim = config.widgetAnims[si]?.[wi] || w.dataset.anim || 'fade';
+                const widgets = slide.querySelectorAll('.grandchild');
+                widgets.forEach((w, wi) => {
+                    const name = w.querySelector('.grandchild-title')?.textContent?.substring(0, 30) || `Widget ${wi + 1}`;
+                    const currentAnim = config.widgetAnims[ si ]?.[ wi ] || w.dataset.anim || 'fade';
 
-					const row = document.createElement('div');
-					row.className = 'widget-anim-row';
-					row.innerHTML = `
+                    const row = document.createElement('div');
+                    row.className = 'widget-anim-row';
+                    row.innerHTML = `
 						<span class="widget-name">${name}</span>
 						<select data-slide="${si}" data-widget="${wi}">
 							<option value="fade" ${currentAnim === 'fade' ? 'selected' : ''}>Fade</option>
@@ -824,340 +852,341 @@
 							<option value="none" ${currentAnim === 'none' ? 'selected' : ''}>None</option>
 						</select>
 					`;
-					container.appendChild(row);
-				});
-			});
-		}
+                    container.appendChild(row);
+                });
+            });
+        }
 
-		/* ==============================
-		   APPLY SETTINGS
-		============================== */
-		function applySettings() {
-			config.sensitivity     = document.getElementById('cpSensitivity').value;
-			config.duration        = parseFloat(document.getElementById('cpDuration').value);
-			config.easing          = document.getElementById('cpEasing').value;
-			config.enableDisappear = document.getElementById('cpEnableDisappear').checked;
-			config.loop            = document.getElementById('cpLoop').checked;
-			config.showDots        = document.getElementById('cpShowDots').checked;
-			config.showHint        = document.getElementById('cpShowHint').checked;
-			config.bgColors[0]     = document.getElementById('cpBg1').value;
-			config.bgColors[1]     = document.getElementById('cpBg2').value;
-			config.bgColors[2]     = document.getElementById('cpBg3').value;
-			config.appearAnim      = document.getElementById('cpAppearAnim').value;
-			config.appearStagger   = parseFloat(document.getElementById('cpAppearStagger').value);
+        /* ==============================
+           APPLY SETTINGS
+        ============================== */
+        function applySettings() {
+            config.sensitivity = document.getElementById('cpSensitivity').value;
+            config.duration = parseFloat(document.getElementById('cpDuration').value);
+            config.easing = document.getElementById('cpEasing').value;
+            config.enableDisappear = document.getElementById('cpEnableDisappear').checked;
+            config.loop = document.getElementById('cpLoop').checked;
+            config.showDots = document.getElementById('cpShowDots').checked;
+            config.showHint = document.getElementById('cpShowHint').checked;
+            config.bgColors[ 0 ] = document.getElementById('cpBg1').value;
+            config.bgColors[ 1 ] = document.getElementById('cpBg2').value;
+            config.bgColors[ 2 ] = document.getElementById('cpBg3').value;
+            config.appearAnim = document.getElementById('cpAppearAnim').value;
+            config.appearStagger = parseFloat(document.getElementById('cpAppearStagger').value);
 
-			// Collect per-widget animations
-			config.widgetAnims = {};
-			document.querySelectorAll('.widget-anim-row select').forEach(sel => {
-				const si = parseInt(sel.dataset.slide);
-				const wi = parseInt(sel.dataset.widget);
-				if (!config.widgetAnims[si]) config.widgetAnims[si] = {};
-				config.widgetAnims[si][wi] = sel.value;
-			});
+            // Collect per-widget animations
+            config.widgetAnims = {};
+            document.querySelectorAll('.widget-anim-row select').forEach(sel => {
+                const si = parseInt(sel.dataset.slide);
+                const wi = parseInt(sel.dataset.widget);
+                if (!config.widgetAnims[ si ]) config.widgetAnims[ si ] = {};
+                config.widgetAnims[ si ][ wi ] = sel.value;
+            });
 
-			// Apply visibility
-			indicator.style.display = config.showDots ? 'flex' : 'none';
-			hint.style.display      = config.showHint ? 'block' : 'none';
+            // Apply visibility
+            indicator.style.display = config.showDots ? 'flex' : 'none';
+            hint.style.display = config.showHint ? 'block' : 'none';
 
-			// Rebuild slider
-			destroySlider();
-			buildSlider();
-		}
+            // Rebuild slider
+            destroySlider();
+            buildSlider();
+        }
 
-		document.getElementById('cpApply').addEventListener('click', applySettings);
+        document.getElementById('cpApply').addEventListener('click', applySettings);
 
-		document.getElementById('cpReset').addEventListener('click', () => {
-			config = JSON.parse(JSON.stringify(DEFAULTS));
-			document.getElementById('cpSensitivity').value     = config.sensitivity;
-			document.getElementById('cpDuration').value        = config.duration;
-			document.getElementById('cpEasing').value          = config.easing;
-			document.getElementById('cpEnableDisappear').checked = config.enableDisappear;
-			document.getElementById('cpLoop').checked          = config.loop;
-			document.getElementById('cpShowDots').checked      = config.showDots;
-			document.getElementById('cpShowHint').checked      = config.showHint;
-			document.getElementById('cpBg1').value             = config.bgColors[0];
-			document.getElementById('cpBg2').value             = config.bgColors[1];
-			document.getElementById('cpBg3').value             = config.bgColors[2];
-			document.getElementById('cpAppearAnim').value      = config.appearAnim;
-			document.getElementById('cpAppearStagger').value   = config.appearStagger;
-			populateWidgetAnims();
-			applySettings();
-		});
+        document.getElementById('cpReset').addEventListener('click', () => {
+            config = JSON.parse(JSON.stringify(DEFAULTS));
+            document.getElementById('cpSensitivity').value = config.sensitivity;
+            document.getElementById('cpDuration').value = config.duration;
+            document.getElementById('cpEasing').value = config.easing;
+            document.getElementById('cpEnableDisappear').checked = config.enableDisappear;
+            document.getElementById('cpLoop').checked = config.loop;
+            document.getElementById('cpShowDots').checked = config.showDots;
+            document.getElementById('cpShowHint').checked = config.showHint;
+            document.getElementById('cpBg1').value = config.bgColors[ 0 ];
+            document.getElementById('cpBg2').value = config.bgColors[ 1 ];
+            document.getElementById('cpBg3').value = config.bgColors[ 2 ];
+            document.getElementById('cpAppearAnim').value = config.appearAnim;
+            document.getElementById('cpAppearStagger').value = config.appearStagger;
+            populateWidgetAnims();
+            applySettings();
+        });
 
-		/* ==============================
-		   GET APPEAR FROM/TO VALUES
-		============================== */
-		function getAppearFrom(animType) {
-			switch (animType) {
-				case 'fade':        return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: 0 };
-				case 'slide-left':  return { opacity: 0, x: 120, y: 0, scale: 1, rotateX: 0 };
-				case 'slide-right': return { opacity: 0, x: -120, y: 0, scale: 1, rotateX: 0 };
-				case 'slide-up':    return { opacity: 0, x: 0, y: 100, scale: 1, rotateX: 0 };
-				case 'slide-down':  return { opacity: 0, x: 0, y: -100, scale: 1, rotateX: 0 };
-				case 'zoom-in':     return { opacity: 0, x: 0, y: 0, scale: 0.3, rotateX: 0 };
-				case 'zoom-out':    return { opacity: 0, x: 0, y: 0, scale: 1.8, rotateX: 0 };
-				case 'bounce':      return { opacity: 0, x: 0, y: 200, scale: 0.8, rotateX: 0 };
-				case 'flip':        return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: -90 };
-				default:            return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: 0 };
-			}
-		}
+        /* ==============================
+           GET APPEAR FROM/TO VALUES
+        ============================== */
+        function getAppearFrom(animType) {
+            switch (animType) {
+                case 'fade': return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: 0 };
+                case 'slide-left': return { opacity: 0, x: 120, y: 0, scale: 1, rotateX: 0 };
+                case 'slide-right': return { opacity: 0, x: -120, y: 0, scale: 1, rotateX: 0 };
+                case 'slide-up': return { opacity: 0, x: 0, y: 100, scale: 1, rotateX: 0 };
+                case 'slide-down': return { opacity: 0, x: 0, y: -100, scale: 1, rotateX: 0 };
+                case 'zoom-in': return { opacity: 0, x: 0, y: 0, scale: 0.3, rotateX: 0 };
+                case 'zoom-out': return { opacity: 0, x: 0, y: 0, scale: 1.8, rotateX: 0 };
+                case 'bounce': return { opacity: 0, x: 0, y: 200, scale: 0.8, rotateX: 0 };
+                case 'flip': return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: -90 };
+                default: return { opacity: 0, x: 0, y: 0, scale: 1, rotateX: 0 };
+            }
+        }
 
-		function getAppearTo(animType) {
-			switch (animType) {
-				case 'bounce': return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, ease: 'bounce.out' };
-				case 'flip':   return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, ease: 'back.out(1.7)' };
-				default:       return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0 };
-			}
-		}
+        function getAppearTo(animType) {
+            switch (animType) {
+                case 'bounce': return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, ease: 'bounce.out' };
+                case 'flip': return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, ease: 'back.out(1.7)' };
+                default: return { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0 };
+            }
+        }
 
-		/* ==============================
-		   GET DISAPPEAR VALUES FOR WIDGET
-		============================== */
-		function getDisappearTo(slideIndex, widgetIndex) {
-			const animType = config.widgetAnims[slideIndex]?.[widgetIndex]
-				|| slides[slideIndex]?.querySelectorAll('.grandchild')[widgetIndex]?.dataset.anim
-				|| 'fade';
+        /* ==============================
+           GET DISAPPEAR VALUES FOR WIDGET
+        ============================== */
+        function getDisappearTo(slideIndex, widgetIndex) {
+            const animType = config.widgetAnims[ slideIndex ]?.[ widgetIndex ]
+                || slides[ slideIndex ]?.querySelectorAll('.grandchild')[ widgetIndex ]?.dataset.anim
+                || 'fade';
 
-			const preset = ANIM_PRESETS[animType] || ANIM_PRESETS['fade'];
-			const base = { ...preset.to };
+            const preset = ANIM_PRESETS[ animType ] || ANIM_PRESETS[ 'fade' ];
+            const base = { ...preset.to };
 
-			// If bounce has custom ease, preserve it
-			if (animType === 'bounce') base.ease = 'bounce.out';
-			if (animType === 'flip')   base.ease = 'power2.in';
+            // If bounce has custom ease, preserve it
+            if (animType === 'bounce') base.ease = 'bounce.out';
+            if (animType === 'flip') base.ease = 'power2.in';
 
-			return { ...base, duration: config.duration };
-		}
+            return { ...base, duration: config.duration };
+        }
 
-		/* ==============================
-		   BUILD / DESTROY SLIDER
-		============================== */
-		function destroySlider() {
-			if (mainST) {
-				mainST.scrollTrigger?.kill();
-				mainST.kill();
-				mainST = null;
-			}
-			// Reset all slides
-			slides.forEach(slide => {
-				gsap.set(slide, { clearProps: 'all' });
-				slide.classList.remove('active');
-				const widgets = slide.querySelectorAll('.grandchild');
-				widgets.forEach(w => gsap.set(w, { clearProps: 'all' }));
-			});
-			slides[0]?.classList.add('active');
-			parent.style.backgroundColor = config.bgColors[0];
-			currentSlide = 0;
-			updateDots();
-		}
+        /* ==============================
+           BUILD / DESTROY SLIDER
+        ============================== */
+        function destroySlider() {
+            if (mainST) {
+                mainST.scrollTrigger?.kill();
+                mainST.kill();
+                mainST = null;
+            }
+            // Reset all slides
+            slides.forEach(slide => {
+                gsap.set(slide, { clearProps: 'all' });
+                slide.classList.remove('active');
+                const widgets = slide.querySelectorAll('.grandchild');
+                widgets.forEach(w => gsap.set(w, { clearProps: 'all' }));
+            });
+            slides[ 0 ]?.classList.add('active');
+            parent.style.backgroundColor = config.bgColors[ 0 ];
+            currentSlide = 0;
+            updateDots();
+        }
 
-		function buildSlider() {
-			parent.style.backgroundColor = config.bgColors[0];
-			slides[0].classList.add('active');
+        function buildSlider() {
+            parent.style.backgroundColor = config.bgColors[ 0 ];
+            slides[ 0 ].classList.add('active');
 
-			const sensConfig  = SENSITIVITY[config.sensitivity];
-			const totalSlides = slides.length;
+            const sensConfig = SENSITIVITY[ config.sensitivity ];
+            const totalSlides = slides.length;
 
-			// Create pinned ScrollTrigger
-			mainST = ScrollTrigger.create({
-				trigger: wrapper,
-				pin: true,
-				start: 'top top',
-				end: '+=' + (parseInt(sensConfig.scrollDistance) / 100) * window.innerHeight * totalSlides,
-				scrub: 0.5,
-				onUpdate: (self) => {
-					const progress = self.progress;
-					const slideProgress = progress * totalSlides;
-					const newIndex = Math.min(Math.floor(slideProgress), totalSlides - 1);
+            // Create pinned ScrollTrigger
+            mainST = ScrollTrigger.create({
+                trigger: wrapper,
+                pin: true,
+                start: 'top top',
+                end: '+=' + (parseInt(sensConfig.scrollDistance) / 100) * window.innerHeight * totalSlides,
+                scrub: 0.5,
+                onUpdate: (self) => {
+                    const progress = self.progress;
+                    const slideProgress = progress * totalSlides;
+                    const newIndex = Math.min(Math.floor(slideProgress), totalSlides - 1);
 
-					// Update progress bar
-					progressBar.style.width = (progress * 100) + '%';
+                    // Update progress bar
+                    progressBar.style.width = (progress * 100) + '%';
 
-					if (newIndex !== currentSlide && !isAnimating) {
-						goToSlide(newIndex, currentSlide);
-					}
-				}
-			});
-		}
+                    if (newIndex !== currentSlide && !isAnimating) {
+                        goToSlide(newIndex, currentSlide);
+                    }
+                }
+            });
+        }
 
-		/* ==============================
-		   SLIDE TRANSITION
-		============================== */
-		function goToSlide(newIndex, oldIndex) {
-			if (newIndex === oldIndex || isAnimating) return;
-			isAnimating = true;
+        /* ==============================
+           SLIDE TRANSITION
+        ============================== */
+        function goToSlide(newIndex, oldIndex) {
+            if (newIndex === oldIndex || isAnimating) return;
+            isAnimating = true;
 
-			const outSlide = slides[oldIndex];
-			const inSlide  = slides[newIndex];
-			const duration = config.duration;
-			const easing   = config.easing;
+            const outSlide = slides[ oldIndex ];
+            const inSlide = slides[ newIndex ];
+            const duration = config.duration;
+            const easing = config.easing;
 
-			// Background color transition
-			gsap.to(parent, {
-				backgroundColor: config.bgColors[newIndex] || '#1a1a2e',
-				duration: duration,
-				ease: 'power1.inOut'
-			});
+            // Background color transition
+            gsap.to(parent, {
+                backgroundColor: config.bgColors[ newIndex ] || '#1a1a2e',
+                duration: duration,
+                ease: 'power1.inOut'
+            });
 
-			// ---- DISAPPEAR (outgoing) ----
-			const outWidgets = outSlide.querySelectorAll('.grandchild');
+            // ---- DISAPPEAR (outgoing) ----
+            const outWidgets = outSlide.querySelectorAll('.grandchild');
 
-			if (config.enableDisappear) {
-				const disappearTL = gsap.timeline({
-					onComplete: () => {
-						outSlide.classList.remove('active');
-						gsap.set(outSlide, { opacity: 0, visibility: 'hidden' });
-					}
-				});
+            if (config.enableDisappear) {
+                const disappearTL = gsap.timeline({
+                    onComplete: () => {
+                        outSlide.classList.remove('active');
+                        gsap.set(outSlide, { opacity: 0, visibility: 'hidden' });
+                    }
+                });
 
-				outWidgets.forEach((widget, wi) => {
-					const disTo = getDisappearTo(oldIndex, wi);
-					const customEase = disTo.ease || easing;
-					const wDuration = disTo.duration || duration;
+                outWidgets.forEach((widget, wi) => {
+                    const disTo = getDisappearTo(oldIndex, wi);
+                    const customEase = disTo.ease || easing;
+                    const wDuration = disTo.duration || duration;
 
-					disappearTL.to(widget, {
-						opacity:   disTo.opacity   ?? 0,
-						x:         disTo.x         ?? 0,
-						y:         disTo.y         ?? 0,
-						scale:     disTo.scale     ?? 1,
-						rotateX:   disTo.rotateX   ?? 0,
-						duration:  wDuration * 0.6,
-						ease:      customEase
-					}, wi * 0.05);
-				});
+                    disappearTL.to(widget, {
+                        opacity: disTo.opacity ?? 0,
+                        x: disTo.x ?? 0,
+                        y: disTo.y ?? 0,
+                        scale: disTo.scale ?? 1,
+                        rotateX: disTo.rotateX ?? 0,
+                        duration: wDuration * 0.6,
+                        ease: customEase
+                    }, wi * 0.05);
+                });
 
-				// ---- APPEAR (incoming) ----
-				disappearTL.add(() => {
-					inSlide.classList.add('active');
-					gsap.set(inSlide, { opacity: 1, visibility: 'visible' });
+                // ---- APPEAR (incoming) ----
+                disappearTL.add(() => {
+                    inSlide.classList.add('active');
+                    gsap.set(inSlide, { opacity: 1, visibility: 'visible' });
 
-					const inWidgets = inSlide.querySelectorAll('.grandchild');
-					const appearFrom = getAppearFrom(config.appearAnim);
-					const appearTo   = getAppearTo(config.appearAnim);
+                    const inWidgets = inSlide.querySelectorAll('.grandchild');
+                    const appearFrom = getAppearFrom(config.appearAnim);
+                    const appearTo = getAppearTo(config.appearAnim);
 
-					gsap.set(inWidgets, { ...appearFrom, force3D: true });
+                    gsap.set(inWidgets, { ...appearFrom, force3D: true });
 
-					gsap.to(inWidgets, {
-						...appearTo,
-						duration: duration,
-						stagger: config.appearStagger,
-						ease: easing,
-						onComplete: () => {
-							isAnimating = false;
-						}
-					});
-				}, '-=0.15');
+                    gsap.to(inWidgets, {
+                        ...appearTo,
+                        duration: duration,
+                        stagger: config.appearStagger,
+                        ease: easing,
+                        onComplete: () => {
+                            isAnimating = false;
+                        }
+                    });
+                }, '-=0.15');
 
-			} else {
-				// No disappear — just crossfade
-				gsap.to(outSlide, {
-					opacity: 0,
-					duration: duration * 0.5,
-					onComplete: () => {
-						outSlide.classList.remove('active');
-						gsap.set(outSlide, { visibility: 'hidden' });
+            } else {
+                // No disappear — just crossfade
+                gsap.to(outSlide, {
+                    opacity: 0,
+                    duration: duration * 0.5,
+                    onComplete: () => {
+                        outSlide.classList.remove('active');
+                        gsap.set(outSlide, { visibility: 'hidden' });
 
-						inSlide.classList.add('active');
-						gsap.set(inSlide, { opacity: 1, visibility: 'visible' });
+                        inSlide.classList.add('active');
+                        gsap.set(inSlide, { opacity: 1, visibility: 'visible' });
 
-						const inWidgets = inSlide.querySelectorAll('.grandchild');
-						const appearFrom = getAppearFrom(config.appearAnim);
-						const appearTo   = getAppearTo(config.appearAnim);
+                        const inWidgets = inSlide.querySelectorAll('.grandchild');
+                        const appearFrom = getAppearFrom(config.appearAnim);
+                        const appearTo = getAppearTo(config.appearAnim);
 
-						gsap.set(inWidgets, { ...appearFrom, force3D: true });
-						gsap.to(inWidgets, {
-							...appearTo,
-							duration: duration,
-							stagger: config.appearStagger,
-							ease: easing,
-							onComplete: () => { isAnimating = false; }
-						});
-					}
-				});
-			}
+                        gsap.set(inWidgets, { ...appearFrom, force3D: true });
+                        gsap.to(inWidgets, {
+                            ...appearTo,
+                            duration: duration,
+                            stagger: config.appearStagger,
+                            ease: easing,
+                            onComplete: () => { isAnimating = false; }
+                        });
+                    }
+                });
+            }
 
-			currentSlide = newIndex;
-			updateDots();
-		}
+            currentSlide = newIndex;
+            updateDots();
+        }
 
-		/* ==============================
-		   DOT NAVIGATION
-		============================== */
-		function updateDots() {
-			dots.forEach((dot, i) => {
-				dot.classList.toggle('active', i === currentSlide);
-			});
-		}
+        /* ==============================
+           DOT NAVIGATION
+        ============================== */
+        function updateDots() {
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlide);
+            });
+        }
 
-		dots.forEach(dot => {
-			dot.addEventListener('click', () => {
-				const target = parseInt(dot.dataset.index);
-				if (target !== currentSlide && !isAnimating) {
-					const st = mainST?.scrollTrigger;
-					if (st) {
-						const progress = target / slides.length;
-						const scrollTo = st.start + (st.end - st.start) * progress + 0.01;
-						gsap.to(window, {
-							scrollTo: scrollTo,
-							duration: 0.8,
-							ease: 'power2.inOut'
-						});
-					}
-				}
-			});
-		});
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const target = parseInt(dot.dataset.index);
+                if (target !== currentSlide && !isAnimating) {
+                    const st = mainST?.scrollTrigger;
+                    if (st) {
+                        const progress = target / slides.length;
+                        const scrollTo = st.start + (st.end - st.start) * progress + 0.01;
+                        gsap.to(window, {
+                            scrollTo: scrollTo,
+                            duration: 0.8,
+                            ease: 'power2.inOut'
+                        });
+                    }
+                }
+            });
+        });
 
-		/* ==============================
-		   KEYBOARD NAVIGATION
-		============================== */
-		document.addEventListener('keydown', (e) => {
-			if (isAnimating) return;
-			if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-				e.preventDefault();
-				if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1, currentSlide);
-			} else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-				e.preventDefault();
-				if (currentSlide > 0) goToSlide(currentSlide - 1, currentSlide);
-			}
-		});
+        /* ==============================
+           KEYBOARD NAVIGATION
+        ============================== */
+        document.addEventListener('keydown', (e) => {
+            if (isAnimating) return;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1, currentSlide);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (currentSlide > 0) goToSlide(currentSlide - 1, currentSlide);
+            }
+        });
 
-		/* ==============================
-		   SCROLL BAR SYNC
-		============================== */
-		window.addEventListener('scroll', () => {
-			if (!mainST?.scrollTrigger) return;
-			const st = mainST.scrollTrigger;
-			const globalProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-			progressBar.style.width = (globalProgress * 100) + '%';
-		});
+        /* ==============================
+           SCROLL BAR SYNC
+        ============================== */
+        window.addEventListener('scroll', () => {
+            if (!mainST?.scrollTrigger) return;
+            const st = mainST.scrollTrigger;
+            const globalProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+            progressBar.style.width = (globalProgress * 100) + '%';
+        });
 
-		/* ==============================
-		   INIT
-		============================== */
-		function init() {
-			populateWidgetAnims();
-			indicator.style.display = config.showDots ? 'flex' : 'none';
-			hint.style.display      = config.showHint ? 'block' : 'none';
-			buildSlider();
+        /* ==============================
+           INIT
+        ============================== */
+        function init() {
+            populateWidgetAnims();
+            indicator.style.display = config.showDots ? 'flex' : 'none';
+            hint.style.display = config.showHint ? 'block' : 'none';
+            buildSlider();
 
-			// Load ScrollTo plugin for dot nav
-			const script = document.createElement('script');
-			script.src = 'https://unpkg.com/gsap@3/dist/ScrollToPlugin.min.js';
-			document.head.appendChild(script);
-		}
+            // Load ScrollTo plugin for dot nav
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/gsap@3/dist/ScrollToPlugin.min.js';
+            document.head.appendChild(script);
+        }
 
-		init();
+        init();
 
-		/* ==============================
-		   RESIZE HANDLER
-		============================== */
-		let resizeTimer;
-		window.addEventListener('resize', () => {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				ScrollTrigger.refresh();
-			}, 250);
-		});
-	</script>
+        /* ==============================
+           RESIZE HANDLER
+        ============================== */
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                ScrollTrigger.refresh();
+            }, 250);
+        });
+    </script>
 
 </body>
+
 </html>
