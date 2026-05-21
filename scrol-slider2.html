@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,189 +10,436 @@
 	<script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
 
 	<style>
-		*{box-sizing:border-box;margin:0;padding:0}
-
-		body{
-			font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-			background:#080810;
-			color:#fff;
-			overflow-x:hidden;
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0
 		}
 
-		.cp-toggle{
-			position:fixed;top:20px;right:20px;z-index:10001;
-			width:48px;height:48px;border-radius:50%;
-			background:#6c5ce7;border:none;color:#fff;font-size:22px;
-			cursor:pointer;box-shadow:0 4px 20px rgba(108,92,231,0.4);
-			transition:transform 0.3s;
+		body {
+			font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+			background: #080810;
+			color: #fff;
+			overflow-x: hidden;
 		}
-		.cp-toggle:hover{transform:scale(1.1)}
 
-		.control-panel{
-			position:fixed;top:0;right:-420px;width:400px;height:100vh;
-			background:#12121a;border-left:2px solid #6c5ce7;z-index:10000;
-			overflow-y:auto;padding:24px;
-			transition:right 0.4s cubic-bezier(0.25,0.8,0.25,1);
-			font-size:13px;
+		.cp-toggle {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			z-index: 10001;
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			background: #6c5ce7;
+			border: none;
+			color: #fff;
+			font-size: 22px;
+			cursor: pointer;
+			box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+			transition: transform 0.3s;
 		}
-		.control-panel.open{right:0}
-		.control-panel h3{
-			font-size:18px;color:#6c5ce7;margin-bottom:20px;
-			padding-bottom:12px;border-bottom:1px solid #2a2a3a;
+
+		.cp-toggle:hover {
+			transform: scale(1.1)
 		}
-		.cp-section{
-			margin-bottom:20px;padding:14px;background:#1a1a28;border-radius:8px;
+
+		.control-panel {
+			position: fixed;
+			top: 0;
+			right: -420px;
+			width: 400px;
+			height: 100vh;
+			background: #12121a;
+			border-left: 2px solid #6c5ce7;
+			z-index: 10000;
+			overflow-y: auto;
+			padding: 24px;
+			transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+			font-size: 13px;
 		}
-		.cp-section h4{
-			font-size:12px;color:#6c5ce7;margin-bottom:12px;
-			text-transform:uppercase;letter-spacing:1.5px;font-weight:700;
+
+		.control-panel.open {
+			right: 0
 		}
-		.cp-row{margin-bottom:10px}
-		.cp-row label{
-			display:block;font-size:11px;color:#8888aa;margin-bottom:4px;font-weight:600;
+
+		.control-panel h3 {
+			font-size: 18px;
+			color: #6c5ce7;
+			margin-bottom: 20px;
+			padding-bottom: 12px;
+			border-bottom: 1px solid #2a2a3a;
 		}
-		.cp-row .hint{
-			font-size:10px;color:#555;font-weight:400;font-style:italic;
-			margin-top:2px;display:block;
+
+		.cp-section {
+			margin-bottom: 20px;
+			padding: 14px;
+			background: #1a1a28;
+			border-radius: 8px;
 		}
+
+		.cp-section h4 {
+			font-size: 12px;
+			color: #6c5ce7;
+			margin-bottom: 12px;
+			text-transform: uppercase;
+			letter-spacing: 1.5px;
+			font-weight: 700;
+		}
+
+		.cp-row {
+			margin-bottom: 10px
+		}
+
+		.cp-row label {
+			display: block;
+			font-size: 11px;
+			color: #8888aa;
+			margin-bottom: 4px;
+			font-weight: 600;
+		}
+
+		.cp-row .hint {
+			font-size: 10px;
+			color: #555;
+			font-weight: 400;
+			font-style: italic;
+			margin-top: 2px;
+			display: block;
+		}
+
 		.cp-row select,
 		.cp-row input[type="number"],
-		.cp-row input[type="text"]{
-			width:100%;padding:7px 10px;background:#0e0e18;
-			border:1px solid #2a2a3a;border-radius:4px;color:#fff;font-size:13px;
+		.cp-row input[type="text"] {
+			width: 100%;
+			padding: 7px 10px;
+			background: #0e0e18;
+			border: 1px solid #2a2a3a;
+			border-radius: 4px;
+			color: #fff;
+			font-size: 13px;
 		}
+
 		.cp-row select:focus,
-		.cp-row input:focus{outline:none;border-color:#6c5ce7}
-		.cp-row-inline{display:flex;gap:8px}
-		.cp-row-inline .cp-row{flex:1}
-		.cp-apply{
-			width:100%;padding:12px;background:#6c5ce7;color:#fff;
-			border:none;border-radius:6px;font-size:14px;font-weight:700;
-			cursor:pointer;margin-top:8px;transition:background 0.3s;
+		.cp-row input:focus {
+			outline: none;
+			border-color: #6c5ce7
 		}
-		.cp-apply:hover{background:#5a4bd1}
-		.cp-reset{
-			width:100%;padding:10px;background:transparent;color:#666;
-			border:1px solid #2a2a3a;border-radius:6px;font-size:13px;
-			cursor:pointer;margin-top:8px;transition:all 0.3s;
-		}
-		.cp-reset:hover{color:#fff;border-color:#555}
 
-		.repeater-item{
-			background:#14141f;border:1px solid #2a2a3a;border-radius:6px;
-			padding:12px;margin-bottom:10px;
+		.cp-row-inline {
+			display: flex;
+			gap: 8px
 		}
-		.repeater-item .repeater-header{
-			display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
-		}
-		.repeater-item .repeater-header span{font-size:12px;color:#6c5ce7;font-weight:700}
-		.repeater-remove{
-			width:24px;height:24px;border-radius:50%;background:#ff4757;
-			border:none;color:#fff;font-size:14px;cursor:pointer;
-			display:flex;align-items:center;justify-content:center;
-		}
-		.repeater-add{
-			width:100%;padding:10px;background:#1a1a28;color:#6c5ce7;
-			border:1px dashed #6c5ce7;border-radius:6px;font-size:13px;
-			cursor:pointer;margin-top:4px;transition:all 0.3s;
-		}
-		.repeater-add:hover{background:#222236}
 
-		.scroll-progress{
-			position:fixed;top:0;left:0;height:3px;
-			background:linear-gradient(90deg,#6c5ce7,#a29bfe);
-			z-index:9999;width:0%;
+		.cp-row-inline .cp-row {
+			flex: 1
+		}
+
+		.cp-apply {
+			width: 100%;
+			padding: 12px;
+			background: #6c5ce7;
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			font-size: 14px;
+			font-weight: 700;
+			cursor: pointer;
+			margin-top: 8px;
+			transition: background 0.3s;
+		}
+
+		.cp-apply:hover {
+			background: #5a4bd1
+		}
+
+		.cp-reset {
+			width: 100%;
+			padding: 10px;
+			background: transparent;
+			color: #666;
+			border: 1px solid #2a2a3a;
+			border-radius: 6px;
+			font-size: 13px;
+			cursor: pointer;
+			margin-top: 8px;
+			transition: all 0.3s;
+		}
+
+		.cp-reset:hover {
+			color: #fff;
+			border-color: #555
+		}
+
+		.repeater-item {
+			background: #14141f;
+			border: 1px solid #2a2a3a;
+			border-radius: 6px;
+			padding: 12px;
+			margin-bottom: 10px;
+		}
+
+		.repeater-item .repeater-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+
+		.repeater-item .repeater-header span {
+			font-size: 12px;
+			color: #6c5ce7;
+			font-weight: 700
+		}
+
+		.repeater-remove {
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: #ff4757;
+			border: none;
+			color: #fff;
+			font-size: 14px;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.repeater-add {
+			width: 100%;
+			padding: 10px;
+			background: #1a1a28;
+			color: #6c5ce7;
+			border: 1px dashed #6c5ce7;
+			border-radius: 6px;
+			font-size: 13px;
+			cursor: pointer;
+			margin-top: 4px;
+			transition: all 0.3s;
+		}
+
+		.repeater-add:hover {
+			background: #222236
+		}
+
+		.scroll-progress {
+			position: fixed;
+			top: 0;
+			left: 0;
+			height: 3px;
+			background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+			z-index: 9999;
+			width: 0%;
 		}
 
 		/* ===================== SLIDER ===================== */
-		.ss-wrapper{
-			position:relative;overflow:hidden;width:100%;height:100vh;
+		.ss-wrapper {
+			position: relative;
+			overflow: hidden;
+			width: 100%;
+			height: 100vh;
 		}
-		.ss-track{display:flex;position:relative;}
-		.ss-track.vertical{flex-direction:column;}
 
-		.ss-panel{
-			flex-shrink:0;display:flex;align-items:center;justify-content:center;
-			padding:60px;width:100vw;height:100vh;
+		.ss-track {
+			display: flex;
+			position: relative;
 		}
-		.ss-track.vertical .ss-panel{width:100%;}
+
+		.ss-track.vertical {
+			flex-direction: column;
+		}
+
+		.ss-panel {
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 60px;
+			width: 100vw;
+			height: 100vh;
+		}
+
+		.ss-track.vertical .ss-panel {
+			width: 100%;
+		}
 
 		/* 3-column grid */
-		.ss-panel-inner{
-			display:grid;
-			grid-template-columns:1.1fr 1.2fr 0.9fr;
-			gap:48px;
-			max-width:1200px;
-			width:100%;
-			align-items:center;
+		.ss-panel-inner {
+			display: grid;
+			grid-template-columns: 1.1fr 1.2fr 0.9fr;
+			gap: 48px;
+			max-width: 1200px;
+			width: 100%;
+			align-items: center;
 		}
 
-		.ss-child{padding:24px}
-
-		.ss-child-badge{
-			display:inline-block;padding:5px 14px;
-			background:rgba(108,92,231,0.15);color:#a29bfe;
-			border-radius:20px;font-size:12px;font-weight:700;
-			margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;
-		}
-		.ss-child-title{
-			font-size:clamp(24px,3vw,42px);font-weight:800;
-			line-height:1.15;margin-bottom:16px;
-		}
-		.ss-child-text{font-size:15px;line-height:1.7;color:#8888aa;margin-bottom:20px}
-
-		.ss-child-image{
-			width:100%;border-radius:16px;overflow:hidden;
-			box-shadow:0 20px 60px rgba(0,0,0,0.4);
-		}
-		.ss-child-image img{width:100%;height:420px;object-fit:cover;display:block}
-
-		.ss-actions{display:flex;flex-direction:column;gap:14px}
-		.ss-action-btn{
-			display:flex;align-items:center;gap:12px;
-			padding:16px 22px;border-radius:10px;
-			font-size:14px;font-weight:600;cursor:pointer;
-			text-decoration:none;color:#fff;border:none;
-			transition:transform 0.3s,box-shadow 0.3s;
-		}
-		.ss-action-btn:hover{
-			transform:translateY(-2px);
-			box-shadow:0 8px 24px rgba(0,0,0,0.3);
-		}
-		.ss-action-btn .icon{font-size:20px;width:28px;text-align:center}
-		.ss-action-primary{background:#6c5ce7}
-		.ss-action-secondary{background:rgba(108,92,231,0.15);color:#a29bfe}
-		.ss-action-outline{
-			background:transparent;color:#aaa;
-			border:1px solid rgba(255,255,255,0.12);
+		.ss-child {
+			padding: 24px
 		}
 
-		.ss-panel:nth-child(1){background:linear-gradient(135deg,#0d0d1a 0%,#1a0a2e 50%,#2d1b69 100%)}
-		.ss-panel:nth-child(2){background:linear-gradient(135deg,#10102a 0%,#0a2a3e 50%,#1b4d6e 100%)}
-		.ss-panel:nth-child(3){background:linear-gradient(135deg,#0a0a20 0%,#1a2a0a 50%,#2d4a1b 100%)}
-		.ss-panel:nth-child(4){background:linear-gradient(135deg,#12122e 0%,#2e1a0a 50%,#6e3b1b 100%)}
-
-		.dir-label{
-			position:fixed;top:20px;left:20px;z-index:100;
-			padding:8px 16px;background:rgba(108,92,231,0.2);
-			color:#a29bfe;border-radius:20px;font-size:12px;
-			font-weight:700;text-transform:uppercase;letter-spacing:1px;
-			backdrop-filter:blur(8px);
+		.ss-child-badge {
+			display: inline-block;
+			padding: 5px 14px;
+			background: rgba(108, 92, 231, 0.15);
+			color: #a29bfe;
+			border-radius: 20px;
+			font-size: 12px;
+			font-weight: 700;
+			margin-bottom: 14px;
+			text-transform: uppercase;
+			letter-spacing: 1px;
 		}
-		.scroll-hint{
-			position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
-			z-index:100;font-size:13px;color:rgba(255,255,255,0.35);
-			text-align:center;animation:hintPulse 3s infinite;
-		}
-		.scroll-hint .arrow{display:block;font-size:18px;margin-top:2px}
-		@keyframes hintPulse{0%,100%{opacity:0.3}50%{opacity:0.7}}
 
-		.spacer{
-			height:100vh;display:flex;align-items:center;justify-content:center;
-			font-size:20px;color:#333;background:#080810;
+		.ss-child-title {
+			font-size: clamp(24px, 3vw, 42px);
+			font-weight: 800;
+			line-height: 1.15;
+			margin-bottom: 16px;
+		}
+
+		.ss-child-text {
+			font-size: 15px;
+			line-height: 1.7;
+			color: #8888aa;
+			margin-bottom: 20px
+		}
+
+		.ss-child-image {
+			width: 100%;
+			border-radius: 16px;
+			overflow: hidden;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+		}
+
+		.ss-child-image img {
+			width: 100%;
+			height: 420px;
+			object-fit: cover;
+			display: block
+		}
+
+		.ss-actions {
+			display: flex;
+			flex-direction: column;
+			gap: 14px
+		}
+
+		.ss-action-btn {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			padding: 16px 22px;
+			border-radius: 10px;
+			font-size: 14px;
+			font-weight: 600;
+			cursor: pointer;
+			text-decoration: none;
+			color: #fff;
+			border: none;
+			transition: transform 0.3s, box-shadow 0.3s;
+		}
+
+		.ss-action-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+		}
+
+		.ss-action-btn .icon {
+			font-size: 20px;
+			width: 28px;
+			text-align: center
+		}
+
+		.ss-action-primary {
+			background: #6c5ce7
+		}
+
+		.ss-action-secondary {
+			background: rgba(108, 92, 231, 0.15);
+			color: #a29bfe
+		}
+
+		.ss-action-outline {
+			background: transparent;
+			color: #aaa;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+		}
+
+		.ss-panel:nth-child(1) {
+			background: linear-gradient(135deg, #0d0d1a 0%, #1a0a2e 50%, #2d1b69 100%)
+		}
+
+		.ss-panel:nth-child(2) {
+			background: linear-gradient(135deg, #10102a 0%, #0a2a3e 50%, #1b4d6e 100%)
+		}
+
+		.ss-panel:nth-child(3) {
+			background: linear-gradient(135deg, #0a0a20 0%, #1a2a0a 50%, #2d4a1b 100%)
+		}
+
+		.ss-panel:nth-child(4) {
+			background: linear-gradient(135deg, #12122e 0%, #2e1a0a 50%, #6e3b1b 100%)
+		}
+
+		.dir-label {
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			z-index: 100;
+			padding: 8px 16px;
+			background: rgba(108, 92, 231, 0.2);
+			color: #a29bfe;
+			border-radius: 20px;
+			font-size: 12px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			backdrop-filter: blur(8px);
+		}
+
+		.scroll-hint {
+			position: fixed;
+			bottom: 30px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 100;
+			font-size: 13px;
+			color: rgba(255, 255, 255, 0.35);
+			text-align: center;
+			animation: hintPulse 3s infinite;
+		}
+
+		.scroll-hint .arrow {
+			display: block;
+			font-size: 18px;
+			margin-top: 2px
+		}
+
+		@keyframes hintPulse {
+
+			0%,
+			100% {
+				opacity: 0.3
+			}
+
+			50% {
+				opacity: 0.7
+			}
+		}
+
+		.spacer {
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 20px;
+			color: #333;
+			background: #080810;
 		}
 	</style>
 </head>
+
 <body>
 
 	<div class="scroll-progress" id="scrollProgress"></div>
@@ -212,11 +460,6 @@
 				</select>
 			</div>
 			<div class="cp-row">
-				<label>Scroll Distance (px)</label>
-				<span class="hint">How many pixels of page scroll the slider consumes</span>
-				<input type="number" id="cpDistance" value="4000" min="500" max="15000" step="100">
-			</div>
-			<div class="cp-row">
 				<label>Scrub Smoothness</label>
 				<span class="hint">0 = instant snap, 1 = smooth follow, higher = more lag</span>
 				<input type="number" id="cpScrub" value="1" min="0" max="3" step="0.1">
@@ -226,7 +469,8 @@
 		<div class="cp-section">
 			<h4>Child Animations (Repeater)</h4>
 			<p style="font-size:11px;color:#666;margin-bottom:12px">
-				Each rule targets a child element by CSS class. The element animates in (Enter) then out (Exit) as you scroll through its panel.
+				Each rule targets a child element by CSS class. The element animates in (Enter) then out (Exit) as you
+				scroll through its panel.
 			</p>
 			<div id="repeaterContainer"></div>
 			<button class="repeater-add" id="addRepeater">+ Add Animation Rule</button>
@@ -249,18 +493,23 @@
 					<div class="ss-child element-1">
 						<div class="ss-child-badge">Featured</div>
 						<div class="ss-child-title">Build Immersive Scroll Experiences</div>
-						<div class="ss-child-text">Every child enters and exits based on scroll position. A single master timeline drives all animations in perfect sync — no code required.</div>
+						<div class="ss-child-text">Every child enters and exits based on scroll position. A single
+							master timeline drives all animations in perfect sync — no code required.</div>
 					</div>
 					<div class="ss-child element-2">
 						<div class="ss-child-image">
-							<img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop" alt="Code">
+							<img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop"
+								alt="Code">
 						</div>
 					</div>
 					<div class="ss-child element-3">
 						<div class="ss-actions">
-							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🚀</span> Get Started Free</a>
-							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">📖</span> Read Documentation</a>
-							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">▶</span> Watch Demo Video</a>
+							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🚀</span> Get Started
+								Free</a>
+							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">📖</span> Read
+								Documentation</a>
+							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">▶</span> Watch Demo
+								Video</a>
 						</div>
 					</div>
 				</div>
@@ -272,18 +521,23 @@
 					<div class="ss-child element-4">
 						<div class="ss-child-badge">New</div>
 						<div class="ss-child-title">Enter &amp; Exit Animation Pairs</div>
-						<div class="ss-child-text">Each element gets its own enter animation (scroll in) and exit animation (scroll out). Flip, slide, zoom, fade — mix and match freely.</div>
+						<div class="ss-child-text">Each element gets its own enter animation (scroll in) and exit
+							animation (scroll out). Flip, slide, zoom, fade — mix and match freely.</div>
 					</div>
 					<div class="ss-child element-5">
 						<div class="ss-child-image">
-							<img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=500&fit=crop" alt="Design">
+							<img src="https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&h=500&fit=crop"
+								alt="Design">
 						</div>
 					</div>
 					<div class="ss-child element-6">
 						<div class="ss-actions">
-							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🎨</span> Explore Templates</a>
-							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">⚙</span> Customize Settings</a>
-							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">📋</span> View Changelog</a>
+							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🎨</span> Explore
+								Templates</a>
+							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">⚙</span> Customize
+								Settings</a>
+							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">📋</span> View
+								Changelog</a>
 						</div>
 					</div>
 				</div>
@@ -295,18 +549,23 @@
 					<div class="ss-child element-7">
 						<div class="ss-child-badge">Pro</div>
 						<div class="ss-child-title">Production-Grade Performance</div>
-						<div class="ss-child-text">GPU-accelerated transforms, scrub-linked playback, and zero layout thrashing. Butter-smooth 60fps on every device.</div>
+						<div class="ss-child-text">GPU-accelerated transforms, scrub-linked playback, and zero layout
+							thrashing. Butter-smooth 60fps on every device.</div>
 					</div>
 					<div class="ss-child element-8">
 						<div class="ss-child-image">
-							<img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop" alt="Performance">
+							<img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=500&fit=crop"
+								alt="Performance">
 						</div>
 					</div>
 					<div class="ss-child element-9">
 						<div class="ss-actions">
-							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">⚡</span> Benchmark Tests</a>
-							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">📦</span> Download Bundle</a>
-							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">🔧</span> API Reference</a>
+							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">⚡</span> Benchmark
+								Tests</a>
+							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">📦</span> Download
+								Bundle</a>
+							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">🔧</span> API
+								Reference</a>
 						</div>
 					</div>
 				</div>
@@ -318,18 +577,23 @@
 					<div class="ss-child element-10">
 						<div class="ss-child-badge">Integrate</div>
 						<div class="ss-child-title">One Toggle in Elementor</div>
-						<div class="ss-child-text">Enable in the Container's Advanced tab. A repeater lets you define per-element animation rules with CSS selectors — zero code.</div>
+						<div class="ss-child-text">Enable in the Container's Advanced tab. A repeater lets you define
+							per-element animation rules with CSS selectors — zero code.</div>
 					</div>
 					<div class="ss-child element-11">
 						<div class="ss-child-image">
-							<img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=500&fit=crop" alt="Integration">
+							<img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=500&fit=crop"
+								alt="Integration">
 						</div>
 					</div>
 					<div class="ss-child element-12">
 						<div class="ss-actions">
-							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🔌</span> Install Plugin</a>
-							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">🎓</span> Beginner Guide</a>
-							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">💬</span> Join Community</a>
+							<a href="#" class="ss-action-btn ss-action-primary"><span class="icon">🔌</span> Install
+								Plugin</a>
+							<a href="#" class="ss-action-btn ss-action-secondary"><span class="icon">🎓</span> Beginner
+								Guide</a>
+							<a href="#" class="ss-action-btn ss-action-outline"><span class="icon">💬</span> Join
+								Community</a>
 						</div>
 					</div>
 				</div>
@@ -345,7 +609,6 @@
 
 		const DEFAULTS = {
 			direction: 'vertical',
-			distance: 4000,
 			scrub: 1,
 			childAnimations: [
 				/* Panel 1 — Title: slide-left (enter from right, exit to left) */
@@ -357,12 +620,12 @@
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 5, exitPct: 60
 				},
-				/* Panel 1 — Image: fade (opacity only) */
+				/* Panel 1 — Image: scale + fade (like fullpage example) */
 				{
 					selector: '.element-2',
-					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.5, enterFromRotate: 0,
 					enterDuration: 2.5, enterDelay: 0.3, enterEasing: 'power2.out',
-					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 0.5, exitToRotate: 0,
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 8, exitPct: 58
 				},
@@ -384,12 +647,12 @@
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 5, exitPct: 60
 				},
-				/* Panel 2 — Image: slide-right (enter from left, exit to right) */
+				/* Panel 2 — Image: scale + fade */
 				{
 					selector: '.element-5',
-					enterFromX: -120, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.5, enterFromRotate: 0,
 					enterDuration: 2.5, enterDelay: 0.3, enterEasing: 'power2.out',
-					exitToX: 120, exitToY: 0, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 0.5, exitToRotate: 0,
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 8, exitPct: 58
 				},
@@ -411,12 +674,12 @@
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 5, exitPct: 60
 				},
-				/* Panel 3 — Image: zoom-in (enter big, exit small) */
+				/* Panel 3 — Image: scale + fade */
 				{
 					selector: '.element-8',
-					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 1.8, enterFromRotate: 0,
+					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.5, enterFromRotate: 0,
 					enterDuration: 2.5, enterDelay: 0.3, enterEasing: 'power3.out',
-					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 0.3, exitToRotate: 0,
+					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 0.5, exitToRotate: 0,
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 8, exitPct: 58
 				},
@@ -438,12 +701,12 @@
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 5, exitPct: 60
 				},
-				/* Panel 4 — Image: slide-up (enter from below, exit to above) */
+				/* Panel 4 — Image: scale + fade */
 				{
 					selector: '.element-11',
-					enterFromX: 0, enterFromY: 100, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+					enterFromX: 0, enterFromY: 0, enterFromOpacity: 0, enterFromScale: 0.5, enterFromRotate: 0,
 					enterDuration: 2.5, enterDelay: 0.3, enterEasing: 'power3.out',
-					exitToX: 0, exitToY: -100, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+					exitToX: 0, exitToY: 0, exitToOpacity: 0, exitToScale: 0.5, exitToRotate: 0,
 					exitDuration: 1.5, exitEasing: 'power2.in',
 					enterPct: 8, exitPct: 58
 				},
@@ -461,10 +724,10 @@
 
 		let config = JSON.parse(JSON.stringify(DEFAULTS));
 
-		const wrapper      = document.getElementById('ssWrapper');
-		const track        = document.getElementById('ssTrack');
-		const progressBar  = document.getElementById('scrollProgress');
-		const dirLabel     = document.getElementById('dirLabel');
+		const wrapper = document.getElementById('ssWrapper');
+		const track = document.getElementById('ssTrack');
+		const progressBar = document.getElementById('scrollProgress');
+		const dirLabel = document.getElementById('dirLabel');
 		const controlPanel = document.getElementById('controlPanel');
 
 		let masterST = null;
@@ -475,20 +738,20 @@
 		});
 
 		const EASINGS = [
-			'power1.out','power1.inOut','power1.in',
-			'power2.out','power2.inOut','power2.in',
-			'power3.out','power3.inOut','power3.in',
-			'power4.out','power4.inOut','power4.in',
-			'back.out(1.7)','back.inOut','back.in',
-			'elastic.out(1,0.3)','elastic.inOut',
-			'bounce.out','bounce.inOut',
-			'expo.out','expo.inOut','expo.in',
-			'circ.out','circ.inOut','circ.in',
-			'sine.out','sine.inOut','sine.in'
+			'power1.out', 'power1.inOut', 'power1.in',
+			'power2.out', 'power2.inOut', 'power2.in',
+			'power3.out', 'power3.inOut', 'power3.in',
+			'power4.out', 'power4.inOut', 'power4.in',
+			'back.out(1.7)', 'back.inOut', 'back.in',
+			'elastic.out(1,0.3)', 'elastic.inOut',
+			'bounce.out', 'bounce.inOut',
+			'expo.out', 'expo.inOut', 'expo.in',
+			'circ.out', 'circ.inOut', 'circ.in',
+			'sine.out', 'sine.inOut', 'sine.in'
 		];
 
 		function easingOptions(sel) {
-			return EASINGS.map(e => `<option value="${e}"${e===sel?' selected':''}>${e}</option>`).join('');
+			return EASINGS.map(e => `<option value="${e}"${e === sel ? ' selected' : ''}>${e}</option>`).join('');
 		}
 
 		function buildRepeaterUI() {
@@ -499,7 +762,7 @@
 				el.className = 'repeater-item';
 				el.innerHTML = `
 					<div class="repeater-header">
-						<span>Rule ${i+1}</span>
+						<span>Rule ${i + 1}</span>
 						<button class="repeater-remove" data-index="${i}">×</button>
 					</div>
 					<div class="cp-row">
@@ -564,15 +827,15 @@
 						<span class="hint">+clockwise / −counter-clockwise</span>
 						<input type="number" data-field="exitToRotate" value="${row.exitToRotate}" min="-360" max="360" step="5">
 					</div>
-					<div style="font-size:10px;color:#888;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px">Stagger Timing</div>
+					<div style="font-size:10px;color:#888;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px">Trigger Timing</div>
 					<div class="cp-row-inline">
 						<div class="cp-row">
-							<label>Enter Start %</label>
+							<label>Start Trigger</label>
 							<span class="hint">% into panel when enter begins</span>
 							<input type="number" data-field="enterPct" value="${row.enterPct}" min="0" max="50" step="1">
 						</div>
 						<div class="cp-row">
-							<label>Exit Start %</label>
+							<label>Exit Trigger</label>
 							<span class="hint">% into panel when exit begins</span>
 							<input type="number" data-field="exitPct" value="${row.exitPct}" min="50" max="100" step="1">
 						</div>
@@ -590,23 +853,23 @@
 		document.getElementById('addRepeater').addEventListener('click', () => {
 			const n = document.querySelectorAll('.ss-track .ss-child').length;
 			config.childAnimations.push({
-				selector: `.element-${n+1}`, enterFromX:0, enterFromY:60, enterFromOpacity:0, enterFromScale:1, enterFromRotate:0,
-				enterDuration:1, enterDelay:0, enterEasing:'power2.out',
-				exitToX:0, exitToY:-60, exitToOpacity:0, exitToScale:1, exitToRotate:0,
-				exitDuration:0.8, exitEasing:'power2.in', enterPct:5, exitPct:60
+				selector: `.element-${n + 1}`, enterFromX: 0, enterFromY: 60, enterFromOpacity: 0, enterFromScale: 1, enterFromRotate: 0,
+				enterDuration: 1, enterDelay: 0, enterEasing: 'power2.out',
+				exitToX: 0, exitToY: -60, exitToOpacity: 0, exitToScale: 1, exitToRotate: 0,
+				exitDuration: 0.8, exitEasing: 'power2.in', enterPct: 5, exitPct: 60
 			});
 			buildRepeaterUI();
 		});
 
 		function collectRepeaterValues() {
-			const numFields = ['enterFromX','enterFromY','enterFromOpacity','enterFromScale','enterFromRotate',
-				'enterDuration','enterDelay','enterPct','exitToX','exitToY','exitToOpacity','exitToScale','exitToRotate',
-				'exitDuration','exitPct'];
+			const numFields = [ 'enterFromX', 'enterFromY', 'enterFromOpacity', 'enterFromScale', 'enterFromRotate',
+				'enterDuration', 'enterDelay', 'enterPct', 'exitToX', 'exitToY', 'exitToOpacity', 'exitToScale', 'exitToRotate',
+				'exitDuration', 'exitPct' ];
 			const rows = [];
 			document.querySelectorAll('.repeater-item').forEach(item => {
 				const row = {};
 				item.querySelectorAll('[data-field]').forEach(inp => {
-					row[inp.dataset.field] = numFields.includes(inp.dataset.field) ? parseFloat(inp.value) : inp.value;
+					row[ inp.dataset.field ] = numFields.includes(inp.dataset.field) ? parseFloat(inp.value) : inp.value;
 				});
 				if (row.selector) rows.push(row);
 			});
@@ -627,7 +890,7 @@
 				while (sp.firstChild) parent.insertBefore(sp.firstChild, sp);
 				parent.removeChild(sp);
 			});
-			[wrapper, track, ...track.querySelectorAll('.ss-child')].forEach(el => {
+			[ wrapper, track, ...track.querySelectorAll('.ss-child') ].forEach(el => {
 				gsap.killTweensOf(el);
 				el.removeAttribute('style');
 			});
@@ -640,6 +903,7 @@
 			const panels = gsap.utils.toArray('.ss-panel');
 			const N = panels.length;
 			const frac = 1 / N;
+			const dynamicDistance = N * 1000;
 
 			wrapper.className = 'ss-wrapper';
 			track.className = 'ss-track' + (isHorizontal ? '' : ' vertical');
@@ -665,8 +929,8 @@
 					const pStart = pi * frac;
 					const eStart = pStart + frac * (row.enterPct / 100);
 					const xStart = pStart + frac * (row.exitPct / 100);
-					const eDur   = frac * (row.enterDuration / 10);
-					const xDur   = frac * (row.exitDuration / 10);
+					const eDur = frac * (row.enterDuration / 10);
+					const xDur = frac * (row.exitDuration / 10);
 
 					gsap.set(el, {
 						x: row.enterFromX, y: row.enterFromY,
@@ -677,7 +941,7 @@
 					});
 
 					tl.to(el, {
-						x:0, y:0, opacity:1, scale:1, rotation:0,
+						x: 0, y: 0, opacity: 1, scale: 1, rotation: 0,
 						duration: eDur, ease: row.enterEasing
 					}, eStart + frac * (row.enterDelay / 10));
 
@@ -697,7 +961,7 @@
 				pin: true,
 				scrub: config.scrub,
 				start: 'top top',
-				end: '+=' + config.distance,
+				end: '+=' + dynamicDistance,
 				onUpdate: self => { progressBar.style.width = (self.progress * 100) + '%'; }
 			});
 
@@ -713,8 +977,7 @@
 
 		function applySettings() {
 			config.direction = document.getElementById('cpDirection').value;
-			config.distance  = parseInt(document.getElementById('cpDistance').value);
-			config.scrub     = parseFloat(document.getElementById('cpScrub').value);
+			config.scrub = parseFloat(document.getElementById('cpScrub').value);
 			config.childAnimations = collectRepeaterValues();
 			buildSlider();
 		}
@@ -724,16 +987,14 @@
 		document.getElementById('cpReset').addEventListener('click', () => {
 			config = JSON.parse(JSON.stringify(DEFAULTS));
 			document.getElementById('cpDirection').value = config.direction;
-			document.getElementById('cpDistance').value   = config.distance;
-			document.getElementById('cpScrub').value      = config.scrub;
+			document.getElementById('cpScrub').value = config.scrub;
 			buildRepeaterUI();
 			buildSlider();
 		});
 
 		(function init() {
 			document.getElementById('cpDirection').value = config.direction;
-			document.getElementById('cpDistance').value   = config.distance;
-			document.getElementById('cpScrub').value      = config.scrub;
+			document.getElementById('cpScrub').value = config.scrub;
 			buildRepeaterUI();
 			buildSlider();
 		})();
@@ -746,4 +1007,5 @@
 	</script>
 
 </body>
+
 </html>
