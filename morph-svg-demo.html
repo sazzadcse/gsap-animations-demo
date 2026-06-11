@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morph SVG Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: #0e100f;
+            color: #f8dbb9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            font-size: 1.8rem;
+            color: #fb8305;
+        }
+
+        .settings-panel {
+            background: #1a1c1b;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 760px;
+        }
+
+        .settings-panel h2 {
+            margin: 0 0 16px;
+            font-size: 1.1rem;
+            color: #fb8305;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+
+        .io-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #aaa;
+        }
+
+        .form-group select,
+        .form-group input {
+            background: #0e100f;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #f8dbb9;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #fb8305;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+        }
+
+        .btn-row {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            background: #fb8305;
+            color: #0e100f;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #e07600;
+        }
+
+        button.secondary {
+            background: #333;
+            color: #f8dbb9;
+        }
+
+        button.secondary:hover {
+            background: #444;
+        }
+
+        svg {
+            max-width: 760px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Morph SVG Animation Demo</h1>
+
+    <div class="settings-panel">
+        <h2>Animation Settings</h2>
+
+        <div class="io-row">
+            <div class="form-group">
+                <label for="fromShape">From Shape</label>
+                <select id="fromShape">
+                    <optgroup label="Basic Shapes">
+                        <option value="triangle" selected>Triangle</option>
+                        <option value="square">Square</option>
+                        <option value="rectangle">Rectangle</option>
+                        <option value="circle">Circle</option>
+                        <option value="ellipse">Ellipse</option>
+                        <option value="diamond">Diamond</option>
+                    </optgroup>
+                    <optgroup label="Polygons">
+                        <option value="pentagon">Pentagon</option>
+                        <option value="hexagon">Hexagon</option>
+                        <option value="heptagon">Heptagon</option>
+                        <option value="octagon">Octagon</option>
+                        <option value="nonagon">Nonagon</option>
+                        <option value="decagon">Decagon</option>
+                    </optgroup>
+                    <optgroup label="Stars">
+                        <option value="star4">4-Point Star</option>
+                        <option value="star5">5-Point Star</option>
+                        <option value="star6">6-Point Star</option>
+                        <option value="star8">8-Point Star</option>
+                    </optgroup>
+                    <optgroup label="Special">
+                        <option value="heart">Heart</option>
+                        <option value="cross">Cross</option>
+                        <option value="arrow">Arrow</option>
+                        <option value="crescent">Crescent</option>
+                        <option value="infinity">Infinity</option>
+                        <option value="lightning">Lightning</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="toLetter">To Character</label>
+                <select id="toLetter">
+                    <option value="a" selected>A</option>
+                    <option value="b">B</option>
+                    <option value="c">C</option>
+                    <option value="d">D</option>
+                    <option value="e">E</option>
+                    <option value="f">F</option>
+                    <option value="g">G</option>
+                    <option value="h">H</option>
+                    <option value="i">I</option>
+                    <option value="j">J</option>
+                    <option value="k">K</option>
+                    <option value="l">L</option>
+                    <option value="m">M</option>
+                    <option value="n">N</option>
+                    <option value="o">O</option>
+                    <option value="p">P</option>
+                    <option value="q">Q</option>
+                    <option value="r">R</option>
+                    <option value="s">S</option>
+                    <option value="t">T</option>
+                    <option value="u">U</option>
+                    <option value="v">V</option>
+                    <option value="w">W</option>
+                    <option value="x">X</option>
+                    <option value="y">Y</option>
+                    <option value="z">Z</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-grid">
+            <div class="form-group">
+                <label for="repeat">Repeat</label>
+                <input type="number" id="repeat" value="20" min="-1" />
+            </div>
+            <div class="form-group">
+                <label for="repeatDelay">Repeat Delay (s)</label>
+                <input type="number" id="repeatDelay" value="0.5" min="0" step="0.1" />
+            </div>
+            <div class="form-group">
+                <label for="delay">Delay (s)</label>
+                <input type="number" id="delay" value="0.5" min="0" step="0.1" />
+            </div>
+            <div class="form-group">
+                <label for="yoyo">Yoyo</label>
+                <select id="yoyo">
+                    <option value="true" selected>True</option>
+                    <option value="false">False</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ease">Ease</label>
+                <select id="ease">
+                    <option value="power2.inOut" selected>power2.inOut</option>
+                    <option value="power1.inOut">power1.inOut</option>
+                    <option value="power3.inOut">power3.inOut</option>
+                    <option value="power4.inOut">power4.inOut</option>
+                    <option value="none">none</option>
+                    <option value="elastic.inOut">elastic.inOut</option>
+                    <option value="back.inOut">back.inOut</option>
+                    <option value="circ.inOut">circ.inOut</option>
+                    <option value="expo.inOut">expo.inOut</option>
+                    <option value="sine.inOut">sine.inOut</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="duration">Duration (s)</label>
+                <input type="number" id="duration" value="1" min="0.1" step="0.1" />
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button id="playBtn">Play Animation</button>
+            <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+    </div>
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400">
+        <defs>
+            <linearGradient id="grad-from" x1="200" y1="300" x2="400" y2="50" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#f8dbb9"></stop>
+                <stop offset="0.5" stop-color="#fb8305"></stop>
+            </linearGradient>
+        </defs>
+        <path id="morphShape" fill="url(#grad-from)" d="M380 110 L470 290 L290 290 Z" />
+    </svg>
+
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/MorphSVGPlugin.min.js"></script>
+
+    <script>
+        const CX = 380, CY = 200, S = 90;
+
+        function r(n) { return Math.round(n * 10) / 10; }
+
+        function poly(radius, sides, rotDeg) {
+            const rot = ((rotDeg || -90) * Math.PI) / 180;
+            let d = "";
+            for (let i = 0; i < sides; i++) {
+                const angle = rot + (2 * Math.PI * i) / sides;
+                const x = r(CX + radius * Math.cos(angle));
+                const y = r(CY + radius * Math.sin(angle));
+                d += (i === 0 ? "M" : "L") + x + " " + y + " ";
+            }
+            return d + "Z";
+        }
+
+        function starPath(outer, inner, pts) {
+            let d = "";
+            const rot = (-90 * Math.PI) / 180;
+            for (let i = 0; i < pts * 2; i++) {
+                const radius = i % 2 === 0 ? outer : inner;
+                const angle = rot + (Math.PI * i) / pts;
+                const x = r(CX + radius * Math.cos(angle));
+                const y = r(CY + radius * Math.sin(angle));
+                d += (i === 0 ? "M" : "L") + x + " " + y + " ";
+            }
+            return d + "Z";
+        }
+
+        function arc(cx, cy, rx, ry) {
+            return "M" + cx + " " + r(cy - ry) +
+                " A" + rx + " " + ry + " 0 0 1 " + r(cx + rx) + " " + cy +
+                " A" + rx + " " + ry + " 0 0 1 " + cx + " " + r(cy + ry) +
+                " A" + rx + " " + ry + " 0 0 1 " + r(cx - rx) + " " + cy +
+                " A" + rx + " " + ry + " 0 0 1 " + cx + " " + r(cy - ry) + " Z";
+        }
+
+        const shapes = {
+            triangle: poly(S, 3),
+            square: poly(S, 4, -45),
+            rectangle: "M" + r(CX - S) + " " + r(CY - S * 0.6) +
+                " L" + r(CX + S) + " " + r(CY - S * 0.6) +
+                " L" + r(CX + S) + " " + r(CY + S * 0.6) +
+                " L" + r(CX - S) + " " + r(CY + S * 0.6) + " Z",
+            circle: arc(CX, CY, S, S),
+            ellipse: arc(CX, CY, S, S * 0.65),
+            diamond: "M" + CX + " " + r(CY - S) +
+                " L" + r(CX + S * 0.65) + " " + CY +
+                " L" + CX + " " + r(CY + S) +
+                " L" + r(CX - S * 0.65) + " " + CY + " Z",
+            pentagon: poly(S, 5),
+            hexagon: poly(S, 6),
+            heptagon: poly(S, 7),
+            octagon: poly(S, 8),
+            nonagon: poly(S, 9),
+            decagon: poly(S, 10),
+            star4: starPath(S, S * 0.4, 4),
+            star5: starPath(S, S * 0.42, 5),
+            star6: starPath(S, S * 0.5, 6),
+            star8: starPath(S, S * 0.45, 8),
+            heart: "M" + CX + " " + r(CY + S * 0.8) +
+                " C" + r(CX - S * 1.2) + " " + r(CY + S * 0.1) +
+                " " + r(CX - S * 0.9) + " " + r(CY - S * 0.7) +
+                " " + CX + " " + r(CY - S * 0.35) +
+                " C" + r(CX + S * 0.9) + " " + r(CY - S * 0.7) +
+                " " + r(CX + S * 1.2) + " " + r(CY + S * 0.1) +
+                " " + CX + " " + r(CY + S * 0.8) + " Z",
+            cross: "M" + r(CX - S * 0.3) + " " + r(CY - S) +
+                " L" + r(CX + S * 0.3) + " " + r(CY - S) +
+                " L" + r(CX + S * 0.3) + " " + r(CY - S * 0.3) +
+                " L" + r(CX + S) + " " + r(CY - S * 0.3) +
+                " L" + r(CX + S) + " " + r(CY + S * 0.3) +
+                " L" + r(CX + S * 0.3) + " " + r(CY + S * 0.3) +
+                " L" + r(CX + S * 0.3) + " " + r(CY + S) +
+                " L" + r(CX - S * 0.3) + " " + r(CY + S) +
+                " L" + r(CX - S * 0.3) + " " + r(CY + S * 0.3) +
+                " L" + r(CX - S) + " " + r(CY + S * 0.3) +
+                " L" + r(CX - S) + " " + r(CY - S * 0.3) +
+                " L" + r(CX - S * 0.3) + " " + r(CY - S * 0.3) + " Z",
+            arrow: "M" + CX + " " + r(CY - S) +
+                " L" + r(CX + S * 0.6) + " " + r(CY - S * 0.2) +
+                " L" + r(CX + S * 0.25) + " " + r(CY - S * 0.2) +
+                " L" + r(CX + S * 0.25) + " " + r(CY + S) +
+                " L" + r(CX - S * 0.25) + " " + r(CY + S) +
+                " L" + r(CX - S * 0.25) + " " + r(CY - S * 0.2) +
+                " L" + r(CX - S * 0.6) + " " + r(CY - S * 0.2) + " Z",
+            crescent: "M" + CX + " " + r(CY - S) +
+                " A" + S + " " + S + " 0 1 0 " + CX + " " + r(CY + S) +
+                " A" + r(S * 0.75) + " " + r(S * 0.75) + " 0 1 1 " + CX + " " + r(CY - S) + " Z",
+            infinity: "M" + CX + " " + CY +
+                " C" + r(CX + S * 0.5) + " " + r(CY - S * 0.85) +
+                " " + r(CX + S) + " " + r(CY - S * 0.55) +
+                " " + r(CX + S * 0.5) + " " + CY +
+                " C" + r(CX + S) + " " + r(CY + S * 0.55) +
+                " " + r(CX + S * 0.5) + " " + r(CY + S * 0.85) +
+                " " + CX + " " + CY +
+                " C" + r(CX - S * 0.5) + " " + r(CY + S * 0.85) +
+                " " + r(CX - S) + " " + r(CY + S * 0.55) +
+                " " + r(CX - S * 0.5) + " " + CY +
+                " C" + r(CX - S) + " " + r(CY - S * 0.55) +
+                " " + r(CX - S * 0.5) + " " + r(CY - S * 0.85) +
+                " " + CX + " " + CY + " Z",
+            lightning: "M" + r(CX + S * 0.1) + " " + r(CY - S) +
+                " L" + r(CX - S * 0.35) + " " + r(CY - S * 0.05) +
+                " L" + r(CX + S * 0.05) + " " + r(CY - S * 0.05) +
+                " L" + r(CX - S * 0.1) + " " + r(CY + S) +
+                " L" + r(CX + S * 0.35) + " " + r(CY + S * 0.05) +
+                " L" + r(CX - S * 0.05) + " " + r(CY + S * 0.05) + " Z"
+        };
+
+        const letters = {
+            a: "M" + r(CX - 35) + " " + r(CY + 50) +
+                " L" + r(CX - 10) + " " + r(CY - 50) +
+                " L" + r(CX + 10) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY + 50) +
+                " L" + r(CX + 20) + " " + r(CY + 50) +
+                " L" + r(CX + 12) + " " + r(CY + 25) +
+                " L" + r(CX - 12) + " " + r(CY + 25) +
+                " L" + r(CX - 20) + " " + r(CY + 50) + " Z",
+            b: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " C" + r(CX + 40) + " " + r(CY - 50) + " " + r(CX + 40) + " " + r(CY - 15) + " " + r(CX + 15) + " " + CY +
+                " C" + r(CX + 45) + " " + r(CY + 15) + " " + r(CX + 45) + " " + r(CY + 50) + " " + r(CX + 15) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            c: "M" + r(CX + 30) + " " + r(CY - 25) +
+                " C" + r(CX + 30) + " " + r(CY - 55) + " " + r(CX - 10) + " " + r(CY - 55) + " " + r(CX - 25) + " " + r(CY - 25) +
+                " C" + r(CX - 40) + " " + r(CY + 10) + " " + r(CX - 40) + " " + r(CY + 40) + " " + r(CX - 10) + " " + r(CY + 50) +
+                " C" + r(CX + 20) + " " + r(CY + 58) + " " + r(CX + 40) + " " + r(CY + 40) + " " + r(CX + 30) + " " + r(CY + 25) +
+                " L" + r(CX + 20) + " " + r(CY + 20) +
+                " C" + r(CX + 25) + " " + r(CY + 35) + " " + r(CX + 10) + " " + r(CY + 42) + " " + r(CX - 8) + " " + r(CY + 35) +
+                " C" + r(CX - 25) + " " + r(CY + 28) + " " + r(CX - 25) + " " + r(CY + 5) + " " + r(CX - 12) + " " + r(CY - 10) +
+                " C" + r(CX) + " " + r(CY - 28) + " " + r(CX + 18) + " " + r(CY - 22) + " " + r(CX + 20) + " " + r(CY - 15) + " Z",
+            d: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 5) + " " + r(CY - 50) +
+                " C" + r(CX + 45) + " " + r(CY - 50) + " " + r(CX + 45) + " " + r(CY + 50) + " " + r(CX + 5) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            e: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 35) +
+                " L" + r(CX - 10) + " " + r(CY - 35) +
+                " L" + r(CX - 10) + " " + r(CY - 10) +
+                " L" + r(CX + 25) + " " + r(CY - 10) +
+                " L" + r(CX + 25) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 35) +
+                " L" + r(CX + 30) + " " + r(CY + 35) +
+                " L" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            f: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 35) +
+                " L" + r(CX - 10) + " " + r(CY - 35) +
+                " L" + r(CX - 10) + " " + r(CY - 10) +
+                " L" + r(CX + 25) + " " + r(CY - 10) +
+                " L" + r(CX + 25) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            g: "M" + r(CX + 25) + " " + r(CY - 25) +
+                " C" + r(CX + 25) + " " + r(CY - 55) + " " + r(CX - 15) + " " + r(CY - 55) + " " + r(CX - 28) + " " + r(CY - 25) +
+                " C" + r(CX - 40) + " " + r(CY + 10) + " " + r(CX - 35) + " " + r(CY + 45) + " " + r(CX - 5) + " " + r(CY + 50) +
+                " C" + r(CX + 20) + " " + r(CY + 55) + " " + r(CX + 40) + " " + r(CY + 35) + " " + r(CX + 30) + " " + r(CY + 15) +
+                " L" + r(CX + 30) + " " + r(CY + 5) +
+                " L" + r(CX + 10) + " " + r(CY + 5) +
+                " L" + r(CX + 10) + " " + r(CY + 18) +
+                " L" + r(CX + 18) + " " + r(CY + 18) +
+                " C" + r(CX + 15) + " " + r(CY + 32) + " " + r(CX) + " " + r(CY + 35) + " " + r(CX - 10) + " " + r(CY + 30) +
+                " C" + r(CX - 25) + " " + r(CY + 22) + " " + r(CX - 25) + " " + r(CY + 2) + " " + r(CX - 15) + " " + r(CY - 12) +
+                " C" + r(CX - 5) + " " + r(CY - 30) + " " + r(CX + 12) + " " + r(CY - 28) + " " + r(CX + 18) + " " + r(CY - 15) + " Z",
+            h: "M" + r(CX - 30) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 10) +
+                " L" + r(CX + 15) + " " + r(CY - 10) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX + 15) + " " + r(CY + 50) +
+                " L" + r(CX + 15) + " " + r(CY + 5) +
+                " L" + r(CX - 15) + " " + r(CY + 5) +
+                " L" + r(CX - 15) + " " + r(CY + 50) +
+                " L" + r(CX - 30) + " " + r(CY + 50) + " Z",
+            i: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 25) + " " + r(CY - 50) +
+                " L" + r(CX + 25) + " " + r(CY - 35) +
+                " L" + r(CX + 10) + " " + r(CY - 35) +
+                " L" + r(CX + 10) + " " + r(CY + 35) +
+                " L" + r(CX + 25) + " " + r(CY + 35) +
+                " L" + r(CX + 25) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 35) +
+                " L" + r(CX - 10) + " " + r(CY + 35) +
+                " L" + r(CX - 10) + " " + r(CY - 35) +
+                " L" + r(CX - 25) + " " + r(CY - 35) + " Z",
+            j: "M" + r(CX + 25) + " " + r(CY - 50) +
+                " L" + r(CX + 25) + " " + r(CY + 30) +
+                " C" + r(CX + 25) + " " + r(CY + 55) + " " + r(CX - 5) + " " + r(CY + 55) + " " + r(CX - 20) + " " + r(CY + 35) +
+                " L" + r(CX - 10) + " " + r(CY + 28) +
+                " C" + r(CX - 2) + " " + r(CY + 40) + " " + r(CX + 10) + " " + r(CY + 40) + " " + r(CX + 10) + " " + r(CY + 30) +
+                " L" + r(CX + 10) + " " + r(CY - 50) + " Z",
+            k: "M" + r(CX - 30) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 5) +
+                " L" + r(CX + 22) + " " + r(CY - 50) +
+                " L" + r(CX + 38) + " " + r(CY - 50) +
+                " L" + r(CX + 8) + " " + r(CY) +
+                " L" + r(CX + 38) + " " + r(CY + 50) +
+                " L" + r(CX + 20) + " " + r(CY + 50) +
+                " L" + r(CX - 8) + " " + r(CY + 8) +
+                " L" + r(CX - 15) + " " + r(CY + 15) +
+                " L" + r(CX - 15) + " " + r(CY + 50) +
+                " L" + r(CX - 30) + " " + r(CY + 50) + " Z",
+            l: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX - 10) + " " + r(CY - 50) +
+                " L" + r(CX - 10) + " " + r(CY + 35) +
+                " L" + r(CX + 30) + " " + r(CY + 35) +
+                " L" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            m: "M" + r(CX - 40) + " " + r(CY + 50) +
+                " L" + r(CX - 40) + " " + r(CY - 50) +
+                " L" + r(CX - 22) + " " + r(CY - 50) +
+                " L" + CX + " " + r(CY - 5) +
+                " L" + r(CX + 22) + " " + r(CY - 50) +
+                " L" + r(CX + 40) + " " + r(CY - 50) +
+                " L" + r(CX + 40) + " " + r(CY + 50) +
+                " L" + r(CX + 25) + " " + r(CY + 50) +
+                " L" + r(CX + 25) + " " + r(CY - 10) +
+                " L" + CX + " " + r(CY + 35) +
+                " L" + r(CX - 25) + " " + r(CY - 10) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            n: "M" + r(CX - 30) + " " + r(CY + 50) +
+                " L" + r(CX - 30) + " " + r(CY - 50) +
+                " L" + r(CX - 12) + " " + r(CY - 50) +
+                " L" + r(CX + 20) + " " + r(CY + 25) +
+                " L" + r(CX + 20) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY + 50) +
+                " L" + r(CX + 17) + " " + r(CY + 50) +
+                " L" + r(CX - 15) + " " + r(CY - 20) +
+                " L" + r(CX - 15) + " " + r(CY + 50) + " Z",
+            o: arc(CX, CY, S * 0.55, S * 0.55),
+            p: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " C" + r(CX + 42) + " " + r(CY - 50) + " " + r(CX + 42) + " " + r(CY - 5) + " " + r(CX + 15) + " " + r(CY) +
+                " L" + r(CX - 25) + " " + CY +
+                " L" + r(CX - 25) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 15) +
+                " L" + r(CX - 10) + " " + r(CY + 15) +
+                " L" + r(CX - 10) + " " + r(CY - 50) + " Z",
+            q: "M" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX + 40) + " " + r(CY + 60) +
+                " L" + r(CX + 25) + " " + r(CY + 50) +
+                " C" + r(CX + 25) + " " + r(CY + 30) + " " + r(CX + 25) + " " + r(CY - 40) + " " + CX + " " + r(CY - 50) +
+                " C" + r(CX - 40) + " " + r(CY - 50) + " " + r(CX - 40) + " " + r(CY + 50) + " " + CX + " " + r(CY + 50) + " Z",
+            r: "M" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " C" + r(CX + 42) + " " + r(CY - 50) + " " + r(CX + 42) + " " + r(CY - 10) + " " + r(CX + 15) + " " + r(CY - 2) +
+                " L" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX + 13) + " " + r(CY + 50) +
+                " L" + r(CX) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 5) +
+                " L" + r(CX - 10) + " " + r(CY + 50) +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            s: "M" + r(CX + 25) + " " + r(CY - 22) +
+                " C" + r(CX + 25) + " " + r(CY - 45) + " " + r(CX - 5) + " " + r(CY - 50) + " " + r(CX - 18) + " " + r(CY - 38) +
+                " C" + r(CX - 32) + " " + r(CY - 25) + " " + r(CX - 20) + " " + r(CY - 5) + " " + r(CX + 5) + " " + r(CY) +
+                " C" + r(CX + 25) + " " + r(CY + 5) + " " + r(CX + 30) + " " + r(CY + 22) + " " + r(CX + 18) + " " + r(CY + 38) +
+                " C" + r(CX + 5) + " " + r(CY + 52) + " " + r(CX - 20) + " " + r(CY + 48) + " " + r(CX - 25) + " " + r(CY + 30) +
+                " L" + r(CX - 15) + " " + r(CY + 25) +
+                " C" + r(CX - 10) + " " + r(CY + 38) + " " + r(CX + 5) + " " + r(CY + 38) + " " + r(CX + 10) + " " + r(CY + 28) +
+                " C" + r(CX + 18) + " " + r(CY + 15) + " " + r(CX + 10) + " " + r(CY + 5) + " " + r(CX - 5) + " " + r(CY + 2) +
+                " C" + r(CX - 18) + " " + r(CY - 2) + " " + r(CX - 22) + " " + r(CY - 15) + " " + r(CX - 10) + " " + r(CY - 25) +
+                " C" + r(CX + 2) + " " + r(CY - 35) + " " + r(CX + 15) + " " + r(CY - 28) + " " + r(CX + 15) + " " + r(CY - 18) + " Z",
+            t: "M" + r(CX - 35) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 35) +
+                " L" + r(CX + 10) + " " + r(CY - 35) +
+                " L" + r(CX + 10) + " " + r(CY + 50) +
+                " L" + r(CX - 10) + " " + r(CY + 50) +
+                " L" + r(CX - 10) + " " + r(CY - 35) +
+                " L" + r(CX - 35) + " " + r(CY - 35) + " Z",
+            u: "M" + r(CX - 30) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY + 20) +
+                " C" + r(CX - 15) + " " + r(CY + 50) + " " + r(CX + 15) + " " + r(CY + 50) + " " + r(CX + 15) + " " + r(CY + 20) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY + 25) +
+                " C" + r(CX + 30) + " " + r(CY + 62) + " " + r(CX - 30) + " " + r(CY + 62) + " " + r(CX - 30) + " " + r(CY + 25) + " Z",
+            v: "M" + r(CX - 35) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 50) +
+                " L" + CX + " " + r(CY + 25) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 50) +
+                " L" + r(CX + 10) + " " + r(CY + 50) +
+                " L" + r(CX - 10) + " " + r(CY + 50) + " Z",
+            w: "M" + r(CX - 45) + " " + r(CY - 50) +
+                " L" + r(CX - 25) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY + 30) +
+                " L" + CX + " " + r(CY - 15) +
+                " L" + r(CX + 15) + " " + r(CY + 30) +
+                " L" + r(CX + 25) + " " + r(CY - 50) +
+                " L" + r(CX + 45) + " " + r(CY - 50) +
+                " L" + r(CX + 25) + " " + r(CY + 50) +
+                " L" + CX + " " + CY +
+                " L" + r(CX - 25) + " " + r(CY + 50) + " Z",
+            x: "M" + r(CX - 35) + " " + r(CY - 50) +
+                " L" + r(CX - 15) + " " + r(CY - 50) +
+                " L" + CX + " " + r(CY - 10) +
+                " L" + r(CX + 15) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 50) +
+                " L" + r(CX + 12) + " " + r(CY) +
+                " L" + r(CX + 35) + " " + r(CY + 50) +
+                " L" + r(CX + 15) + " " + r(CY + 50) +
+                " L" + CX + " " + r(CY + 10) +
+                " L" + r(CX - 15) + " " + r(CY + 50) +
+                " L" + r(CX - 35) + " " + r(CY + 50) +
+                " L" + r(CX - 12) + " " + CY + " Z",
+            y: "M" + r(CX - 35) + " " + r(CY - 50) +
+                " L" + r(CX - 12) + " " + r(CY - 50) +
+                " L" + CX + " " + r(CY - 5) +
+                " L" + r(CX + 12) + " " + r(CY - 50) +
+                " L" + r(CX + 35) + " " + r(CY - 50) +
+                " L" + r(CX + 8) + " " + CY +
+                " L" + r(CX + 8) + " " + r(CY + 50) +
+                " L" + r(CX - 8) + " " + r(CY + 50) +
+                " L" + r(CX - 8) + " " + CY + " Z",
+            z: "M" + r(CX - 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 50) +
+                " L" + r(CX + 30) + " " + r(CY - 30) +
+                " L" + r(CX - 12) + " " + r(CY + 30) +
+                " L" + r(CX + 30) + " " + r(CY + 30) +
+                " L" + r(CX + 30) + " " + r(CY + 50) +
+                " L" + r(CX - 30) + " " + r(CY + 50) +
+                " L" + r(CX - 30) + " " + r(CY + 30) +
+                " L" + r(CX + 12) + " " + r(CY - 30) +
+                " L" + r(CX - 30) + " " + r(CY - 30) + " Z"
+        };
+
+        let currentTween = null;
+
+        function setShape(pathData) {
+            document.getElementById("morphShape").setAttribute("d", pathData);
+        }
+
+        function resetVisuals() {
+            if (currentTween) {
+                currentTween.kill();
+                currentTween = null;
+            }
+            const fromPath = shapes[document.getElementById("fromShape").value];
+            setShape(fromPath);
+        }
+
+        function playAnimation() {
+            const fromKey = document.getElementById("fromShape").value;
+            const toKey = document.getElementById("toLetter").value;
+            const fromPath = shapes[fromKey];
+            const toPath = letters[toKey];
+
+            if (!fromPath || !toPath) return;
+
+            if (currentTween) currentTween.kill();
+
+            setShape(fromPath);
+
+            currentTween = gsap.to("#morphShape", {
+                morphSVG: { shape: toPath, type: "linear" },
+                duration: parseFloat(document.getElementById("duration").value),
+                repeat: parseInt(document.getElementById("repeat").value, 10),
+                repeatDelay: parseFloat(document.getElementById("repeatDelay").value),
+                delay: parseFloat(document.getElementById("delay").value),
+                yoyo: document.getElementById("yoyo").value === "true",
+                ease: document.getElementById("ease").value
+            });
+        }
+
+        document.getElementById("playBtn").addEventListener("click", playAnimation);
+        document.getElementById("resetBtn").addEventListener("click", resetVisuals);
+
+        playAnimation();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GSAP Hero Demo - Animate Anything</title>
+	<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+	<style>
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			background: #0a0a0a;
+			color: #fff;
+			overflow-x: hidden;
+			min-height: 100vh;
+		}
+
+		.visually-hidden {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			border: 0;
+		}
+
+		/* ── NAV ── */
+		.nav {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 100;
+			padding: 1.25rem 2.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background: rgba(10, 10, 10, 0.6);
+			backdrop-filter: blur(12px);
+			border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		}
+
+		.nav__logo {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-weight: 800;
+			font-size: 1.25rem;
+			color: #0ae448;
+			text-decoration: none;
+			letter-spacing: -0.02em;
+		}
+
+		.nav__logo svg {
+			width: 28px;
+			height: 28px;
+		}
+
+		.nav__links {
+			display: flex;
+			gap: 2rem;
+			list-style: none;
+		}
+
+		.nav__links a {
+			color: rgba(255, 255, 255, 0.7);
+			text-decoration: none;
+			font-size: 0.9rem;
+			font-weight: 500;
+			transition: color 0.3s;
+		}
+
+		.nav__links a:hover {
+			color: #0ae448;
+		}
+
+		.nav__cta {
+			background: #0ae448;
+			color: #0a0a0a;
+			border: none;
+			padding: 0.6rem 1.5rem;
+			border-radius: 100px;
+			font-weight: 700;
+			font-size: 0.85rem;
+			cursor: pointer;
+			transition: transform 0.2s, box-shadow 0.2s;
+		}
+
+		.nav__cta:hover {
+			transform: scale(1.05);
+			box-shadow: 0 0 24px rgba(10, 228, 72, 0.4);
+		}
+
+		/* ── HERO SECTION ── */
+		.hero {
+			position: relative;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			overflow: hidden;
+			padding: 8rem 2.5rem 4rem;
+		}
+
+		.hero__container {
+			width: 100%;
+			max-width: 1400px;
+			margin: 0 auto;
+			position: relative;
+			z-index: 2;
+		}
+
+		/* ── HEADING ── */
+		.hero__heading {
+			position: relative;
+			margin-bottom: 2.5rem;
+		}
+
+		.hero__heading-text {
+			font-size: clamp(3.5rem, 10vw, 10rem);
+			font-weight: 900;
+			line-height: 0.92;
+			letter-spacing: -0.04em;
+			pointer-events: none;
+		}
+
+		.hero__row {
+			display: flex;
+			width: 100%;
+		}
+
+		.hero__row--anything {
+			justify-content: flex-end;
+		}
+
+		.hero__row .char {
+			display: inline-block;
+			position: relative;
+			white-space: pre;
+		}
+
+		.hero__row .char.clip {
+			overflow: hidden;
+		}
+
+		.hero__row .char.clip .char-inner {
+			display: inline-block;
+		}
+
+		/* 3D perspective on special letters */
+		.char.perspective {
+			perspective: 750px;
+		}
+
+		.char.flip-char .flip-front,
+		.char.flip-char .flip-back {
+			display: inline-block;
+			backface-visibility: hidden;
+			-webkit-backface-visibility: hidden;
+		}
+
+		.char.flip-char .flip-back {
+			position: absolute;
+			top: 0;
+			left: 0;
+			visibility: hidden;
+		}
+
+		/* ── SVG OVERLAY for replacement effect ── */
+		.svg-overlay {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			pointer-events: none;
+			z-index: 10;
+		}
+
+		.svg-overlay svg {
+			width: 100%;
+			height: 100%;
+		}
+
+		/* ── FLAIR SVGS ── */
+		.flair {
+			position: absolute;
+			font-size: 0;
+			pointer-events: none;
+			z-index: -1;
+		}
+
+		.flair svg,
+		.flair img {
+			width: 100%;
+			height: 100%;
+		}
+
+		.flair--star {
+			width: clamp(60px, 8vw, 130px);
+			height: clamp(60px, 8vw, 130px);
+		}
+
+		.flair--circles {
+			width: clamp(40px, 5vw, 80px);
+			height: clamp(40px, 5vw, 80px);
+		}
+
+		.flair--bolt {
+			width: clamp(50px, 7vw, 110px);
+			height: clamp(70px, 10vw, 160px);
+		}
+
+		.flair--windmill {
+			width: clamp(40px, 6vw, 90px);
+			height: clamp(40px, 6vw, 90px);
+		}
+
+		/* ── TOP ROTATING SVG ── */
+		.top-svg {
+			position: fixed;
+			top: 5vh;
+			left: -200px;
+			width: clamp(80px, 10vw, 140px);
+			height: clamp(80px, 10vw, 140px);
+			z-index: 10;
+			pointer-events: none;
+		}
+
+		/* ── SUBTITLE ── */
+		.hero__subtitle {
+			max-width: 600px;
+			margin-bottom: 2.5rem;
+		}
+
+		.hero__subtitle p {
+			font-size: clamp(1rem, 1.5vw, 1.35rem);
+			color: rgba(255, 255, 255, 0.65);
+			line-height: 1.6;
+			font-weight: 400;
+		}
+
+		.hero__subtitle p strong {
+			color: #0ae448;
+			font-weight: 600;
+		}
+
+		/* ── BUTTON ── */
+		.hero__button {
+			position: relative;
+			display: inline-flex;
+			z-index: 2;
+		}
+
+		.hero__button a {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.75rem;
+			background: #0ae448;
+			color: #0a0a0a;
+			text-decoration: none;
+			padding: 1rem 2.25rem;
+			border-radius: 100px;
+			font-weight: 800;
+			font-size: 1.05rem;
+			transition: transform 0.25s, box-shadow 0.25s;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.hero__button a:hover {
+			transform: scale(1.06);
+			box-shadow: 0 0 40px rgba(10, 228, 72, 0.45);
+		}
+
+		.hero__button a svg {
+			width: 18px;
+			height: 18px;
+			transition: transform 0.3s;
+		}
+
+		.hero__button a:hover svg {
+			transform: translateX(4px);
+		}
+
+		/* ── BACKGROUND ELEMENTS ── */
+		.bg-glow {
+			position: fixed;
+			border-radius: 50%;
+			filter: blur(120px);
+			pointer-events: none;
+			z-index: 0;
+		}
+
+		.bg-glow--green {
+			width: 600px;
+			height: 600px;
+			background: rgba(10, 228, 72, 0.08);
+			top: -10%;
+			right: -10%;
+		}
+
+		.bg-glow--purple {
+			width: 500px;
+			height: 500px;
+			background: rgba(139, 92, 246, 0.06);
+			bottom: -10%;
+			left: -10%;
+		}
+
+		.bg-grid {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-image:
+				linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+			background-size: 60px 60px;
+			z-index: 0;
+			pointer-events: none;
+		}
+
+		/* ── CURSOR FOLLOWER ── */
+		.cursor-glow {
+			position: fixed;
+			width: 300px;
+			height: 300px;
+			border-radius: 50%;
+			background: radial-gradient(circle, rgba(10, 228, 72, 0.07) 0%, transparent 70%);
+			pointer-events: none;
+			z-index: 1;
+			transform: translate(-50%, -50%);
+		}
+
+		/* ── FLOATING SHAPES ── */
+		.floating-shapes {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 1;
+		}
+
+		.floating-shape {
+			position: absolute;
+			opacity: 0.15;
+		}
+
+		/* ── SCROLL INDICATOR ── */
+		.scroll-indicator {
+			position: fixed;
+			bottom: 2rem;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.5rem;
+			z-index: 50;
+		}
+
+		.scroll-indicator span {
+			font-size: 0.7rem;
+			text-transform: uppercase;
+			letter-spacing: 0.15em;
+			color: rgba(255, 255, 255, 0.35);
+		}
+
+		.scroll-indicator .mouse {
+			width: 24px;
+			height: 38px;
+			border: 2px solid rgba(255, 255, 255, 0.25);
+			border-radius: 12px;
+			position: relative;
+		}
+
+		.scroll-indicator .mouse::after {
+			content: '';
+			position: absolute;
+			top: 6px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 3px;
+			height: 8px;
+			background: #0ae448;
+			border-radius: 2px;
+			animation: mouseScroll 1.5s infinite;
+		}
+
+		@keyframes mouseScroll {
+			0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+			100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
+		}
+
+		/* ── NOISE TEXTURE ── */
+		.noise {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 999;
+			opacity: 0.035;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+			background-repeat: repeat;
+			background-size: 256px 256px;
+		}
+
+		/* ── INTERACTIVE LETTER HOVER ── */
+		.hero__row .char {
+			cursor: default;
+		}
+
+		/* ── RESPONSIVE ── */
+		@media (max-width: 768px) {
+			.nav {
+				padding: 1rem 1.25rem;
+			}
+
+			.nav__links {
+				display: none;
+			}
+
+			.hero {
+				padding: 6rem 1.25rem 3rem;
+			}
+
+			.hero__heading-text {
+				font-size: clamp(2.8rem, 13vw, 5rem);
+			}
+		}
+	</style>
+</head>
+<body>
+
+	<!-- Noise overlay -->
+	<div class="noise"></div>
+
+	<!-- Background elements -->
+	<div class="bg-grid"></div>
+	<div class="bg-glow bg-glow--green"></div>
+	<div class="bg-glow bg-glow--purple"></div>
+	<div class="cursor-glow" id="cursorGlow"></div>
+
+	<!-- Floating shapes container -->
+	<div class="floating-shapes" id="floatingShapes"></div>
+
+	<!-- Top rotating SVG (gear/windmill) - starts off-screen left -->
+	<div class="top-svg" id="topSvg">
+		<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<defs>
+				<linearGradient id="gearGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+					<stop offset="0%" stop-color="#0ae448"/>
+					<stop offset="100%" stop-color="#00bae2"/>
+				</linearGradient>
+			</defs>
+			<path d="M50 5 L55 20 L65 10 L62 27 L78 22 L68 35 L85 35 L72 43 L88 50 L72 57 L85 65 L68 65 L78 78 L62 73 L65 90 L55 80 L50 95 L45 80 L35 90 L38 73 L22 78 L32 65 L15 65 L28 57 L12 50 L28 43 L15 35 L32 35 L22 22 L38 27 L35 10 L45 20 Z" fill="url(#gearGrad)" opacity="0.9"/>
+			<circle cx="50" cy="50" r="15" fill="#0a0a0a"/>
+			<circle cx="50" cy="50" r="10" stroke="url(#gearGrad)" stroke-width="2" fill="none"/>
+		</svg>
+	</div>
+
+	<!-- Navigation -->
+	<nav class="nav" id="mainNav">
+		<a href="#" class="nav__logo">
+			<svg viewBox="0 0 32 32" fill="none">
+				<circle cx="16" cy="16" r="14" fill="#0ae448"/>
+				<path d="M10 16 L14 22 L22 10" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+			GSAP
+		</a>
+		<ul class="nav__links">
+			<li><a href="#">Docs</a></li>
+			<li><a href="#">Showcase</a></li>
+			<li><a href="#">Community</a></li>
+			<li><a href="#">Pricing</a></li>
+		</ul>
+		<button class="nav__cta">Get GSAP</button>
+	</nav>
+
+	<!-- Hero Section -->
+	<section class="hero">
+		<div class="hero__container">
+			<div class="hero__heading">
+				<h1 class="visually-hidden">Animate Anything</h1>
+
+				<!-- Decorative heading -->
+				<div class="hero__heading-text" id="heroHeading" aria-hidden="true">
+
+					<!-- Row 1: "Animate" -->
+					<div class="hero__row hero__row--animate" id="rowAnimate">
+						<span class="char" data-char="A">A</span><!--
+						--><span class="char perspective" data-char="n"><!--
+							--><span class="flip-front">n</span><!--
+							--><span class="flip-back">n</span><!--
+						--></span><!--
+						--><span class="char clip" data-char="i" id="flipI"><!--
+							--><span class="char-inner">i</span><!--
+						--></span><!--
+						--><span class="char clip" data-char="m"><!--
+							--><span class="char-inner">m</span><!--
+						--></span><!--
+						--><span class="char" data-char="a">a</span><!--
+						--><span class="char perspective flip-char" data-char="t"><!--
+							--><span class="flip-front">t</span><!--
+							--><span class="flip-back">t</span><!--
+						--></span><!--
+						--><span class="char clip" data-char="e"><!--
+							--><span class="char-inner">e</span><!--
+						--></span>
+					</div>
+
+					<!-- Row 2: "Anything" -->
+					<div class="hero__row hero__row--anything" id="rowAnything">
+						<span class="char clip perspective" data-char="A"><!--
+							--><span class="char-inner">A</span><!--
+						--></span><!--
+						--><span class="char clip" data-char="n"><!--
+							--><span class="char-inner">n</span><!--
+						--></span><!--
+						--><span class="char perspective flip-char" data-char="y"><!--
+							--><span class="flip-front">y</span><!--
+							--><span class="flip-back">y</span><!--
+						--></span><!--
+						--><span class="char" data-char="t">t</span><!--
+						--><span class="char clip" data-char="h" id="charH"><!--
+							--><span class="char-inner">h</span><!--
+						--></span><!--
+						--><span class="char" data-char="i">i</span><!--
+						--><span class="char clip" data-char="n"><!--
+							--><span class="char-inner">n</span><!--
+						--></span><!--
+						--><span class="char clip" data-char="g"><!--
+							--><span class="char-inner">g</span><!--
+						--></span>
+					</div>
+				</div>
+
+				<!-- Flair: Star (near "A" of Animate) -->
+				<div class="flair flair--star" id="flairStar" style="top: -8%; left: -2%;">
+					<svg viewBox="0 0 100 100" fill="none">
+						<defs>
+							<radialGradient id="starGrad" cx="50%" cy="50%" r="50%">
+								<stop offset="0%" stop-color="#FFE9FE"/>
+								<stop offset="100%" stop-color="#FF96F9"/>
+							</radialGradient>
+						</defs>
+						<path d="M50 0 L58 35 L95 35 L65 57 L75 92 L50 70 L25 92 L35 57 L5 35 L42 35 Z" fill="url(#starGrad)"/>
+					</svg>
+				</div>
+
+				<!-- Flair: Circles (near "n" of Animate) -->
+				<div class="flair flair--circles" id="flairCircles" style="top: -15%; left: 25%;">
+					<svg viewBox="0 0 80 80" fill="none">
+						<defs>
+							<radialGradient id="circGrad" cx="50%" cy="50%" r="50%">
+								<stop offset="0%" stop-color="#E193FF"/>
+								<stop offset="100%" stop-color="#DFC7E8"/>
+							</radialGradient>
+						</defs>
+						<circle cx="30" cy="30" r="22" stroke="url(#circGrad)" stroke-width="3" fill="none"/>
+						<circle cx="50" cy="50" r="22" stroke="url(#circGrad)" stroke-width="3" fill="none"/>
+					</svg>
+				</div>
+
+				<!-- Flair: Windmill (near "e" of Animate) -->
+				<div class="flair flair--windmill" id="flairWindmill" style="bottom: -20%; right: 15%;">
+					<svg viewBox="0 0 100 100" fill="none">
+						<defs>
+							<linearGradient id="windGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+								<stop offset="0%" stop-color="#FF8709"/>
+								<stop offset="100%" stop-color="#F7BDF8"/>
+							</linearGradient>
+						</defs>
+						<path d="M50 10 Q60 30 50 50 Q40 30 50 10Z" fill="url(#windGrad)"/>
+						<path d="M90 50 Q70 60 50 50 Q70 40 90 50Z" fill="url(#windGrad)"/>
+						<path d="M50 90 Q40 70 50 50 Q60 70 50 90Z" fill="url(#windGrad)"/>
+						<path d="M10 50 Q30 40 50 50 Q30 60 10 50Z" fill="url(#windGrad)"/>
+					</svg>
+				</div>
+
+				<!-- Flair: Bolt (near "h" of Anything) -->
+				<div class="flair flair--bolt" id="flairBolt" style="top: -5%; right: 22%;">
+					<svg viewBox="0 0 60 100" fill="none">
+						<defs>
+							<linearGradient id="boltGrad" x1="30" y1="0" x2="30" y2="100" gradientUnits="userSpaceOnUse">
+								<stop offset="0%" stop-color="#0ae448"/>
+								<stop offset="100%" stop-color="#00bae2"/>
+							</linearGradient>
+						</defs>
+						<path d="M35 5 L10 50 L28 50 L20 95 L55 42 L35 42 Z" fill="url(#boltGrad)" opacity="0.9"/>
+					</svg>
+				</div>
+			</div>
+
+			<!-- Subtitle -->
+			<div class="hero__subtitle" id="heroSubtitle">
+				<p>A wildly robust JavaScript animation library <strong>built for professionals</strong>. Animation that's reliable, effortless, and incredibly <strong>expressive</strong>.</p>
+			</div>
+
+			<!-- CTA Button -->
+			<div class="hero__button" id="heroButton">
+				<a href="#">
+					Get GSAP
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M5 12h14M12 5l7 7-7 7"/>
+					</svg>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Scroll indicator -->
+	<div class="scroll-indicator" id="scrollIndicator">
+		<div class="mouse"></div>
+		<span>Scroll</span>
+	</div>
+
+	<!-- Extra scroll space -->
+	<div style="height: 100vh; display: flex; align-items: center; justify-content: center;">
+		<p style="color: rgba(255,255,255,0.3); font-size: 1.2rem; letter-spacing: 0.1em; text-transform: uppercase;">Keep Exploring</p>
+	</div>
+
+	<script>
+		(function () {
+			'use strict';
+
+			// ── DOM refs ──
+			const rowAnimate = document.getElementById('rowAnimate');
+			const rowAnything = document.getElementById('rowAnything');
+			const heroHeading = document.getElementById('heroHeading');
+
+			// Collect all chars per row
+			const animateChars = Array.from(rowAnimate.querySelectorAll('.char'));
+			const anythingChars = Array.from(rowAnything.querySelectorAll('.char'));
+			const allChars = [...animateChars, ...anythingChars];
+
+			// ── Initial states ──
+			// Flair SVGs: hidden
+			gsap.set(['#flairStar', '#flairCircles', '#flairWindmill', '#flairBolt'], {
+				scale: 0,
+				opacity: 0,
+				transformOrigin: '50% 50%'
+			});
+
+			// Subtitle & button & scroll indicator: hidden
+			gsap.set('#heroSubtitle', { opacity: 0, y: 30 });
+			gsap.set('#heroButton', { opacity: 0, y: 20 });
+			gsap.set('#scrollIndicator', { opacity: 0 });
+			gsap.set('#cursorGlow', { opacity: 0 });
+
+			// Nav entrance
+			gsap.from('#mainNav', { y: -60, opacity: 0, duration: 0.8, ease: 'power2.out', delay: 0.2 });
+
+			// ── Per-char initial state ──
+			// clip chars: inner pushed down (hidden by overflow:hidden parent)
+			allChars.forEach(function (c) {
+				if (c.classList.contains('clip')) {
+					var inner = c.querySelector('.char-inner');
+					if (inner) gsap.set(inner, { yPercent: 110 });
+				} else {
+					// non-clip chars (including flip chars)
+					gsap.set(c, { opacity: 0, y: 50 });
+				}
+			});
+
+			// Flip-back spans: hidden by default (rotateX -90)
+			rowAnimate.querySelectorAll('.flip-back').forEach(function (el) {
+				gsap.set(el, { rotationX: -90, visibility: 'visible', opacity: 0 });
+			});
+			rowAnything.querySelectorAll('.flip-back').forEach(function (el) {
+				gsap.set(el, { rotationX: -90, visibility: 'visible', opacity: 0 });
+			});
+
+			// ───────────────────────────────────────────
+			// 1. TOP SVG: Slide in from left + continuous clockwise rotation
+			// ───────────────────────────────────────────
+			var topSvgTl = gsap.timeline({ delay: 0.3 });
+			topSvgTl
+				.to('#topSvg', {
+					left: '5vw',
+					rotation: 720,
+					duration: 1.8,
+					ease: 'power3.out'
+				})
+				.to('#topSvg', {
+					rotation: '+=360',
+					duration: 8,
+					ease: 'none',
+					repeat: -1
+				});
+
+			// ───────────────────────────────────────────
+			// 2. MAIN HERO TIMELINE
+			// ───────────────────────────────────────────
+			var tl = gsap.timeline({ delay: 0.5 });
+
+			// ── Row 1 "Animate" reveal ──
+			animateChars.forEach(function (c, i) {
+				var pos = 0.6 + i * 0.07;
+				if (c.classList.contains('clip')) {
+					var inner = c.querySelector('.char-inner');
+					if (inner) tl.to(inner, { yPercent: 0, duration: 0.8, ease: 'power3.out' }, pos);
+				} else {
+					tl.to(c, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, pos);
+				}
+			});
+
+			// ── Row 2 "Anything" reveal ──
+			anythingChars.forEach(function (c, i) {
+				var pos = 1.1 + i * 0.07;
+				if (c.classList.contains('clip')) {
+					var inner = c.querySelector('.char-inner');
+					if (inner) tl.to(inner, { yPercent: 0, duration: 0.8, ease: 'power3.out' }, pos);
+				} else {
+					tl.to(c, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, pos);
+				}
+			});
+
+			// ── 3D flip "n" of Animate ──
+			(function () {
+				var nChar = rowAnimate.querySelector('.char[data-char="n"]');
+				if (!nChar) return;
+				var front = nChar.querySelector('.flip-front');
+				var back = nChar.querySelector('.flip-back');
+				tl.to(front, { rotationX: 90, opacity: 0, duration: 0.4, ease: 'power2.in' }, 2.0)
+				  .to(back, { rotationX: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }, 2.2);
+			})();
+
+			// ── 3D flip "t" of Animate ──
+			(function () {
+				var tChar = rowAnimate.querySelector('.char.flip-char[data-char="t"]');
+				if (!tChar) return;
+				var front = tChar.querySelector('.flip-front');
+				var back = tChar.querySelector('.flip-back');
+				tl.to(front, { rotationX: 90, opacity: 0, duration: 0.4, ease: 'power2.in' }, 2.3)
+				  .to(back, { rotationX: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }, 2.5);
+			})();
+
+			// ── 3D flip "y" of Anything ──
+			(function () {
+				var yChar = rowAnything.querySelector('.char.flip-char[data-char="y"]');
+				if (!yChar) return;
+				var front = yChar.querySelector('.flip-front');
+				var back = yChar.querySelector('.flip-back');
+				tl.to(front, { rotationX: 90, opacity: 0, duration: 0.4, ease: 'power2.in' }, 2.6)
+				  .to(back, { rotationX: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }, 2.8);
+			})();
+
+			// ── Flair animations ──
+			tl.to('#flairStar', { scale: 1, opacity: 1, rotation: 360, duration: 0.8, ease: 'back.out(1.7)' }, 1.4)
+			  .to('#flairCircles', { scale: 1, opacity: 1, duration: 0.6, ease: 'power2.out' }, 1.7)
+			  .to('#flairWindmill', { scale: 1, opacity: 1, rotation: 180, duration: 0.7, ease: 'power2.out' }, 1.9)
+			  .to('#flairBolt', { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 2.1);
+
+			// Continuous flair rotations
+			gsap.to('#flairWindmill', { rotation: '+=360', duration: 12, ease: 'none', repeat: -1 });
+			gsap.to('#flairStar', { rotation: '+=360', duration: 20, ease: 'none', repeat: -1 });
+			gsap.to('#flairCircles', { rotation: '-=360', duration: 15, ease: 'none', repeat: -1 });
+
+			// ── Subtitle, button, scroll indicator ──
+			tl.to('#heroSubtitle', { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, 2.8)
+			  .to('#heroButton', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 3.0)
+			  .to('#scrollIndicator', { opacity: 1, duration: 0.5 }, 3.5);
+
+			// ───────────────────────────────────────────
+			// 3. "i" continuous Y-axis flip
+			// ───────────────────────────────────────────
+			tl.call(function () {
+				var flipI = document.getElementById('flipI');
+				if (!flipI) return;
+				var inner = flipI.querySelector('.char-inner');
+				if (!inner) return;
+				gsap.to(inner, {
+					rotationY: 360,
+					duration: 1.2,
+					ease: 'power1.inOut',
+					repeat: -1,
+					repeatDelay: 2.5
+				});
+			}, null, 2.0);
+
+			// ───────────────────────────────────────────
+			// 4. SVG OVERLAY REPLACEMENT (doesn't touch DOM of chars)
+			//    Overlays SVGs on specific chars, then removes them
+			// ───────────────────────────────────────────
+			var svgMap = {
+				'A': '<svg viewBox="0 0 80 100" fill="none"><path d="M40 5 L75 95 L55 95 L48 75 L32 75 L25 95 L5 95 L40 5Z M40 30 L30 65 L50 65 L40 30Z" fill="#0ae448" opacity="0.8"/></svg>',
+				'n': '<svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="28" stroke="#FF96F9" stroke-width="4" fill="none"/><circle cx="40" cy="40" r="14" fill="#FF96F9" opacity="0.5"/></svg>',
+				't': '<svg viewBox="0 0 60 80" fill="none"><rect x="5" y="5" width="50" height="12" rx="3" fill="#00bae2"/><rect x="24" y="5" width="12" height="70" rx="3" fill="#00bae2"/></svg>',
+				'e': '<svg viewBox="0 0 80 80" fill="none"><path d="M58 40 A22 22 0 1 1 22 40 A22 22 0 1 1 58 40 M22 40 L52 40" stroke="#FF8709" stroke-width="4" fill="none"/></svg>',
+				'g': '<svg viewBox="0 0 80 80" fill="none"><path d="M55 25 A22 22 0 1 0 55 55 L37 55 L37 42 L55 42" stroke="#E193FF" stroke-width="4" fill="none"/></svg>'
+			};
+
+			// Which chars to target (unique selectors to avoid duplicates)
+			var svgTargets = [
+				{ sel: '#rowAnimate .char[data-char="A"]', key: 'A' },
+				{ sel: '#rowAnimate .char[data-char="m"]', key: 'n' },
+				{ sel: '#rowAnimate .char[data-char="t"]', key: 't' },
+				{ sel: '#rowAnimate .char[data-char="e"]', key: 'e' },
+				{ sel: '#rowAnything .char[data-char="g"]', key: 'g' }
+			];
+
+			tl.call(function () {
+				var overlays = [];
+
+				svgTargets.forEach(function (target) {
+					var charEl = document.querySelector(target.sel);
+					if (!charEl) return;
+
+					var rect = charEl.getBoundingClientRect();
+					var size = Math.max(rect.width, rect.height) * 0.85;
+
+					var wrapper = document.createElement('div');
+					wrapper.className = 'svg-overlay';
+					wrapper.style.width = size + 'px';
+					wrapper.style.height = size + 'px';
+					wrapper.innerHTML = svgMap[target.key];
+
+					charEl.appendChild(wrapper);
+					gsap.set(wrapper, { scale: 0, rotation: -180, opacity: 0 });
+
+					overlays.push(wrapper);
+				});
+
+				if (overlays.length === 0) return;
+
+				var replaceTl = gsap.timeline();
+
+				// Fade out the real char text
+				replaceTl.to(overlays, {
+					scale: 1,
+					rotation: 0,
+					opacity: 1,
+					duration: 0.5,
+					ease: 'back.out(1.7)',
+					stagger: 0.06
+				}, 0);
+
+				// Hold for a moment, then remove overlays
+				replaceTl.to(overlays, {
+					scale: 0,
+					rotation: 180,
+					opacity: 0,
+					duration: 0.4,
+					ease: 'power2.in',
+					stagger: 0.04,
+					onComplete: function () {
+						overlays.forEach(function (o) {
+							if (o.parentNode) o.parentNode.removeChild(o);
+						});
+					}
+				}, '+=1.0');
+			}, null, 3.8);
+
+			// ───────────────────────────────────────────
+			// 5. INTERACTIVE: Cursor glow follower
+			// ───────────────────────────────────────────
+			var mouseX = 0, mouseY = 0;
+
+			document.addEventListener('mousemove', function (e) {
+				mouseX = e.clientX;
+				mouseY = e.clientY;
+				gsap.to('#cursorGlow', {
+					x: mouseX,
+					y: mouseY,
+					duration: 0.8,
+					ease: 'power2.out'
+				});
+				gsap.to('#cursorGlow', { opacity: 1, duration: 0.3 });
+			});
+
+			// ───────────────────────────────────────────
+			// 6. INTERACTIVE: Letter hover effects
+			// ───────────────────────────────────────────
+			allChars.forEach(function (charEl) {
+				charEl.style.pointerEvents = 'auto';
+				charEl.style.cursor = 'default';
+
+				charEl.addEventListener('mouseenter', function () {
+					gsap.to(charEl, {
+						scale: 1.15,
+						y: -8,
+						color: '#0ae448',
+						duration: 0.3,
+						ease: 'back.out(1.7)',
+						overwrite: 'auto'
+					});
+				});
+
+				charEl.addEventListener('mouseleave', function () {
+					gsap.to(charEl, {
+						scale: 1,
+						y: 0,
+						color: '#ffffff',
+						duration: 0.4,
+						ease: 'power2.out',
+						overwrite: 'auto'
+					});
+				});
+			});
+
+			// ───────────────────────────────────────────
+			// 7. FLOATING SHAPES
+			// ───────────────────────────────────────────
+			var shapesContainer = document.getElementById('floatingShapes');
+			var shapeColors = ['#0ae448', '#FF96F9', '#00bae2', '#FF8709', '#E193FF'];
+
+			shapeColors.forEach(function (color, i) {
+				var el = document.createElement('div');
+				el.className = 'floating-shape';
+				var size = 6 + Math.random() * 10;
+				el.style.cssText = 'width:' + size + 'px;height:' + size + 'px;background:' + color + ';border-radius:50%;top:' + (10 + Math.random() * 80) + '%;left:' + (5 + Math.random() * 90) + '%;';
+				shapesContainer.appendChild(el);
+
+				gsap.to(el, {
+					y: 'random(-60,60)',
+					x: 'random(-40,40)',
+					duration: 'random(4,8)',
+					ease: 'sine.inOut',
+					repeat: -1,
+					yoyo: true,
+					delay: i * 0.5
+				});
+
+				gsap.to(el, {
+					opacity: 'random(0.05,0.2)',
+					duration: 'random(2,5)',
+					ease: 'sine.inOut',
+					repeat: -1,
+					yoyo: true
+				});
+			});
+
+			// ───────────────────────────────────────────
+			// 8. PARALLAX on mouse move
+			// ───────────────────────────────────────────
+			document.addEventListener('mousemove', function (e) {
+				var cx = (e.clientX / window.innerWidth - 0.5) * 2;
+				var cy = (e.clientY / window.innerHeight - 0.5) * 2;
+
+				gsap.to('#flairStar', { x: cx * 15, y: cy * 10, duration: 1, overwrite: 'auto' });
+				gsap.to('#flairCircles', { x: cx * -10, y: cy * -8, duration: 1, overwrite: 'auto' });
+				gsap.to('#flairWindmill', { x: cx * 12, y: cy * 12, duration: 1, overwrite: 'auto' });
+				gsap.to('#flairBolt', { x: cx * -8, y: cy * 6, duration: 1, overwrite: 'auto' });
+				gsap.to('.bg-glow--green', { x: cx * 30, y: cy * 20, duration: 1.5, overwrite: 'auto' });
+				gsap.to('.bg-glow--purple', { x: cx * -20, y: cy * -15, duration: 1.5, overwrite: 'auto' });
+			});
+
+		})();
+	</script>
+
+</body>
+</html>

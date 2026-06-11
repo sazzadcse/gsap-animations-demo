@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Morphing Plugin</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0e100f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+        }
+
+        :root {
+            --accent: #fb8305;
+            --accent-hover: #e07600;
+            --panel-bg: #1a1c1b;
+            --input-bg: #0e100f;
+            --border: #333;
+            --text-muted: #999;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --success: #2ecc71;
+        }
+
+        .sidebar {
+            width: 420px;
+            min-width: 420px;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 16px;
+            padding-bottom: 70px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+            scrollbar-width: thin;
+            scrollbar-color: #444 transparent;
+        }
+
+        .apply-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 420px;
+            padding: 12px 16px;
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .apply-bar .btn {
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 16px;
+            height: 100vh;
+            overflow: auto;
+            min-width: 0;
+        }
+
+        .logo-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-bar h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .logo-bar .version {
+            font-size: 0.7rem;
+            background: var(--accent);
+            color: #0e100f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: visible;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .panel-header:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .panel-header.collapsed {
+            border-radius: 10px;
+            border-bottom-color: transparent;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-header .icon {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .panel-header .chevron {
+            transition: transform 0.2s;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .panel-header.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+
+        .panel-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .panel-body.collapsed {
+            display: none;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: #e0e0e0;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .form-group input[type="color"] {
+            padding: 2px;
+            height: 36px;
+            cursor: pointer;
+        }
+
+        .form-group input[type="range"] {
+            padding: 0;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            border: none;
+            border-radius: 3px;
+            margin-top: 6px;
+        }
+
+        .form-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0e100f;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #0e100f;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .steps-bar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .step .step-num {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--border);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step.active .step-num {
+            background: var(--accent);
+            color: #0e100f;
+        }
+
+        .step.done .step-num {
+            background: var(--success);
+            color: #0e100f;
+        }
+
+        .step-arrow {
+            color: #444;
+            font-size: 0.7rem;
+            margin: 0 2px;
+        }
+
+        .shape-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .shape-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .shape-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 2px;
+        }
+
+        .shape-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            transition: border-color 0.15s;
+        }
+
+        .shape-item:hover {
+            border-color: #555;
+        }
+
+        .shape-item .shape-idx {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--border);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #aaa;
+            flex-shrink: 0;
+        }
+
+        .shape-item .shape-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .shape-item .shape-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .shape-item .shape-actions button {
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            font-size: 0.7rem;
+            border-radius: 4px;
+        }
+
+        .shape-preview-thumb {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .shape-preview-thumb svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .morph-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 0.8rem;
+            padding: 2px 0;
+            opacity: 0.6;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .canvas-wrapper canvas {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--panel-bg);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .playback-controls .btn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        .timeline-slider {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .timeline-slider input[type="range"] {
+            width: 100%;
+        }
+
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .speed-control select {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: #e0e0e0;
+            padding: 4px 6px;
+            font-size: 0.75rem;
+            outline: none;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .preset-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 4px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #ccc;
+            font-size: 0.65rem;
+            font-family: inherit;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent);
+            background: rgba(251, 131, 5, 0.05);
+        }
+
+        .preset-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .preview-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .preview-area .preview-canvas-wrap {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .preview-area .preview-canvas-wrap canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .preview-area .preview-info {
+            flex: 1;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .preview-area .preview-info .preview-name {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+
+        .preview-area .preview-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .gradient-stops {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gradient-stop {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .gradient-stop input[type="color"] {
+            width: 36px;
+            height: 30px;
+            flex-shrink: 0;
+            padding: 2px;
+        }
+
+        .gradient-stop input[type="number"] {
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .gradient-stop .remove-stop {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .gradient-preview {
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin-top: 4px;
+        }
+
+        .status-bar {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--panel-bg);
+            border: 1px solid var(--accent);
+            color: #e0e0e0;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 900px) {
+            html,
+            body {
+                flex-direction: column;
+                overflow: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                height: auto;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-y: visible;
+                padding-bottom: 16px;
+            }
+
+            .apply-bar {
+                width: 100%;
+                border-right: none;
+                border-top: 1px solid var(--border);
+            }
+
+            .main-area {
+                min-height: 50vh;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="logo-bar">
+            <h1>Canvas Morph Plugin</h1>
+            <span class="version">v1.0</span>
+        </div>
+
+        <div class="steps-bar">
+            <div class="step active" id="step1"><span class="step-num">1</span> Add Shapes</div>
+            <span class="step-arrow">&#9654;</span>
+            <div class="step" id="step2"><span class="step-num">2</span> Arrange</div>
+            <span class="step-arrow">&#9654;</span>
+            <div class="step" id="step3"><span class="step-num">3</span> Play</div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header" data-panel="presets">
+                <h3><span class="icon">&#9733;</span> Quick Add Presets</h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body" id="panel-presets">
+                <p style="margin:0;font-size:0.75rem;color:#999;">Click a shape to add it to your sequence:</p>
+                <div class="preset-grid" id="presetGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header" data-panel="svgInput">
+                <h3><span class="icon">&#9998;</span> Custom SVG Input</h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body" id="panel-svgInput">
+                <div style="background:rgba(251,131,5,0.08);border:1px solid rgba(251,131,5,0.25);border-radius:6px;padding:10px 12px;font-size:0.72rem;color:#ccc;line-height:1.5;">
+                    <strong style="color:var(--accent);">Best results with:</strong><br>
+                    &#8226; <strong>Filled</strong> paths (not stroke-only icons)<br>
+                    &#8226; Single closed shapes (circle, star, polygon, etc.)<br>
+                    &#8226; Paste the full <code>&lt;svg&gt;...&lt;/svg&gt;</code> or just the <code>d="..."</code> attribute value<br>
+                    &#8226; Coordinates are auto-scaled and centered to fit the canvas
+                </div>
+                <div class="form-group">
+                    <label>Paste SVG Code or Path <code>d</code> Attribute</label>
+                    <textarea id="svgInputArea" placeholder='<svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z" fill="currentColor"/></svg>&#10;&#10;or just: M12 2 L2 22 L22 22 Z' rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Shape Name</label>
+                    <input type="text" id="shapeNameInput" placeholder="e.g. My Custom Shape" />
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="previewShapeBtn">&#128065; Preview</button>
+                    <button class="btn btn-primary" id="addShapeBtn">+ Add to Sequence</button>
+                </div>
+                <div class="preview-area" id="previewArea" style="display:none;">
+                    <div class="preview-canvas-wrap">
+                        <canvas id="previewCanvas" width="120" height="120"></canvas>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-name" id="previewName">Preview</div>
+                        <div id="previewPathInfo">Path data OK</div>
+                    </div>
+                    <div class="preview-actions">
+                        <button class="btn btn-success btn-sm" id="confirmAddBtn">+ Add</button>
+                        <button class="btn btn-secondary btn-sm" id="cancelPreviewBtn">&#10005;</button>
+                    </div>
+                </div>
+                <div class="status-bar">
+                    <span id="parseStatus">Paste SVG and click Preview</span>
+                    <span id="shapeCount">0 shapes</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header" data-panel="sequence">
+                <h3><span class="icon">&#9776;</span> Morph Sequence <span id="seqBadge" style="background:#444;color:#aaa;padding:1px 6px;border-radius:3px;font-size:0.65rem;margin-left:4px;">0</span></h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body" id="panel-sequence">
+                <div class="shape-list" id="shapeList">
+                    <div class="empty-state">No shapes yet. Click a preset above or paste custom SVG.</div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-danger btn-sm" id="clearAllBtn" style="display:none;">Clear All</button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header collapsed" data-panel="animation">
+                <h3><span class="icon">&#9881;</span> Animation Settings</h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body collapsed" id="panel-animation">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Duration (s)</label>
+                        <input type="number" id="animDuration" value="2" min="0.1" step="0.1" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ease</label>
+                        <select id="animEase">
+                            <option value="expo.inOut">expo.inOut</option>
+                            <option value="power2.inOut">power2.inOut</option>
+                            <option value="power1.inOut">power1.inOut</option>
+                            <option value="power3.inOut">power3.inOut</option>
+                            <option value="power4.inOut">power4.inOut</option>
+                            <option value="elastic.inOut">elastic.inOut</option>
+                            <option value="back.inOut">back.inOut</option>
+                            <option value="circ.inOut">circ.inOut</option>
+                            <option value="sine.inOut">sine.inOut</option>
+                            <option value="none">none</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Repeat</label>
+                        <input type="number" id="animRepeat" value="-1" min="-1" />
+                    </div>
+                    <div class="form-group">
+                        <label>Repeat Delay (s)</label>
+                        <input type="number" id="animRepeatDelay" value="0.5" min="0" step="0.1" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Stagger (s)</label>
+                        <input type="number" id="animStagger" value="0.5" min="0" step="0.1" />
+                    </div>
+                    <div class="form-group">
+                        <label>Yoyo</label>
+                        <select id="animYoyo">
+                            <option value="false">False</option>
+                            <option value="true">True</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Speed</label>
+                        <select id="animSpeedControl">
+                            <option value="0.25">0.25x</option>
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Auto Play</label>
+                        <select id="animAutoPlay">
+                            <option value="true" selected>True</option>
+                            <option value="false">False</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header collapsed" data-panel="gradient">
+                <h3><span class="icon">&#9670;</span> Fill &amp; Gradient</h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body collapsed" id="panel-gradient">
+                <div class="form-group">
+                    <label>Fill Type</label>
+                    <select id="fillType">
+                        <option value="linear">Linear Gradient</option>
+                        <option value="radial">Radial Gradient</option>
+                        <option value="solid">Solid Color</option>
+                    </select>
+                </div>
+                <div id="solidColorWrap" style="display:none;">
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="color" id="solidColor" value="#fb8305" />
+                    </div>
+                </div>
+                <div id="gradientWrap">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Angle (&deg;)</label>
+                            <input type="number" id="gradAngle" value="45" min="0" max="360" step="1" />
+                        </div>
+                        <div class="btn-row" style="align-items:flex-end;">
+                            <button class="btn btn-secondary btn-sm" id="addStopBtn">+ Stop</button>
+                        </div>
+                    </div>
+                    <div class="gradient-stops" id="gradientStops">
+                        <div class="gradient-stop" data-idx="0">
+                            <input type="color" value="#ff8709" class="stop-color" />
+                            <input type="number" value="0.2" min="0" max="1" step="0.05" class="stop-offset" />
+                            <button class="btn btn-danger btn-sm remove-stop">&#10005;</button>
+                        </div>
+                        <div class="gradient-stop" data-idx="1">
+                            <input type="color" value="#f7bdf8" class="stop-color" />
+                            <input type="number" value="0.7" min="0" max="1" step="0.05" class="stop-offset" />
+                            <button class="btn btn-danger btn-sm remove-stop">&#10005;</button>
+                        </div>
+                    </div>
+                    <div class="gradient-preview" id="gradientPreview"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header collapsed" data-panel="canvas">
+                <h3><span class="icon">&#9634;</span> Canvas Settings</h3>
+                <span class="chevron">&#9660;</span>
+            </div>
+            <div class="panel-body collapsed" id="panel-canvas">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Canvas Size (px)</label>
+                        <input type="number" id="canvasSize" value="400" min="100" max="1200" step="10" />
+                    </div>
+                    <div class="form-group">
+                        <label>Background</label>
+                        <input type="color" id="canvasBg" value="#0e100f" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>SVG Scale (%)</label>
+                        <input type="range" id="svgScale" value="100" min="10" max="200" step="5" />
+                    </div>
+                    <div class="form-group" style="max-width:70px;">
+                        <label>&nbsp;</label>
+                        <input type="number" id="svgScaleNum" value="100" min="10" max="200" step="5" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ViewBox</label>
+                        <input type="text" id="canvasViewBox" value="0 0 100 100" placeholder="0 0 100 100" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <div class="apply-bar" id="applyBar">
+        <button class="btn btn-primary btn-block" id="applyAllBtn">&#10003; Apply All Settings</button>
+    </div>
+
+    <main class="main-area">
+        <div class="canvas-wrapper">
+            <canvas id="morphCanvas"></canvas>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/MorphSVGPlugin.min.js"></script>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const CX = 50, CY = 50, S = 40;
+
+            function r(n) { return Math.round(n * 10) / 10; }
+
+            function poly(radius, sides, rotDeg) {
+                const rot = ((rotDeg || -90) * Math.PI) / 180;
+                let d = "";
+                for (let i = 0; i < sides; i++) {
+                    const angle = rot + (2 * Math.PI * i) / sides;
+                    const x = r(CX + radius * Math.cos(angle));
+                    const y = r(CY + radius * Math.sin(angle));
+                    d += (i === 0 ? "M" : "L") + x + " " + y + " ";
+                }
+                return d + "Z";
+            }
+
+            function starPath(outer, inner, pts) {
+                let d = "";
+                const rot = (-90 * Math.PI) / 180;
+                for (let i = 0; i < pts * 2; i++) {
+                    const radius = i % 2 === 0 ? outer : inner;
+                    const angle = rot + (Math.PI * i) / pts;
+                    const x = r(CX + radius * Math.cos(angle));
+                    const y = r(CY + radius * Math.sin(angle));
+                    d += (i === 0 ? "M" : "L") + x + " " + y + " ";
+                }
+                return d + "Z";
+            }
+
+            function arc(cx, cy, rx, ry) {
+                return "M" + cx + " " + r(cy - ry) +
+                    " A" + rx + " " + ry + " 0 0 1 " + r(cx + rx) + " " + cy +
+                    " A" + rx + " " + ry + " 0 0 1 " + cx + " " + r(cy + ry) +
+                    " A" + rx + " " + ry + " 0 0 1 " + r(cx - rx) + " " + cy +
+                    " A" + rx + " " + ry + " 0 0 1 " + cx + " " + r(cy - ry) + " Z";
+            }
+
+            const PRESETS = {
+                circle: { name: "Circle", d: arc(CX, CY, S, S) },
+                square: { name: "Square", d: poly(S * 0.85, 4, -45) },
+                triangle: { name: "Triangle", d: poly(S, 3) },
+                diamond: { name: "Diamond", d: "M" + CX + " " + r(CY - S) + " L" + r(CX + S * 0.65) + " " + CY + " L" + CX + " " + r(CY + S) + " L" + r(CX - S * 0.65) + " " + CY + " Z" },
+                pentagon: { name: "Pentagon", d: poly(S, 5) },
+                hexagon: { name: "Hexagon", d: poly(S, 6) },
+                octagon: { name: "Octagon", d: poly(S, 8) },
+                star5: { name: "5-Point Star", d: starPath(S, S * 0.42, 5) },
+                star6: { name: "6-Point Star", d: starPath(S, S * 0.5, 6) },
+                star8: { name: "8-Point Star", d: starPath(S, S * 0.45, 8) },
+                heart: {
+                    name: "Heart", d: "M" + CX + " " + r(CY + S * 0.8) +
+                        " C" + r(CX - S * 1.2) + " " + r(CY + S * 0.1) + " " + r(CX - S * 0.9) + " " + r(CY - S * 0.7) + " " + CX + " " + r(CY - S * 0.35) +
+                        " C" + r(CX + S * 0.9) + " " + r(CY - S * 0.7) + " " + r(CX + S * 1.2) + " " + r(CY + S * 0.1) + " " + CX + " " + r(CY + S * 0.8) + " Z"
+                },
+                cross: {
+                    name: "Cross", d: "M" + r(CX - S * 0.3) + " " + r(CY - S) +
+                        " L" + r(CX + S * 0.3) + " " + r(CY - S) + " L" + r(CX + S * 0.3) + " " + r(CY - S * 0.3) +
+                        " L" + r(CX + S) + " " + r(CY - S * 0.3) + " L" + r(CX + S) + " " + r(CY + S * 0.3) +
+                        " L" + r(CX + S * 0.3) + " " + r(CY + S * 0.3) + " L" + r(CX + S * 0.3) + " " + r(CY + S) +
+                        " L" + r(CX - S * 0.3) + " " + r(CY + S) + " L" + r(CX - S * 0.3) + " " + r(CY + S * 0.3) +
+                        " L" + r(CX - S) + " " + r(CY + S * 0.3) + " L" + r(CX - S) + " " + r(CY - S * 0.3) +
+                        " L" + r(CX - S * 0.3) + " " + r(CY - S * 0.3) + " Z"
+                },
+                arrow: {
+                    name: "Arrow", d: "M" + CX + " " + r(CY - S) +
+                        " L" + r(CX + S * 0.6) + " " + r(CY - S * 0.2) + " L" + r(CX + S * 0.25) + " " + r(CY - S * 0.2) +
+                        " L" + r(CX + S * 0.25) + " " + r(CY + S) + " L" + r(CX - S * 0.25) + " " + r(CY + S) +
+                        " L" + r(CX - S * 0.25) + " " + r(CY - S * 0.2) + " L" + r(CX - S * 0.6) + " " + r(CY - S * 0.2) + " Z"
+                },
+                crescent: {
+                    name: "Crescent", d: "M" + CX + " " + r(CY - S) +
+                        " A" + S + " " + S + " 0 1 0 " + CX + " " + r(CY + S) +
+                        " A" + r(S * 0.75) + " " + r(S * 0.75) + " 0 1 1 " + CX + " " + r(CY - S) + " Z"
+                },
+                infinity: {
+                    name: "Infinity", d: "M" + CX + " " + CY +
+                        " C" + r(CX + S * 0.5) + " " + r(CY - S * 0.85) + " " + r(CX + S) + " " + r(CY - S * 0.55) + " " + r(CX + S * 0.5) + " " + CY +
+                        " C" + r(CX + S) + " " + r(CY + S * 0.55) + " " + r(CX + S * 0.5) + " " + r(CY + S * 0.85) + " " + CX + " " + CY +
+                        " C" + r(CX - S * 0.5) + " " + r(CY + S * 0.85) + " " + r(CX - S) + " " + r(CY + S * 0.55) + " " + r(CX - S * 0.5) + " " + CY +
+                        " C" + r(CX - S) + " " + r(CY - S * 0.55) + " " + r(CX - S * 0.5) + " " + r(CY - S * 0.85) + " " + CX + " " + CY + " Z"
+                },
+                lightning: {
+                    name: "Lightning", d: "M" + r(CX + S * 0.1) + " " + r(CY - S) +
+                        " L" + r(CX - S * 0.35) + " " + r(CY - S * 0.05) + " L" + r(CX + S * 0.05) + " " + r(CY - S * 0.05) +
+                        " L" + r(CX - S * 0.1) + " " + r(CY + S) + " L" + r(CX + S * 0.35) + " " + r(CY + S * 0.05) +
+                        " L" + r(CX - S * 0.05) + " " + r(CY + S * 0.05) + " Z"
+                }
+            };
+
+            let shapes = [];
+            let timeline = null;
+            let isPlaying = false;
+            let previewedPathD = null;
+            let activeShapeFill = null;
+
+            const canvas = document.getElementById("morphCanvas");
+            const ctx = canvas.getContext("2d");
+            const svgInputArea = document.getElementById("svgInputArea");
+            const shapeNameInput = document.getElementById("shapeNameInput");
+            const addShapeBtn = document.getElementById("addShapeBtn");
+            const previewShapeBtn = document.getElementById("previewShapeBtn");
+            const confirmAddBtn = document.getElementById("confirmAddBtn");
+            const cancelPreviewBtn = document.getElementById("cancelPreviewBtn");
+            const previewArea = document.getElementById("previewArea");
+            const previewCanvas = document.getElementById("previewCanvas");
+            const previewNameEl = document.getElementById("previewName");
+            const previewPathInfoEl = document.getElementById("previewPathInfo");
+            const shapeList = document.getElementById("shapeList");
+            const clearAllBtn = document.getElementById("clearAllBtn");
+            const parseStatus = document.getElementById("parseStatus");
+            const shapeCountEl = document.getElementById("shapeCount");
+            const seqBadge = document.getElementById("seqBadge");
+            const gradientPreview = document.getElementById("gradientPreview");
+            const toastEl = document.getElementById("toast");
+
+            function showToast(msg, dur) {
+                toastEl.textContent = msg;
+                toastEl.classList.add("show");
+                setTimeout(() => toastEl.classList.remove("show"), dur || 2500);
+            }
+
+            function updateSteps() {
+                const step1 = document.getElementById("step1");
+                const step2 = document.getElementById("step2");
+                const step3 = document.getElementById("step3");
+
+                step1.className = "step" + (shapes.length >= 1 ? " done" : " active");
+                step2.className = "step" + (shapes.length >= 2 ? " done" : shapes.length === 1 ? " active" : "");
+                step3.className = "step" + (isPlaying ? " active" : shapes.length >= 2 ? "" : "");
+            }
+
+            function parseSVGInput(input) {
+                input = input.trim();
+                if (!input) return null;
+
+                if (/^[MmLlHhVvCcSsQqTtAaZz0-9\s,.\-+eE]+$/.test(input)) {
+                    return normalizePathToViewBox(input);
+                }
+
+                try {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(input, "image/svg+xml");
+                    const paths = doc.querySelectorAll("path");
+                    if (paths.length > 0) {
+                        var allD = "";
+                        var hasFillPaths = false;
+                        for (var pi = 0; pi < paths.length; pi++) {
+                            var pd = paths[pi].getAttribute("d");
+                            if (pd) {
+                                allD += pd + " ";
+                                var fill = paths[pi].getAttribute("fill");
+                                if (fill && fill !== "none") hasFillPaths = true;
+                            }
+                        }
+                        if (allD) {
+                            var normalized = normalizePathToViewBox(allD.trim());
+                            if (!hasFillPaths) {
+                                var strokeW = paths[0].getAttribute("stroke-width") || "2";
+                                showToast("Note: This is a stroke-based icon. Morphing works best with filled shapes. Result may look different.", 4000);
+                            }
+                            return normalized;
+                        }
+                    }
+
+                    const polygons = doc.querySelectorAll("polygon");
+                    if (polygons.length > 0) {
+                        const pts = polygons[0].getAttribute("points").trim().split(/\s+/);
+                        let d = "";
+                        pts.forEach((p, i) => {
+                            const coords = p.split(",");
+                            d += (i === 0 ? "M" : "L") + coords[0] + "," + coords[1] + " ";
+                        });
+                        return normalizePathToViewBox(d + "Z");
+                    }
+
+                    const circles = doc.querySelectorAll("circle");
+                    if (circles.length > 0) {
+                        const c = circles[0];
+                        var cd = arc(parseFloat(c.getAttribute("cx") || 50), parseFloat(c.getAttribute("cy") || 50), parseFloat(c.getAttribute("r") || 40), parseFloat(c.getAttribute("r") || 40));
+                        return normalizePathToViewBox(cd);
+                    }
+
+                    const rects = doc.querySelectorAll("rect");
+                    if (rects.length > 0) {
+                        const rect = rects[0];
+                        const rx = parseFloat(rect.getAttribute("x") || 0);
+                        const ry = parseFloat(rect.getAttribute("y") || 0);
+                        const rw = parseFloat(rect.getAttribute("width") || 100);
+                        const rh = parseFloat(rect.getAttribute("height") || 100);
+                        return normalizePathToViewBox("M" + rx + " " + ry + " L" + (rx + rw) + " " + ry + " L" + (rx + rw) + " " + (ry + rh) + " L" + rx + " " + (ry + rh) + " Z");
+                    }
+
+                    const ellipses = doc.querySelectorAll("ellipse");
+                    if (ellipses.length > 0) {
+                        const el = ellipses[0];
+                        var ed = arc(parseFloat(el.getAttribute("cx") || 50), parseFloat(el.getAttribute("cy") || 50), parseFloat(el.getAttribute("rx") || 40), parseFloat(el.getAttribute("ry") || 30));
+                        return normalizePathToViewBox(ed);
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            }
+
+            function addShape(name, pathD) {
+                if (!pathD) {
+                    showToast("Invalid SVG input");
+                    return;
+                }
+                shapes.push({
+                    name: name || ("Shape " + (shapes.length + 1)),
+                    d: pathD,
+                    fillType: null,
+                    solidColor: "#fb8305",
+                    gradientAngle: 45,
+                    gradientStops: [
+                        { color: "#ff8709", offset: 0.2 },
+                        { color: "#f7bdf8", offset: 0.7 }
+                    ]
+                });
+                renderShapeList();
+                updateShapeCount();
+                updateSteps();
+                drawFirstShape();
+                showToast("Added: " + (name || "Shape " + shapes.length));
+                var autoPlay = document.getElementById("animAutoPlay").value === "true";
+                if (autoPlay && shapes.length >= 2) {
+                    if (isPlaying) stopSequence();
+                    playSequence();
+                }
+            }
+
+            function removeShape(idx) {
+                shapes.splice(idx, 1);
+                renderShapeList();
+                updateShapeCount();
+                updateSteps();
+                if (shapes.length > 0) drawFirstShape();
+                else clearCanvas();
+            }
+
+            function moveShape(idx, dir) {
+                const newIdx = idx + dir;
+                if (newIdx < 0 || newIdx >= shapes.length) return;
+                const temp = shapes[idx];
+                shapes[idx] = shapes[newIdx];
+                shapes[newIdx] = temp;
+                renderShapeList();
+            }
+
+            function updateShapeCount() {
+                const n = shapes.length;
+                shapeCountEl.textContent = n + " shape" + (n !== 1 ? "s" : "");
+                seqBadge.textContent = n;
+                clearAllBtn.style.display = n > 0 ? "" : "none";
+            }
+
+            function renderShapeList() {
+                if (shapes.length === 0) {
+                    shapeList.innerHTML = '<div class="empty-state">No shapes yet. Click a preset above or paste custom SVG.</div>';
+                    return;
+                }
+                shapeList.innerHTML = "";
+                shapes.forEach((s, i) => {
+                    if (i > 0) {
+                        const arrow = document.createElement("div");
+                        arrow.className = "morph-arrow";
+                        arrow.textContent = "\u25BC morph to";
+                        shapeList.appendChild(arrow);
+                    }
+
+                    var thumbFill = "#fb8305";
+                    if (s.fillType === "solid") {
+                        thumbFill = s.solidColor || "#fb8305";
+                    } else if (s.fillType && s.gradientStops && s.gradientStops.length > 0) {
+                        thumbFill = s.gradientStops[0].color || "#fb8305";
+                    }
+
+                    const item = document.createElement("div");
+                    item.style.cssText = "display:flex;flex-direction:column;gap:4px;";
+                    item.innerHTML =
+                        '<div class="shape-item">' +
+                        '<span class="shape-idx">' + (i + 1) + '</span>' +
+                        '<div class="shape-preview-thumb"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="' + s.d.replace(/"/g, '&quot;') + '" fill="' + thumbFill + '"/></svg></div>' +
+                        '<span class="shape-name" title="' + s.name + '">' + s.name + '</span>' +
+                        '<div class="shape-actions">' +
+                        '<button class="btn btn-secondary btn-sm" data-action="grad" title="Gradient settings">&#9670;</button>' +
+                        '<button class="btn btn-secondary btn-sm" data-action="up" title="Move up"' + (i === 0 ? ' disabled' : '') + '>&#9650;</button>' +
+                        '<button class="btn btn-secondary btn-sm" data-action="down" title="Move down"' + (i === shapes.length - 1 ? ' disabled' : '') + '>&#9660;</button>' +
+                        '<button class="btn btn-danger btn-sm" data-action="remove" title="Remove">&#10005;</button>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="shape-grad-editor" style="display:none;padding:8px 10px 8px 38px;background:rgba(0,0,0,0.15);border-top:1px solid #2a2a2a;border-radius:0 0 6px 6px;">' +
+                        '<div style="display:flex;gap:8px;margin-bottom:6px;">' +
+                        '<div style="display:flex;flex-direction:column;flex:1;">' +
+                        '<label style="font-size:0.65rem;color:#888;margin-bottom:2px;">Fill Type</label>' +
+                        '<select class="sg-fill-type" style="background:#0e100f;border:1px solid #333;border-radius:4px;color:#e0e0e0;padding:4px 6px;font-size:0.75rem;">' +
+                        '<option value=""' + (!s.fillType ? ' selected' : '') + '>General</option>' +
+                        '<option value="solid"' + (s.fillType === "solid" ? ' selected' : '') + '>Solid</option>' +
+                        '<option value="linear"' + (s.fillType === "linear" ? ' selected' : '') + '>Linear Gradient</option>' +
+                        '<option value="radial"' + (s.fillType === "radial" ? ' selected' : '') + '>Radial Gradient</option>' +
+                        '</select>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="sg-solid-wrap" style="display:' + (s.fillType === "solid" ? "block" : "none") + ';margin-bottom:6px;">' +
+                        '<label style="font-size:0.65rem;color:#888;margin-bottom:2px;">Color</label>' +
+                        '<input type="color" class="sg-solid-color" value="' + (s.solidColor || "#fb8305") + '" style="width:100%;height:28px;padding:1px;border:1px solid #444;border-radius:4px;" />' +
+                        '</div>' +
+                        '<div class="sg-gradient-wrap" style="display:' + (s.fillType === "linear" || s.fillType === "radial" ? "block" : "none") + ';">' +
+                        '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:flex-end;">' +
+                        '<div style="display:flex;flex-direction:column;flex:1;">' +
+                        '<label style="font-size:0.65rem;color:#888;margin-bottom:2px;">Angle</label>' +
+                        '<input type="number" class="sg-grad-angle" value="' + (s.gradientAngle || 45) + '" min="0" max="360" step="1" style="background:#0e100f;border:1px solid #333;border-radius:4px;color:#e0e0e0;padding:4px 6px;font-size:0.75rem;" />' +
+                        '</div>' +
+                        '<button class="btn btn-secondary btn-sm sg-add-stop" style="margin-bottom:0;">+ Stop</button>' +
+                        '</div>' +
+                        '<div class="sg-stops-container"></div>' +
+                        '<div class="sg-grad-preview" style="height:16px;border-radius:4px;border:1px solid #333;margin-top:4px;"></div>' +
+                        '</div>' +
+                        '</div>';
+
+                    var shapeIdx = i;
+
+                    item.querySelector('[data-action="remove"]').addEventListener("click", function () { removeShape(shapeIdx); });
+                    item.querySelector('[data-action="up"]').addEventListener("click", function () { moveShape(shapeIdx, -1); });
+                    item.querySelector('[data-action="down"]').addEventListener("click", function () { moveShape(shapeIdx, 1); });
+
+                    var gradBtn = item.querySelector('[data-action="grad"]');
+                    var gradEditor = item.querySelector('.shape-grad-editor');
+                    gradBtn.addEventListener("click", function () {
+                        gradEditor.style.display = gradEditor.style.display === "none" ? "block" : "none";
+                    });
+
+                    var fillTypeSelect = item.querySelector('.sg-fill-type');
+                    var solidWrap = item.querySelector('.sg-solid-wrap');
+                    var gradientWrap = item.querySelector('.sg-gradient-wrap');
+                    fillTypeSelect.addEventListener("change", function () {
+                        var val = this.value;
+                        shapes[shapeIdx].fillType = val || null;
+                        solidWrap.style.display = val === "solid" ? "block" : "none";
+                        gradientWrap.style.display = (val === "linear" || val === "radial") ? "block" : "none";
+                        updateShapeThumbFill(item, shapes[shapeIdx]);
+                        updateShapeGradPreview(item, shapes[shapeIdx]);
+                    });
+
+                    var solidColorInput = item.querySelector('.sg-solid-color');
+                    solidColorInput.addEventListener("input", function () {
+                        shapes[shapeIdx].solidColor = this.value;
+                        updateShapeThumbFill(item, shapes[shapeIdx]);
+                    });
+
+                    var gradAngleInput = item.querySelector('.sg-grad-angle');
+                    gradAngleInput.addEventListener("input", function () {
+                        shapes[shapeIdx].gradientAngle = parseFloat(this.value) || 0;
+                        updateShapeGradPreview(item, shapes[shapeIdx]);
+                    });
+
+                    var stopsContainer = item.querySelector('.sg-stops-container');
+                    renderShapeStops(stopsContainer, shapeIdx, item);
+
+                    item.querySelector('.sg-add-stop').addEventListener("click", function () {
+                        shapes[shapeIdx].gradientStops.push({ color: "#ffffff", offset: 0.5 });
+                        renderShapeStops(stopsContainer, shapeIdx, item);
+                        updateShapeGradPreview(item, shapes[shapeIdx]);
+                    });
+
+                    updateShapeGradPreview(item, shapes[shapeIdx]);
+                    shapeList.appendChild(item);
+                });
+            }
+
+            function renderShapeStops(container, shapeIdx, itemEl) {
+                container.innerHTML = "";
+                var stops = shapes[shapeIdx].gradientStops || [];
+                stops.forEach(function (stop, si) {
+                    var row = document.createElement("div");
+                    row.style.cssText = "display:flex;align-items:center;gap:4px;margin-bottom:3px;";
+                    row.innerHTML =
+                        '<input type="color" class="sg-stop-color" value="' + stop.color + '" style="width:28px;height:22px;padding:1px;border:1px solid #444;border-radius:3px;" />' +
+                        '<input type="number" class="sg-stop-offset" value="' + stop.offset + '" min="0" max="1" step="0.05" style="width:50px;background:#0e100f;border:1px solid #333;border-radius:4px;color:#e0e0e0;padding:3px 5px;font-size:0.7rem;" />' +
+                        '<button class="btn btn-danger btn-sm sg-remove-stop" style="width:20px;height:20px;padding:0;font-size:0.6rem;">&#10005;</button>';
+                    row.querySelector('.sg-stop-color').addEventListener("input", function () {
+                        shapes[shapeIdx].gradientStops[si].color = this.value;
+                        updateShapeThumbFill(itemEl, shapes[shapeIdx]);
+                        updateShapeGradPreview(itemEl, shapes[shapeIdx]);
+                    });
+                    row.querySelector('.sg-stop-offset').addEventListener("input", function () {
+                        shapes[shapeIdx].gradientStops[si].offset = parseFloat(this.value) || 0;
+                        updateShapeGradPreview(itemEl, shapes[shapeIdx]);
+                    });
+                    row.querySelector('.sg-remove-stop').addEventListener("click", function () {
+                        if (shapes[shapeIdx].gradientStops.length > 2) {
+                            shapes[shapeIdx].gradientStops.splice(si, 1);
+                            renderShapeStops(container, shapeIdx, itemEl);
+                            updateShapeGradPreview(itemEl, shapes[shapeIdx]);
+                        } else {
+                            showToast("Minimum 2 gradient stops");
+                        }
+                    });
+                    container.appendChild(row);
+                });
+            }
+
+            function updateShapeThumbFill(itemEl, shape) {
+                var thumbFill = "#fb8305";
+                if (shape.fillType === "solid") {
+                    thumbFill = shape.solidColor || "#fb8305";
+                } else if (shape.fillType && shape.gradientStops && shape.gradientStops.length > 0) {
+                    thumbFill = shape.gradientStops[0].color || "#fb8305";
+                }
+                var svgPath = itemEl.querySelector(".shape-preview-thumb path");
+                if (svgPath) svgPath.setAttribute("fill", thumbFill);
+            }
+
+            function updateShapeGradPreview(itemEl, shape) {
+                var preview = itemEl.querySelector('.sg-grad-preview');
+                if (!preview) return;
+                if (!shape.fillType) {
+                    preview.style.background = "transparent";
+                    return;
+                }
+                if (shape.fillType === "solid") {
+                    preview.style.background = shape.solidColor || "#fb8305";
+                    return;
+                }
+                var stops = (shape.gradientStops || []).slice().sort(function (a, b) { return a.offset - b.offset; });
+                var cssStops = stops.map(function (s) { return s.color + " " + (s.offset * 100) + "%"; }).join(", ");
+                var angle = shape.gradientAngle || 0;
+                preview.style.background = shape.fillType === "radial"
+                    ? "radial-gradient(circle, " + cssStops + ")"
+                    : "linear-gradient(" + angle + "deg, " + cssStops + ")";
+            }
+
+            function drawRawPath(targetCtx, rawPath, fill, bg) {
+                const viewBox = getViewBox();
+                targetCtx.clearRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
+                targetCtx.fillStyle = bg;
+                targetCtx.fillRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
+                targetCtx.beginPath();
+                for (let j = 0; j < rawPath.length; j++) {
+                    const segment = rawPath[j];
+                    const l = segment.length;
+                    targetCtx.moveTo(segment[0], segment[1]);
+                    for (let i = 2; i < l; i += 6) {
+                        targetCtx.bezierCurveTo(segment[i], segment[i + 1], segment[i + 2], segment[i + 3], segment[i + 4], segment[i + 5]);
+                    }
+                    if (segment.closed) targetCtx.closePath();
+                }
+                targetCtx.fillStyle = fill;
+                targetCtx.fill("evenodd");
+            }
+
+            function getFillStyle() {
+                const fillType = document.getElementById("fillType").value;
+                if (fillType === "solid") return document.getElementById("solidColor").value;
+
+                const stops = [];
+                document.querySelectorAll("#gradientStops .gradient-stop").forEach(el => {
+                    stops.push({
+                        color: el.querySelector(".stop-color").value,
+                        offset: parseFloat(el.querySelector(".stop-offset").value)
+                    });
+                });
+                stops.sort((a, b) => a.offset - b.offset);
+
+                const viewBox = getViewBox();
+                const angle = parseFloat(document.getElementById("gradAngle").value) * Math.PI / 180;
+                const cx = viewBox.x + viewBox.width / 2;
+                const cy = viewBox.y + viewBox.height / 2;
+                const len = viewBox.width / 2;
+
+                if (fillType === "radial") {
+                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, len);
+                    stops.forEach(s => grad.addColorStop(s.offset, s.color));
+                    return grad;
+                }
+
+                const x1 = cx - len * Math.cos(angle);
+                const y1 = cy - len * Math.sin(angle);
+                const x2 = cx + len * Math.cos(angle);
+                const y2 = cy + len * Math.sin(angle);
+                const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                stops.forEach(s => grad.addColorStop(s.offset, s.color));
+                return grad;
+            }
+
+            function buildShapeFillStyle(shape) {
+                if (!shape || !shape.fillType) return null;
+                if (shape.fillType === "solid") return shape.solidColor || "#fb8305";
+
+                var stops = (shape.gradientStops || []).slice().sort(function (a, b) { return a.offset - b.offset; });
+                var viewBox = getViewBox();
+                var angle = (shape.gradientAngle || 0) * Math.PI / 180;
+                var cx = viewBox.x + viewBox.width / 2;
+                var cy = viewBox.y + viewBox.height / 2;
+                var len = viewBox.width / 2;
+
+                if (shape.fillType === "radial") {
+                    var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, len);
+                    stops.forEach(function (s) { grad.addColorStop(s.offset, s.color); });
+                    return grad;
+                }
+
+                var x1 = cx - len * Math.cos(angle);
+                var y1 = cy - len * Math.sin(angle);
+                var x2 = cx + len * Math.cos(angle);
+                var y2 = cy + len * Math.sin(angle);
+                var grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                stops.forEach(function (s) { grad.addColorStop(s.offset, s.color); });
+                return grad;
+            }
+
+            function getViewBox() {
+                const parts = document.getElementById("canvasViewBox").value.trim().split(/\s+/).map(Number);
+                return { x: parts[0] || 0, y: parts[1] || 0, width: parts[2] || 100, height: parts[3] || 100 };
+            }
+
+            function normalizePathToViewBox(pathD) {
+                try {
+                    const rp = MorphSVGPlugin.stringToRawPath(pathD);
+                    if (!rp || rp.length === 0) return pathD;
+
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    for (let j = 0; j < rp.length; j++) {
+                        const seg = rp[j];
+                        for (let i = 0; i < seg.length; i += 2) {
+                            if (!isFinite(seg[i]) || !isFinite(seg[i + 1])) continue;
+                            minX = Math.min(minX, seg[i]);
+                            maxX = Math.max(maxX, seg[i]);
+                            minY = Math.min(minY, seg[i + 1]);
+                            maxY = Math.max(maxY, seg[i + 1]);
+                        }
+                    }
+                    if (!isFinite(minX) || !isFinite(minY)) return pathD;
+
+                    const viewBox = getViewBox();
+                    const srcW = maxX - minX || 1;
+                    const srcH = maxY - minY || 1;
+                    const pad = 5;
+                    const tW = viewBox.width - pad * 2;
+                    const tH = viewBox.height - pad * 2;
+                    const scale = Math.min(tW / srcW, tH / srcH);
+                    const offX = viewBox.x + pad + (tW - srcW * scale) / 2;
+                    const offY = viewBox.y + pad + (tH - srcH * scale) / 2;
+
+                    for (let j = 0; j < rp.length; j++) {
+                        const seg = rp[j];
+                        for (let i = 0; i < seg.length; i += 2) {
+                            seg[i] = Math.round(((seg[i] - minX) * scale + offX) * 100) / 100;
+                            seg[i + 1] = Math.round(((seg[i + 1] - minY) * scale + offY) * 100) / 100;
+                        }
+                    }
+
+                    return MorphSVGPlugin.rawPathToString(rp);
+                } catch (e) {
+                    return pathD;
+                }
+            }
+
+            function getSvgScale() {
+                return (parseInt(document.getElementById("svgScale").value) || 100) / 100;
+            }
+
+            function setupCanvas() {
+                const size = parseInt(document.getElementById("canvasSize").value) || 400;
+                const ratio = window.devicePixelRatio || 1;
+                canvas.width = size * ratio;
+                canvas.height = size * ratio;
+                canvas.style.width = size + "px";
+                canvas.style.height = size + "px";
+                const viewBox = getViewBox();
+                const sizeRatio = size / viewBox.width;
+                const svgScale = getSvgScale();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.scale(ratio * sizeRatio, ratio * sizeRatio);
+                ctx.translate(-viewBox.x, -viewBox.y);
+                const cx = viewBox.x + viewBox.width / 2;
+                const cy = viewBox.y + viewBox.height / 2;
+                ctx.translate(cx, cy);
+                ctx.scale(svgScale, svgScale);
+                ctx.translate(-cx, -cy);
+            }
+
+            function draw(rawPath) {
+                const bg = document.getElementById("canvasBg").value;
+                const fill = activeShapeFill || getFillStyle();
+                drawRawPath(ctx, rawPath, fill, bg);
+            }
+
+            function clearCanvas() {
+                const viewBox = getViewBox();
+                const bg = document.getElementById("canvasBg").value;
+                ctx.clearRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
+                ctx.fillStyle = bg;
+                ctx.fillRect(viewBox.x, viewBox.y, viewBox.width, viewBox.height);
+            }
+
+            function drawFirstShape() {
+                if (shapes.length === 0) return;
+                activeShapeFill = buildShapeFillStyle(shapes[0]);
+                try {
+                    const rp = MorphSVGPlugin.stringToRawPath(shapes[0].d);
+                    if (rp) draw(rp);
+                } catch (e) {
+                    clearCanvas();
+                }
+            }
+
+            function drawPreviewShape(pathD) {
+                const pCtx = previewCanvas.getContext("2d");
+                const ratio = window.devicePixelRatio || 1;
+                previewCanvas.width = 120 * ratio;
+                previewCanvas.height = 120 * ratio;
+                pCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+                try {
+                    const rp = MorphSVGPlugin.stringToRawPath(pathD);
+                    if (!rp) {
+                        pCtx.clearRect(0, 0, 120, 120);
+                        pCtx.fillStyle = "#1a1c1b";
+                        pCtx.fillRect(0, 0, 120, 120);
+                        return false;
+                    }
+
+                    const seg = rp[0];
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    for (let i = 0; i < seg.length; i += 2) {
+                        minX = Math.min(minX, seg[i]);
+                        maxX = Math.max(maxX, seg[i]);
+                        minY = Math.min(minY, seg[i + 1]);
+                        maxY = Math.max(maxY, seg[i + 1]);
+                    }
+                    const pad = 5;
+                    const vbX = minX - pad, vbY = minY - pad;
+                    const vbW = (maxX - minX) + pad * 2, vbH = (maxY - minY) + pad * 2;
+                    const sc = Math.min(120 / vbW, 120 / vbH);
+
+                    pCtx.clearRect(0, 0, 120, 120);
+                    pCtx.fillStyle = "#0e100f";
+                    pCtx.fillRect(0, 0, 120, 120);
+
+                    pCtx.save();
+                    pCtx.translate(60 - (vbW / 2) * sc, 60 - (vbH / 2) * sc);
+                    pCtx.scale(sc, sc);
+                    pCtx.translate(-vbX, -vbY);
+
+                    pCtx.beginPath();
+                    for (let j = 0; j < rp.length; j++) {
+                        const s = rp[j];
+                        pCtx.moveTo(s[0], s[1]);
+                        for (let i = 2; i < s.length; i += 6) {
+                            pCtx.bezierCurveTo(s[i], s[i + 1], s[i + 2], s[i + 3], s[i + 4], s[i + 5]);
+                        }
+                        if (s.closed) pCtx.closePath();
+                    }
+                    pCtx.fillStyle = "#fb8305";
+                    pCtx.fill("evenodd");
+                    pCtx.restore();
+                    return true;
+                } catch (e) {
+                    pCtx.clearRect(0, 0, 120, 120);
+                    return false;
+                }
+            }
+
+            function showPreview() {
+                const input = svgInputArea.value.trim();
+                if (!input) {
+                    showToast("Paste SVG code or path data first");
+                    return;
+                }
+                const pathD = parseSVGInput(input);
+                if (!pathD) {
+                    parseStatus.textContent = "Failed to parse SVG";
+                    parseStatus.style.color = "#e74c3c";
+                    showToast("Could not extract path from input");
+                    previewArea.style.display = "none";
+                    return;
+                }
+
+                previewedPathD = pathD;
+                const ok = drawPreviewShape(pathD);
+                const name = shapeNameInput.value.trim() || ("Custom " + (shapes.length + 1));
+                previewNameEl.textContent = name;
+
+                var subCount = (pathD.match(/[Mm]/g) || []).length;
+                var info = ok ? "Valid \u2014 " + subCount + " sub-path" + (subCount !== 1 ? "s" : "") + " \u2014 auto-centered" : "Could not render path";
+                previewPathInfoEl.textContent = info;
+                previewPathInfoEl.style.color = ok ? "#2ecc71" : "#e74c3c";
+                previewArea.style.display = "flex";
+                parseStatus.textContent = ok ? "Preview ready \u2014 normalized to viewbox" : "Parse error";
+                parseStatus.style.color = ok ? "#2ecc71" : "#e74c3c";
+            }
+
+            function confirmAdd() {
+                if (!previewedPathD) return;
+                const name = shapeNameInput.value.trim() || ("Custom " + (shapes.length + 1));
+                addShape(name, previewedPathD);
+                previewArea.style.display = "none";
+                previewedPathD = null;
+                svgInputArea.value = "";
+                shapeNameInput.value = "";
+                parseStatus.textContent = "Shape added!";
+                parseStatus.style.color = "#2ecc71";
+            }
+
+            function hidePreview() {
+                previewArea.style.display = "none";
+                previewedPathD = null;
+            }
+
+            let hiddenSvgRef = null;
+
+            function buildTimeline() {
+                if (timeline) {
+                    timeline.kill();
+                    timeline = null;
+                }
+                if (shapes.length < 2) return;
+
+                const hiddenSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                hiddenSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                hiddenSvg.setAttribute("viewBox", "0 0 100 100");
+                hiddenSvg.style.position = "absolute";
+                hiddenSvg.style.visibility = "hidden";
+                hiddenSvg.style.width = "0";
+                hiddenSvg.style.height = "0";
+
+                const mainPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                mainPath.setAttribute("d", shapes[0].d);
+                mainPath.setAttribute("id", "_morphMainPath");
+                hiddenSvg.appendChild(mainPath);
+
+                shapes.forEach((s, i) => {
+                    if (i === 0) return;
+                    const rp = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    rp.setAttribute("d", s.d);
+                    rp.setAttribute("id", "_morphRef_" + i);
+                    hiddenSvg.appendChild(rp);
+                });
+
+                document.body.appendChild(hiddenSvg);
+
+                const duration = parseFloat(document.getElementById("animDuration").value) || 2;
+                const ease = document.getElementById("animEase").value;
+                const repeat = parseInt(document.getElementById("animRepeat").value);
+                const repeatDelay = parseFloat(document.getElementById("animRepeatDelay").value) || 0;
+                const stagger = parseFloat(document.getElementById("animStagger").value) || 0;
+                const yoyo = document.getElementById("animYoyo").value === "true";
+
+                timeline = gsap.timeline({
+                    repeat: repeat,
+                    repeatDelay: repeatDelay,
+                    paused: true,
+                    defaults: { duration: duration, ease: ease }
+                });
+
+                for (let i = 1; i < shapes.length; i++) {
+                    const targetShape = shapes[i];
+                    timeline.to(mainPath, {
+                        morphSVG: { shape: "#_morphRef_" + i, render: draw },
+                        duration: duration,
+                        ease: ease,
+                        onStart: function () { activeShapeFill = buildShapeFillStyle(targetShape); }
+                    }, "+=" + (i === 1 ? 0 : stagger));
+                }
+
+                var firstShape = shapes[0];
+                timeline.to(mainPath, {
+                    morphSVG: { shape: shapes[0].d, render: draw },
+                    duration: duration,
+                    ease: ease,
+                    onStart: function () { activeShapeFill = buildShapeFillStyle(firstShape); }
+                }, "+=" + stagger);
+
+                timeline.progress(0.0001);
+
+                var speedVal = parseFloat(document.getElementById("animSpeedControl").value) || 1;
+                timeline.timeScale(speedVal);
+
+                return hiddenSvg;
+            }
+
+            function playSequence() {
+                if (shapes.length < 2) {
+                    showToast("Add at least 2 shapes to morph");
+                    return;
+                }
+
+                if (hiddenSvgRef && hiddenSvgRef.parentNode) {
+                    document.body.removeChild(hiddenSvgRef);
+                }
+
+                hiddenSvgRef = buildTimeline();
+                if (!timeline) return;
+
+                timeline.play();
+                isPlaying = true;
+                updateSteps();
+            }
+
+            function stopSequence() {
+                if (timeline) {
+                    timeline.kill();
+                    timeline = null;
+                }
+                if (hiddenSvgRef && hiddenSvgRef.parentNode) {
+                    document.body.removeChild(hiddenSvgRef);
+                    hiddenSvgRef = null;
+                }
+                isPlaying = false;
+                activeShapeFill = (shapes.length > 0) ? buildShapeFillStyle(shapes[0]) : null;
+                updateSteps();
+                if (shapes.length > 0) drawFirstShape();
+            }
+
+            function applyAllSettings() {
+                updateGradientPreview();
+                setupCanvas();
+
+                if (shapes.length < 2) {
+                    if (shapes.length > 0) drawFirstShape();
+                    else clearCanvas();
+                    showToast("Canvas & fill applied. Add 2+ shapes for animation.");
+                    return;
+                }
+
+                var autoPlay = document.getElementById("animAutoPlay").value === "true";
+                stopSequence();
+
+                if (autoPlay) {
+                    playSequence();
+                } else {
+                    drawFirstShape();
+                    showToast("All settings applied (animation off)");
+                    return;
+                }
+
+                showToast("All settings applied");
+            }
+
+            function updateGradientPreview() {
+                const stops = [];
+                document.querySelectorAll("#gradientStops .gradient-stop").forEach(el => {
+                    stops.push({
+                        color: el.querySelector(".stop-color").value,
+                        offset: parseFloat(el.querySelector(".stop-offset").value) * 100
+                    });
+                });
+                stops.sort((a, b) => a.offset - b.offset);
+                const cssStops = stops.map(s => s.color + " " + s.offset + "%").join(", ");
+                const angle = document.getElementById("gradAngle").value;
+                const fillType = document.getElementById("fillType").value;
+                gradientPreview.style.background = fillType === "radial"
+                    ? "radial-gradient(circle, " + cssStops + ")"
+                    : "linear-gradient(" + angle + "deg, " + cssStops + ")";
+            }
+
+            function addGradientStop() {
+                const container = document.getElementById("gradientStops");
+                const stop = document.createElement("div");
+                stop.className = "gradient-stop";
+                stop.innerHTML =
+                    '<input type="color" value="#ffffff" class="stop-color" />' +
+                    '<input type="number" value="0.5" min="0" max="1" step="0.05" class="stop-offset" />' +
+                    '<button class="btn btn-danger btn-sm remove-stop">&#10005;</button>';
+                stop.querySelector(".remove-stop").addEventListener("click", function () {
+                    if (document.querySelectorAll("#gradientStops .gradient-stop").length > 2) {
+                        stop.remove();
+                        updateGradientPreview();
+                    } else {
+                        showToast("Minimum 2 gradient stops");
+                    }
+                });
+                stop.querySelector(".stop-color").addEventListener("input", updateGradientPreview);
+                stop.querySelector(".stop-offset").addEventListener("input", updateGradientPreview);
+                container.appendChild(stop);
+                updateGradientPreview();
+            }
+
+            function toggleFillTypeUI() {
+                const fillType = document.getElementById("fillType").value;
+                document.getElementById("solidColorWrap").style.display = fillType === "solid" ? "block" : "none";
+                document.getElementById("gradientWrap").style.display = fillType === "solid" ? "none" : "block";
+            }
+
+            function getConfiguration() {
+                return {
+                    shapes: shapes,
+                    animation: {
+                        duration: parseFloat(document.getElementById("animDuration").value),
+                        ease: document.getElementById("animEase").value,
+                        repeat: parseInt(document.getElementById("animRepeat").value),
+                        repeatDelay: parseFloat(document.getElementById("animRepeatDelay").value),
+                        stagger: parseFloat(document.getElementById("animStagger").value),
+                        yoyo: document.getElementById("animYoyo").value === "true",
+                        speedControl: parseFloat(document.getElementById("animSpeedControl").value) || 1,
+                        autoPlay: document.getElementById("animAutoPlay").value === "true"
+                    },
+                    gradient: {
+                        fillType: document.getElementById("fillType").value,
+                        solidColor: document.getElementById("solidColor").value,
+                        angle: parseFloat(document.getElementById("gradAngle").value),
+                        stops: Array.from(document.querySelectorAll("#gradientStops .gradient-stop")).map(el => ({
+                            color: el.querySelector(".stop-color").value,
+                            offset: parseFloat(el.querySelector(".stop-offset").value)
+                        }))
+                    },
+                    canvas: {
+                        size: parseInt(document.getElementById("canvasSize").value),
+                        background: document.getElementById("canvasBg").value,
+                        viewBox: document.getElementById("canvasViewBox").value
+                    }
+                };
+            }
+
+            function loadConfiguration(config) {
+                if (config.shapes) {
+                    shapes = config.shapes;
+                    renderShapeList();
+                    updateShapeCount();
+                    updateSteps();
+                }
+                if (config.animation) {
+                    const a = config.animation;
+                    if (a.duration !== undefined) document.getElementById("animDuration").value = a.duration;
+                    if (a.ease !== undefined) document.getElementById("animEase").value = a.ease;
+                    if (a.repeat !== undefined) document.getElementById("animRepeat").value = a.repeat;
+                    if (a.repeatDelay !== undefined) document.getElementById("animRepeatDelay").value = a.repeatDelay;
+                    if (a.stagger !== undefined) document.getElementById("animStagger").value = a.stagger;
+                    if (a.yoyo !== undefined) document.getElementById("animYoyo").value = String(a.yoyo);
+                    if (a.speedControl !== undefined) document.getElementById("animSpeedControl").value = String(a.speedControl);
+                    if (a.autoPlay !== undefined) document.getElementById("animAutoPlay").value = String(a.autoPlay);
+                }
+                if (config.gradient) {
+                    const g = config.gradient;
+                    if (g.fillType !== undefined) document.getElementById("fillType").value = g.fillType;
+                    if (g.solidColor !== undefined) document.getElementById("solidColor").value = g.solidColor;
+                    if (g.angle !== undefined) document.getElementById("gradAngle").value = g.angle;
+                    if (g.stops) {
+                        const container = document.getElementById("gradientStops");
+                        container.innerHTML = "";
+                        g.stops.forEach(function (s) {
+                            const stop = document.createElement("div");
+                            stop.className = "gradient-stop";
+                            stop.innerHTML =
+                                '<input type="color" value="' + s.color + '" class="stop-color" />' +
+                                '<input type="number" value="' + s.offset + '" min="0" max="1" step="0.05" class="stop-offset" />' +
+                                '<button class="btn btn-danger btn-sm remove-stop">&#10005;</button>';
+                            stop.querySelector(".remove-stop").addEventListener("click", function () {
+                                if (document.querySelectorAll("#gradientStops .gradient-stop").length > 2) {
+                                    stop.remove();
+                                    updateGradientPreview();
+                                }
+                            });
+                            stop.querySelector(".stop-color").addEventListener("input", updateGradientPreview);
+                            stop.querySelector(".stop-offset").addEventListener("input", updateGradientPreview);
+                            container.appendChild(stop);
+                        });
+                    }
+                    toggleFillTypeUI();
+                    updateGradientPreview();
+                }
+                if (config.canvas) {
+                    const c = config.canvas;
+                    if (c.size !== undefined) document.getElementById("canvasSize").value = c.size;
+                    if (c.background !== undefined) document.getElementById("canvasBg").value = c.background;
+                    if (c.viewBox !== undefined) document.getElementById("canvasViewBox").value = c.viewBox;
+                    setupCanvas();
+                    if (shapes.length > 0) drawFirstShape();
+                }
+            }
+
+            function renderPresetGrid() {
+                const grid = document.getElementById("presetGrid");
+                Object.keys(PRESETS).forEach(key => {
+                    const preset = PRESETS[key];
+                    const btn = document.createElement("button");
+                    btn.className = "preset-btn";
+                    btn.title = "Click to add " + preset.name;
+                    btn.innerHTML = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="' + preset.d + '" fill="#fb8305"/></svg>' + preset.name;
+                    btn.addEventListener("click", function () {
+                        addShape(preset.name, preset.d);
+                    });
+                    grid.appendChild(btn);
+                });
+            }
+
+            function initPanelToggles() {
+                document.querySelectorAll(".panel-header").forEach(header => {
+                    header.addEventListener("click", function () {
+                        const panelId = "panel-" + this.getAttribute("data-panel");
+                        const body = document.getElementById(panelId);
+                        if (body) {
+                            body.classList.toggle("collapsed");
+                            this.classList.toggle("collapsed");
+                        }
+                    });
+                });
+            }
+
+            function initEventListeners() {
+                previewShapeBtn.addEventListener("click", showPreview);
+                confirmAddBtn.addEventListener("click", confirmAdd);
+                cancelPreviewBtn.addEventListener("click", hidePreview);
+
+                addShapeBtn.addEventListener("click", function () {
+                    const input = svgInputArea.value.trim();
+                    if (!input) {
+                        showToast("Paste SVG code or path data first");
+                        return;
+                    }
+                    const pathD = parseSVGInput(input);
+                    if (pathD) {
+                        const name = shapeNameInput.value.trim() || ("Custom " + (shapes.length + 1));
+                        addShape(name, pathD);
+                        svgInputArea.value = "";
+                        shapeNameInput.value = "";
+                        previewArea.style.display = "none";
+                        parseStatus.textContent = "Shape added!";
+                        parseStatus.style.color = "#2ecc71";
+                    } else {
+                        parseStatus.textContent = "Failed to parse SVG";
+                        parseStatus.style.color = "#e74c3c";
+                        showToast("Could not extract path from input");
+                    }
+                });
+
+                clearAllBtn.addEventListener("click", function () {
+                    stopSequence();
+                    shapes = [];
+                    renderShapeList();
+                    updateShapeCount();
+                    updateSteps();
+                    clearCanvas();
+                    showToast("All shapes cleared");
+                });
+
+                document.getElementById("addStopBtn").addEventListener("click", addGradientStop);
+
+                document.getElementById("fillType").addEventListener("change", function () {
+                    toggleFillTypeUI();
+                    updateGradientPreview();
+                });
+
+                document.getElementById("gradAngle").addEventListener("input", updateGradientPreview);
+                document.getElementById("solidColor").addEventListener("input", updateGradientPreview);
+
+                document.querySelectorAll(".stop-color, .stop-offset").forEach(el => {
+                    el.addEventListener("input", updateGradientPreview);
+                });
+
+                document.querySelectorAll(".remove-stop").forEach(el => {
+                    el.addEventListener("click", function () {
+                        if (document.querySelectorAll("#gradientStops .gradient-stop").length > 2) {
+                            this.closest(".gradient-stop").remove();
+                            updateGradientPreview();
+                        }
+                    });
+                });
+
+                document.getElementById("canvasSize").addEventListener("change", function () {
+                    setupCanvas();
+                    if (shapes.length > 0) drawFirstShape();
+                });
+
+                document.getElementById("canvasBg").addEventListener("input", function () {
+                    if (shapes.length > 0) drawFirstShape();
+                });
+
+                document.getElementById("canvasViewBox").addEventListener("change", function () {
+                    setupCanvas();
+                    if (shapes.length > 0) drawFirstShape();
+                });
+
+                var svgScaleEl = document.getElementById("svgScale");
+                var svgScaleNumEl = document.getElementById("svgScaleNum");
+                svgScaleEl.addEventListener("input", function () {
+                    svgScaleNumEl.value = this.value;
+                    setupCanvas();
+                    if (shapes.length > 0) drawFirstShape();
+                });
+                svgScaleNumEl.addEventListener("change", function () {
+                    svgScaleEl.value = this.value;
+                    setupCanvas();
+                    if (shapes.length > 0) drawFirstShape();
+                });
+
+                document.getElementById("applyAllBtn").addEventListener("click", applyAllSettings);
+            }
+
+            function init() {
+                renderPresetGrid();
+                initPanelToggles();
+                initEventListeners();
+                toggleFillTypeUI();
+                updateGradientPreview();
+                setupCanvas();
+
+                addShape(PRESETS.circle.name, PRESETS.circle.d);
+                addShape(PRESETS.triangle.name, PRESETS.triangle.d);
+                addShape(PRESETS.star5.name, PRESETS.star5.d);
+
+                updateSteps();
+            }
+
+            init();
+        })();
+    </script>
+
+</body>
+
+</html>
