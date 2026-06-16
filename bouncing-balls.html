@@ -610,7 +610,7 @@
             <!-- ELEMENTS LIST -->
             <div class="sp-section">
                 <div class="sp-section-title">Elements</div>
-                <p class="sp-desc" style="padding-left:0;margin-bottom:12px">Each card controls one bouncing circle. Set label, size, custom X/Y position (leave empty for random), accent color, idle background, and mouse-follow background.</p>
+                <p class="sp-desc" style="padding-left:0;margin-bottom:12px">Each card controls one bouncing circle. Set label, size, custom X/Y position (leave empty for random), rotation angle, accent color, idle background, and mouse-follow background.</p>
                 <div id="elementsList"></div>
                 <div class="sp-actions-row">
                     <button class="sp-btn sp-btn-primary sp-btn-sm" id="addElementBtn">+ Add Element</button>
@@ -646,26 +646,26 @@
 
         (function () {
             var DEFAULT_ELEMENTS = [
-                { label: 'Element 1', size: 90, bgColor: '#7D4BC0', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 2', size: 120, bgColor: '#3C862A', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 3', size: 75, bgColor: '#404CD6', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 4', size: 100, bgColor: '#21A98E', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 5', size: 140, bgColor: '#F6B22B', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 6', size: 80, bgColor: '#FF6C45', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 7', size: 110, bgColor: '#E84393', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 8', size: 95, bgColor: '#00B894', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 9', size: 200, bgColor: '#6C5CE7', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 10', size: 85, bgColor: '#FD79A8', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 11', size: 115, bgColor: '#0984E3', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 12', size: 105, bgColor: '#FFEAA7', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 13', size: 70, bgColor: '#7D4BC0', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 14', size: 220, bgColor: '#3C862A', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 15', size: 95, bgColor: '#404CD6', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 16', size: 200, bgColor: '#21A98E', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 17', size: 85, bgColor: '#F6B22B', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 18', size: 100, bgColor: '#FF6C45', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 19', size: 110, bgColor: '#E84393', followBgColor: '#6478ff', posX: null, posY: null },
-                { label: 'Element 20', size: 80, bgColor: '#00B894', followBgColor: '#6478ff', posX: null, posY: null }
+                { label: 'Element 1', size: 90, bgColor: '#7D4BC0', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 2', size: 120, bgColor: '#3C862A', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 3', size: 75, bgColor: '#404CD6', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 4', size: 100, bgColor: '#21A98E', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 5', size: 140, bgColor: '#F6B22B', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 6', size: 80, bgColor: '#FF6C45', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 7', size: 110, bgColor: '#E84393', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 8', size: 95, bgColor: '#00B894', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 9', size: 200, bgColor: '#6C5CE7', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 10', size: 85, bgColor: '#FD79A8', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 11', size: 115, bgColor: '#0984E3', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 12', size: 105, bgColor: '#FFEAA7', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 13', size: 70, bgColor: '#7D4BC0', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 14', size: 220, bgColor: '#3C862A', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 15', size: 95, bgColor: '#404CD6', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 16', size: 200, bgColor: '#21A98E', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 17', size: 85, bgColor: '#F6B22B', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 18', size: 100, bgColor: '#FF6C45', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 19', size: 110, bgColor: '#E84393', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 },
+                { label: 'Element 20', size: 80, bgColor: '#00B894', followBgColor: '#6478ff', posX: null, posY: null, rotation: 0 }
             ];
 
             var PRESET_COLORS = [
@@ -851,6 +851,7 @@
                         '<div class="sp-row"><label>Size (px)</label><input type="number" data-field="size" data-idx="' + i + '" value="' + elem.size + '" min="30" max="300" step="5"></div>' +
                         '<div class="sp-row"><label>Pos X (px)</label><input type="number" data-field="posX" data-idx="' + i + '" value="' + (elem.posX != null ? elem.posX : '') + '" min="0" step="10" placeholder="Auto"></div>' +
                         '<div class="sp-row"><label>Pos Y (px)</label><input type="number" data-field="posY" data-idx="' + i + '" value="' + (elem.posY != null ? elem.posY : '') + '" min="0" step="10" placeholder="Auto"></div>' +
+                        '<div class="sp-row"><label>Rotation (°)</label><input type="number" data-field="rotation" data-idx="' + i + '" value="' + (elem.rotation || 0) + '" min="-360" max="360" step="5"></div>' +
                         '<div class="sp-row"><label>Accent Color</label><input type="color" data-field="color" data-idx="' + i + '" value="' + color + '"></div>' +
                         '<div class="sp-row"><label>BG Color</label><input type="color" data-field="bgColor" data-idx="' + i + '" value="' + (elem.bgColor || '#ffffff') + '"></div>' +
                         '<div class="sp-row"><label>Follow BG</label><input type="color" data-field="followBgColor" data-idx="' + i + '" value="' + (elem.followBgColor || '#6478ff') + '"></div>';
@@ -882,6 +883,8 @@
                             state.elements[idx].posX = this.value !== '' ? parseInt(this.value) : null;
                         } else if (field === 'posY') {
                             state.elements[idx].posY = this.value !== '' ? parseInt(this.value) : null;
+                        } else if (field === 'rotation') {
+                            state.elements[idx].rotation = parseFloat(this.value) || 0;
                         }
                     });
                 });
@@ -957,7 +960,8 @@
                         bgColor: state.defaultBgColor,
                         followBgColor: state.defaultFollowBg,
                         posX: null,
-                        posY: null
+                        posY: null,
+                        rotation: 0
                     });
                     renderElementsList();
                 });
@@ -1056,6 +1060,7 @@
                         startX: startX,
                         startY: startY,
                         color: color,
+                        rotation: elem.rotation || 0,
                         idleBg: hexToRgba(elemBg, state.defaultBgOpacity),
                         followBg: hexToRgba(elemFollowBg, state.defaultFollowBgOpacity),
                         dropDelay: i * state.bounceDelay + rand(0, state.bounceDelay * 1.2),
@@ -1069,7 +1074,8 @@
                         x: startX,
                         y: startY,
                         opacity: 0,
-                        scale: rand(0.15, 0.35)
+                        scale: rand(0.15, 0.35),
+                        rotation: elem.rotation || 0
                     });
                 });
             }
