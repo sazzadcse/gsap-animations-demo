@@ -314,12 +314,16 @@
         }
 
         .sp-element-card .sp-row {
-            margin-bottom: 6px;
+            margin-bottom: 2px;
         }
 
         .sp-element-card .sp-row label {
             flex: 0 0 80px;
             font-size: 11px;
+        }
+
+        .sp-element-card .sp-hint {
+            margin: 0 0 8px 88px;
         }
 
         .sp-overlay {
@@ -342,8 +346,8 @@
 
         .sp-desc {
             font-size: 11px;
-            color: #556;
-            line-height: 1.45;
+            color: #778;
+            line-height: 1.5;
             margin: -4px 0 10px 0;
             padding-left: 140px;
         }
@@ -358,7 +362,7 @@
 
         .sp-hint {
             font-size: 10px;
-            color: #666;
+            color: #778;
             margin-top: 4px;
             font-style: italic;
         }
@@ -425,7 +429,7 @@
                         <option value="load">On Page Load</option>
                     </select>
                 </div>
-                <p class="sp-desc">Choose when the drop animation starts — as the section scrolls into view, or immediately when the page loads.</p>
+                <p class="sp-desc">Controls when balls start dropping. "On Scrolling" triggers the animation as you scroll to the section. "On Page Load" plays it immediately.</p>
                 <div id="scrollTriggerSettings">
                     <div class="sp-row">
                         <label>Trigger Position</label>
@@ -442,12 +446,12 @@
                             <option value="custom">Custom</option>
                         </select>
                     </div>
-                    <p class="sp-desc">Sets where the section edge meets the viewport edge to trigger the animation. First word = section edge, second = viewport edge.</p>
+                    <p class="sp-desc">Defines exactly when the animation fires based on where the section meets your screen. For example, "Top → Bottom" means the animation starts when the section's top edge reaches the bottom of your viewport.</p>
                     <div class="sp-row" id="customOffsetRow" style="display:none">
                         <label>Custom Offset (px)</label>
                         <input type="number" id="customOffset" value="0" min="0" step="10">
                     </div>
-                    <p class="sp-desc" id="customOffsetDesc" style="display:none">Pixel offset from the top of the viewport. Animation fires when the section top reaches this point.</p>
+                    <p class="sp-desc" id="customOffsetDesc" style="display:none">Fine-tune the exact scroll position (in pixels from the top) where the animation triggers. Useful for precise timing adjustments.</p>
                     <div class="sp-trigger-preview" id="triggerPreview">
                         <div class="sp-trigger-cell" data-val="top-top">T→T</div>
                         <div class="sp-trigger-cell" data-val="top-center">T→C</div>
@@ -459,7 +463,7 @@
                         <div class="sp-trigger-cell" data-val="bottom-center">B→C</div>
                         <div class="sp-trigger-cell" data-val="bottom-bottom">B→B</div>
                     </div>
-                    <p class="sp-desc-sm">Click a cell to quickly select that trigger position.</p>
+                    <p class="sp-desc-sm">Quick pick: click a cell below to select that trigger position.</p>
                 </div>
             </div>
 
@@ -471,31 +475,31 @@
                     <input type="range" id="bounceDelay" min="0.02" max="0.5" step="0.01" value="0.1">
                     <span class="sp-range-val" id="bounceDelayVal">0.10</span>
                 </div>
-                <p class="sp-desc">Base stagger gap between each element dropping. Higher values create a more sequential cascade effect.</p>
+                <p class="sp-desc">Time gap between each ball starting to drop. Lower = all drop together, higher = one-by-one cascade.</p>
                 <div class="sp-row">
                     <label>Drop Duration (s)</label>
                     <input type="range" id="dropDuration" min="0.3" max="2" step="0.05" value="0.7">
                     <span class="sp-range-val" id="dropDurationVal">0.70</span>
                 </div>
-                <p class="sp-desc">How long each element takes to fall from top to its landing position.</p>
+                <p class="sp-desc">How long (in seconds) each ball takes to fall from above the screen to its final position.</p>
                 <div class="sp-row">
                     <label>Duration Variance</label>
                     <input type="range" id="dropDurationVar" min="0" max="1" step="0.05" value="0.5">
                     <span class="sp-range-val" id="dropDurationVarVal">0.50</span>
                 </div>
-                <p class="sp-desc">Random variation added to each element's drop duration. 0 = all same speed, higher = more organic.</p>
+                <p class="sp-desc">Adds randomness to the fall speed. 0 = all balls fall at the same speed. Higher values make each ball fall at a slightly different speed for a natural look.</p>
                 <div class="sp-row">
                     <label>Scale Bounce</label>
                     <input type="range" id="scaleBounce" min="0.5" max="1.5" step="0.01" value="0.88">
                     <span class="sp-range-val" id="scaleBounceVal">0.88</span>
                 </div>
-                <p class="sp-desc">Scale factor when element hits the ground. Below 1 squashes on impact, above 1 stretches. Set 1 for no deformation.</p>
+                <p class="sp-desc">How much a ball squashes when it hits the ground. Below 1 = squashes flat (like a rubber ball). 1 = no deformation. Above 1 = stretches on impact.</p>
                 <div class="sp-row">
                     <label>Scale Variance</label>
                     <input type="range" id="scaleBounceVar" min="0" max="0.5" step="0.01" value="0.24">
                     <span class="sp-range-val" id="scaleBounceVarVal">0.24</span>
                 </div>
-                <p class="sp-desc">Random variation in the bounce squash amount per element. Makes impacts feel less uniform.</p>
+                <p class="sp-desc">Randomizes how much each ball squashes on impact. 0 = all balls squash the same. Higher = some squash more, some less, making it look more realistic.</p>
             </div>
 
             <!-- MOUSE FOLLOW -->
@@ -506,37 +510,37 @@
                     <input type="range" id="followStrength" min="0.01" max="0.2" step="0.005" value="0.03">
                     <span class="sp-range-val" id="followStrengthVal">0.030</span>
                 </div>
-                <p class="sp-desc">How strongly elements are attracted toward the cursor. Higher = faster, snappier pull.</p>
+                <p class="sp-desc">How aggressively balls are pulled toward your cursor. Low = gentle drift. High = fast, snappy attraction.</p>
                 <div class="sp-row">
                     <label>Strength Variance</label>
                     <input type="range" id="followStrengthVar" min="0" max="0.1" step="0.005" value="0.02">
                     <span class="sp-range-val" id="followStrengthVarVal">0.020</span>
                 </div>
-                <p class="sp-desc">Random range added to each element's follow strength so they don't all move identically.</p>
+                <p class="sp-desc">Makes each ball respond to the cursor at slightly different speeds. 0 = all move at the same rate. Higher = some balls chase faster than others.</p>
                 <div class="sp-row">
                     <label>Follow Damping</label>
                     <input type="range" id="followDamping" min="0.5" max="0.99" step="0.01" value="0.85">
                     <span class="sp-range-val" id="followDampingVal">0.85</span>
                 </div>
-                <p class="sp-desc">Velocity decay per frame. Lower = more floaty/inertial, higher = tighter, less overshoot.</p>
+                <p class="sp-desc">Controls how balls slow down after moving. Low = floaty, overshooting movement (like sliding on ice). High = tight, precise stops.</p>
                 <div class="sp-row">
                     <label>Damping Variance</label>
                     <input type="range" id="followDampingVar" min="0" max="0.2" step="0.01" value="0.08">
                     <span class="sp-range-val" id="followDampingVarVal">0.08</span>
                 </div>
-                <p class="sp-desc">Random range added to damping per element. Creates varied trailing behavior.</p>
+                <p class="sp-desc">Adds randomness to how each ball decelerates. Creates varied trailing behavior — some balls stop quickly while others drift further.</p>
                 <div class="sp-row">
                     <label>Nearest Count</label>
                     <input type="range" id="nearestCount" min="1" max="10" step="1" value="2">
                     <span class="sp-range-val" id="nearestCountVal">2</span>
                 </div>
-                <p class="sp-desc">How many closest elements follow the cursor at once. Others stay at rest positions.</p>
+                <p class="sp-desc">Number of balls that actively follow your cursor at the same time. 1 = only the closest ball moves. Higher = a group of nearest balls chase you.</p>
                 <div class="sp-row">
                     <label>Max Distance (px)</label>
                     <input type="range" id="followMaxDist" min="100" max="800" step="10" value="400">
                     <span class="sp-range-val" id="followMaxDistVal">400</span>
                 </div>
-                <p class="sp-desc">Cursor influence radius. Elements farther than this distance won't be pulled at all.</p>
+                <p class="sp-desc">How far away (in pixels) your cursor can be before balls stop reacting. Small = balls only move when cursor is very close. Large = balls react from far away.</p>
             </div>
 
             <!-- OVERLAP -->
@@ -549,13 +553,13 @@
                         <option value="false">Disabled</option>
                     </select>
                 </div>
-                <p class="sp-desc">When enabled, elements push each other apart so no two circles overlap during drop or mouse follow.</p>
+                <p class="sp-desc">Keeps balls from stacking on top of each other. When enabled, balls push apart if they land on or move into the same area.</p>
                 <div class="sp-row">
                     <label>Overlap Padding (px)</label>
                     <input type="range" id="overlapPadding" min="0" max="30" step="1" value="8">
                     <span class="sp-range-val" id="overlapPaddingVal">8</span>
                 </div>
-                <p class="sp-desc">Extra gap enforced between elements. 0 = edges just touch, higher = more breathing room.</p>
+                <p class="sp-desc">Minimum space (in pixels) kept between each ball. 0 = balls can touch edges. Higher = balls stay further apart with more visible gaps.</p>
             </div>
 
             <!-- ELEMENTS STYLE -->
@@ -565,52 +569,52 @@
                     <label>Default Size (px)</label>
                     <input type="number" id="defaultSize" value="100" min="30" max="300" step="5">
                 </div>
-                <p class="sp-desc">Diameter in pixels for newly added elements. Existing elements keep their own size.</p>
+                <p class="sp-desc">Default width and height (in pixels) for new balls you add. Existing balls keep their current size.</p>
                 <div class="sp-row">
                     <label>Border Radius (%)</label>
                     <input type="range" id="defaultRadius" min="0" max="50" step="1" value="50">
                     <span class="sp-range-val" id="defaultRadiusVal">50%</span>
                 </div>
-                <p class="sp-desc">0% = square, 50% = perfect circle. Values between create rounded squares or pills.</p>
+                <p class="sp-desc">Shape of each ball. 0% = sharp square, 25% = rounded square, 50% = perfect circle. Try different values for unique shapes.</p>
                 <div class="sp-row">
                     <label>Border Color</label>
                     <input type="color" id="defaultBorderColor" value="#ffffff">
                     <input type="range" id="defaultBorderOpacity" min="0" max="1" step="0.05" value="0.15">
                     <span class="sp-range-val" id="defaultBorderOpacityVal">0.15</span>
                 </div>
-                <p class="sp-desc">Stroke color and opacity around each element at rest.</p>
+                <p class="sp-desc">The outline color and transparency around each ball when idle. Use the slider to adjust how visible the border is.</p>
                 <div class="sp-row">
                     <label>Background</label>
                     <input type="color" id="defaultBgColor" value="#ffffff">
                     <input type="range" id="defaultBgOpacity" min="0" max="1" step="0.05" value="0.03">
                     <span class="sp-range-val" id="defaultBgOpacityVal">0.03</span>
                 </div>
-                <p class="sp-desc">Fill color and opacity when element is idle (not following the mouse).</p>
+                <p class="sp-desc">The fill color and transparency of each ball at rest (not interacting with cursor). Lower opacity = more transparent, ghost-like appearance.</p>
                 <div class="sp-row">
                     <label>Mouse Follow BG</label>
                     <input type="color" id="defaultFollowBg" value="#6478ff">
                     <input type="range" id="defaultFollowBgOpacity" min="0" max="1" step="0.05" value="0.15">
                     <span class="sp-range-val" id="defaultFollowBgOpacityVal">0.15</span>
                 </div>
-                <p class="sp-desc">Background color applied when an element is actively following the cursor.</p>
+                <p class="sp-desc">Fill color that appears on a ball when it's being pulled toward your cursor. Helps visually indicate which balls are active.</p>
                 <div class="sp-row">
                     <label>Glow Color</label>
                     <input type="color" id="defaultGlowColor" value="#6478ff">
                     <input type="range" id="defaultGlowOpacity" min="0" max="1" step="0.05" value="0.5">
                     <span class="sp-range-val" id="defaultGlowOpacityVal">0.50</span>
                 </div>
-                <p class="sp-desc">Box-shadow glow color on hover. Set opacity to 0 to disable the glow effect.</p>
+                <p class="sp-desc">The glowing halo effect when you hover over a ball. Set opacity to 0 to disable the glow entirely.</p>
                 <div class="sp-row">
                     <label>Font Size (px)</label>
                     <input type="number" id="defaultFontSize" value="12" min="8" max="24" step="1">
                 </div>
-                <p class="sp-desc">Text size inside each element circle.</p>
+                <p class="sp-desc">Size of the label text displayed inside each ball.</p>
             </div>
 
             <!-- ELEMENTS LIST -->
             <div class="sp-section">
                 <div class="sp-section-title">Elements</div>
-                <p class="sp-desc" style="padding-left:0;margin-bottom:12px">Each card controls one bouncing circle. Set label, size, custom X/Y position (leave empty for random), rotation angle, accent color, idle background, and mouse-follow background.</p>
+                <p class="sp-desc" style="padding-left:0;margin-bottom:12px">Manage individual balls here. Each card lets you customize a ball's name, size, position on screen, rotation, and colors. Leave X/Y empty to place randomly.</p>
                 <div id="elementsList"></div>
                 <div class="sp-actions-row">
                     <button class="sp-btn sp-btn-primary sp-btn-sm" id="addElementBtn">+ Add Element</button>
@@ -625,7 +629,7 @@
                     <button class="sp-btn sp-btn-primary" id="applyBtn">Apply &amp; Replay</button>
                     <button class="sp-btn" id="exportBtn">Export JSON</button>
                 </div>
-                <p class="sp-desc" style="padding-left:0;margin-top:8px"><strong>Apply & Replay</strong> rebuilds all elements and restarts the animation with current settings. <strong>Export JSON</strong> downloads your full configuration as a file.</p>
+                <p class="sp-desc" style="padding-left:0;margin-top:8px"><strong>Apply & Replay</strong> — saves all your changes and restarts the animation from scratch. <strong>Export JSON</strong> — downloads your settings as a file so you can load them later or share with others.</p>
             </div>
 
         </div>
@@ -848,13 +852,21 @@
                         '  <button class="sp-btn sp-btn-danger sp-btn-sm" data-remove="' + i + '">✕</button>' +
                         '</div>' +
                         '<div class="sp-row"><label>Label</label><input type="text" data-field="label" data-idx="' + i + '" value="' + elem.label + '"></div>' +
+                        '<p class="sp-hint">Name displayed inside the ball</p>' +
                         '<div class="sp-row"><label>Size (px)</label><input type="number" data-field="size" data-idx="' + i + '" value="' + elem.size + '" min="30" max="300" step="5"></div>' +
+                        '<p class="sp-hint">Width and height of this specific ball</p>' +
                         '<div class="sp-row"><label>Pos X (px)</label><input type="number" data-field="posX" data-idx="' + i + '" value="' + (elem.posX != null ? elem.posX : '') + '" min="0" step="10" placeholder="Auto"></div>' +
+                        '<p class="sp-hint">Horizontal position from left edge. Leave empty for random</p>' +
                         '<div class="sp-row"><label>Pos Y (px)</label><input type="number" data-field="posY" data-idx="' + i + '" value="' + (elem.posY != null ? elem.posY : '') + '" min="0" step="10" placeholder="Auto"></div>' +
+                        '<p class="sp-hint">Vertical position from top edge. Leave empty for random</p>' +
                         '<div class="sp-row"><label>Rotation (°)</label><input type="number" data-field="rotation" data-idx="' + i + '" value="' + (elem.rotation || 0) + '" min="-360" max="360" step="5"></div>' +
+                        '<p class="sp-hint">Starting rotation angle of the ball</p>' +
                         '<div class="sp-row"><label>Accent Color</label><input type="color" data-field="color" data-idx="' + i + '" value="' + color + '"></div>' +
+                        '<p class="sp-hint">Border highlight and hover glow tint</p>' +
                         '<div class="sp-row"><label>BG Color</label><input type="color" data-field="bgColor" data-idx="' + i + '" value="' + (elem.bgColor || '#ffffff') + '"></div>' +
-                        '<div class="sp-row"><label>Follow BG</label><input type="color" data-field="followBgColor" data-idx="' + i + '" value="' + (elem.followBgColor || '#6478ff') + '"></div>';
+                        '<p class="sp-hint">Fill color when ball is idle (not following cursor)</p>' +
+                        '<div class="sp-row"><label>Follow BG</label><input type="color" data-field="followBgColor" data-idx="' + i + '" value="' + (elem.followBgColor || '#6478ff') + '"></div>' +
+                        '<p class="sp-hint">Fill color when ball is following your cursor</p>';
 
                     container.appendChild(card);
                 });
