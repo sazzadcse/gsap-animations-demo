@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Path Waypoints — Settings Panel</title>
+
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/MotionPathPlugin.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #0e100f;
+            --text: #bbbaa6;
+            --border: #7c7c6f;
+            --accent: #eb7033;
+            --panel-bg: #1a1c1b;
+            --input-bg: #252726;
+            --border-subtle: #3a3c3b;
+        }
+
+        body {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 2px, transparent 2px),
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+            color: var(--text);
+            background-color: var(--bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ───────── settings panel ───────── */
+        .settings-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            background: var(--panel-bg);
+            color: var(--text);
+            border: 1px solid var(--border-subtle);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100vh;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border-subtle);
+            z-index: 999;
+            overflow-y: auto;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .settings-panel.open {
+            transform: translateX(0);
+        }
+
+        .settings-panel h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        .settings-panel h3 {
+            font-size: 14px;
+            margin: 16px 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: #ccc;
+        }
+
+        .settings-panel label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 2px;
+            color: #888;
+        }
+
+        .settings-panel input,
+        .settings-panel select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-subtle);
+            color: var(--text);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .settings-panel .row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-panel .row>div {
+            flex: 1;
+        }
+
+        .settings-panel .unit {
+            position: relative;
+        }
+
+        .settings-panel .unit::after {
+            content: attr(data-unit);
+            position: absolute;
+            right: 8px;
+            top: 25px;
+            font-size: 11px;
+            color: #666;
+            pointer-events: none;
+        }
+
+        .settings-panel .unit input {
+            padding-right: 24px;
+        }
+
+        .wp-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .wp-card .wp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .wp-card .wp-header span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .wp-card .wp-header button {
+            background: none;
+            border: 1px solid var(--border-subtle);
+            color: #f66;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .add-wp-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px dashed var(--border-subtle);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .add-wp-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .action-btn {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: opacity 0.15s ease;
+        }
+
+        .action-btn.apply {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .action-btn.reset {
+            background: var(--input-bg);
+            border: 1px solid var(--border-subtle);
+            color: var(--text);
+        }
+
+        .action-btn:hover {
+            opacity: 0.85;
+        }
+
+        /* ───────── main stage ───────── */
+        .spacer {
+            height: 20vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main {
+            position: relative;
+            height: 300vh;
+        }
+
+        .container {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .initial {
+            left: 60%;
+            top: 5%;
+        }
+
+        .box {
+            width: 100px;
+            height: 100px;
+            z-index: 10;
+            border-radius: 10px;
+            background-image: url("https://assets.codepen.io/16327/flair-26.png");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-color: transparent;
+        }
+
+        .marker {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            background: #7c7c6f;
+        }
+    </style>
+
+</head>
+
+<body>
+    <button class="settings-toggle" onclick="togglePanel()">&#9881; Settings</button>
+
+    <div class="settings-panel" id="panel">
+        <h2>Motion Path Settings</h2>
+
+        <div class="panel-actions">
+            <button class="action-btn apply" onclick="applyAll()">&#10003; Apply Settings</button>
+            <button class="action-btn reset" onclick="resetAll()">&#8635; Reset</button>
+        </div>
+
+        <!-- ═══ Initial Waypoint ═══ -->
+        <h3>Initial Waypoint (Box)</h3>
+        <div class="row">
+            <div class="unit" data-unit="%">
+                <label>X (%)</label>
+                <input id="initX" type="number" value="60" step="1">
+            </div>
+            <div class="unit" data-unit="%">
+                <label>Y (%)</label>
+                <input id="initY" type="number" value="5" step="1">
+            </div>
+        </div>
+        <label>Box Image URL</label>
+        <input id="boxImage" type="text" value="" placeholder="https://assets.codepen.io/16327/flair-26.png">
+        <div class="row">
+            <div class="unit" data-unit="px">
+                <label>Width</label>
+                <input id="boxW" type="number" value="100" step="1">
+            </div>
+            <div class="unit" data-unit="px">
+                <label>Height</label>
+                <input id="boxH" type="number" value="100" step="1">
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label>Border</label>
+                <input id="boxBorder" type="text" value="" placeholder="2px solid #eb7033">
+            </div>
+            <div>
+                <label>Background</label>
+                <input id="boxBg" type="text" value="transparent" placeholder="transparent">
+            </div>
+        </div>
+        <label>Border Radius</label>
+        <input id="boxRadius" type="text" value="10px" placeholder="10px">
+
+        <!-- ═══ Waypoints ═══ -->
+        <h3>Waypoints</h3>
+        <div id="waypointList"></div>
+        <button class="add-wp-btn" onclick="addWaypoint()">+ Add Waypoint</button>
+
+        <!-- ═══ Global Container Styles ═══ -->
+        <h3>Global Container Styles</h3>
+        <div class="row">
+            <div class="unit" data-unit="px">
+                <label>Width</label>
+                <input id="gW" type="number" value="140" step="1">
+            </div>
+            <div class="unit" data-unit="px">
+                <label>Height</label>
+                <input id="gH" type="number" value="140" step="1">
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label>Border</label>
+                <input id="gBorder" type="text" value="2px dashed #7c7c6f" placeholder="2px dashed #7c7c6f">
+            </div>
+            <div>
+                <label>Background</label>
+                <input id="gBg" type="text" value="" placeholder="transparent">
+            </div>
+        </div>
+        <label>Border Radius</label>
+        <input id="gRadius" type="text" value="10px" placeholder="10px">
+        <div class="row">
+            <div>
+                <label>Padding</label>
+                <input id="gPadding" type="text" value="" placeholder="0">
+            </div>
+        </div>
+
+        <!-- ═══ Marker Global Styles ═══ -->
+        <h3>Global Marker Styles</h3>
+        <div class="row">
+            <div class="unit" data-unit="px">
+                <label>Width</label>
+                <input id="gmW" type="number" value="100" step="1">
+            </div>
+            <div class="unit" data-unit="px">
+                <label>Height</label>
+                <input id="gmH" type="number" value="100" step="1">
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label>Border</label>
+                <input id="gmBorder" type="text" value="" placeholder="none">
+            </div>
+            <div>
+                <label>Background</label>
+                <input id="gmBg" type="text" value="" placeholder="transparent">
+            </div>
+        </div>
+        <label>Border Radius</label>
+        <input id="gmRadius" type="text" value="10px" placeholder="10px">
+
+        <!-- ═══ Animation Controls ═══ -->
+        <h3>Animation Controls</h3>
+        <div>
+            <label>Start Trigger</label>
+            <input id="startTrigger" type="text" value="clamp(top center)" placeholder="clamp(top center)">
+        </div>
+        <div>
+            <label>End Trigger</label>
+            <input id="endTrigger" type="text" value="clamp(top center)" placeholder="clamp(top center)">
+        </div>
+        <div class="row">
+            <div>
+                <label>Duration</label>
+                <input id="duration" type="number" value="1" step="0.1" min="0.1">
+            </div>
+            <div>
+                <label>Scrub</label>
+                <input id="scrub" type="number" value="1" step="0.1" min="0">
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label>Curviness</label>
+                <input id="curviness" type="number" value="1.2" step="0.1" min="0">
+            </div>
+            <div>
+                <label>Ease</label>
+                <select id="ease">
+                    <option value="none" selected>none</option>
+                    <option value="power1.inOut">power1.inOut</option>
+                    <option value="power2.inOut">power2.inOut</option>
+                    <option value="power3.inOut">power3.inOut</option>
+                    <option value="power4.inOut">power4.inOut</option>
+                    <option value="back.inOut">back.inOut</option>
+                    <option value="elastic.inOut">elastic.inOut</option>
+                    <option value="linear">linear</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Stage ═══ -->
+    <div class="spacer">scroll down</div>
+    <div class="main" id="main"></div>
+    <div class="spacer final"></div>
+
+    <script>
+        console.clear();
+        gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
+
+        // ── state ──
+        let waypoints = [];
+        let wpCounter = 0;
+        let ctx;
+
+        function togglePanel() {
+            document.getElementById('panel').classList.toggle('open');
+        }
+
+        // ── build waypoint UIs ──
+        function buildWaypointForm(wp, index) {
+            return `
+            <div class="wp-card" id="wpCard${wp.id}">
+                <div class="wp-header">
+                    <span>Waypoint ${index + 1}</span>
+                    <button onclick="removeWaypoint(${wp.id})" title="Remove">✕</button>
+                </div>
+                <div class="row">
+                    <div class="unit" data-unit="%">
+                        <label>X</label>
+                        <input type="number" value="${wp.x}" step="1" data-wp="${wp.id}" data-field="x" onchange="updateWaypoint(this)">
+                    </div>
+                    <div class="unit" data-unit="%">
+                        <label>Y</label>
+                        <input type="number" value="${wp.y}" step="1" data-wp="${wp.id}" data-field="y" onchange="updateWaypoint(this)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="unit" data-unit="px">
+                        <label>Container W</label>
+                        <input type="number" value="${wp.cW}" placeholder="global" step="1" data-wp="${wp.id}" data-field="cW" onchange="updateWaypoint(this)">
+                    </div>
+                    <div class="unit" data-unit="px">
+                        <label>Container H</label>
+                        <input type="number" value="${wp.cH}" placeholder="global" step="1" data-wp="${wp.id}" data-field="cH" onchange="updateWaypoint(this)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Border</label>
+                        <input type="text" value="${wp.cBorder}" placeholder="global" data-wp="${wp.id}" data-field="cBorder" onchange="updateWaypoint(this)">
+                    </div>
+                    <div>
+                        <label>Background</label>
+                        <input type="text" value="${wp.cBg}" placeholder="global" data-wp="${wp.id}" data-field="cBg" onchange="updateWaypoint(this)">
+                    </div>
+                </div>
+                <label>Border Radius</label>
+                <input type="text" value="${wp.cRadius}" placeholder="global" data-wp="${wp.id}" data-field="cRadius" onchange="updateWaypoint(this)">
+                <div class="row">
+                    <div class="unit" data-unit="px">
+                        <label>Marker W</label>
+                        <input type="number" value="${wp.mW}" placeholder="global" step="1" data-wp="${wp.id}" data-field="mW" onchange="updateWaypoint(this)">
+                    </div>
+                    <div class="unit" data-unit="px">
+                        <label>Marker H</label>
+                        <input type="number" value="${wp.mH}" placeholder="global" step="1" data-wp="${wp.id}" data-field="mH" onchange="updateWaypoint(this)">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Marker Border</label>
+                        <input type="text" value="${wp.mBorder}" placeholder="global" data-wp="${wp.id}" data-field="mBorder" onchange="updateWaypoint(this)">
+                    </div>
+                    <div>
+                        <label>Marker Background</label>
+                        <input type="text" value="${wp.mBg}" placeholder="global" data-wp="${wp.id}" data-field="mBg" onchange="updateWaypoint(this)">
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderWaypointList() {
+            const el = document.getElementById('waypointList');
+            el.innerHTML = waypoints.map((wp, i) => buildWaypointForm(wp, i)).join('');
+        }
+
+        function updateWaypoint(input) {
+            const wpId = parseInt(input.dataset.wp);
+            const field = input.dataset.field;
+            const wp = waypoints.find(w => w.id === wpId);
+            if (!wp) return;
+            const val = input.value;
+            wp[field] = field === 'x' || field === 'y' ? parseInt(val) || 0 : val;
+        }
+
+        // ── defaults ──
+        const defaultWaypoints = [
+            { x: 10, y: 25 },
+            { x: null, y: 45, right: 10 },
+            { x: 20, y: 65 },
+            { x: 60, y: 80 },
+            { x: 15, y: 95 },
+        ];
+
+        function newWaypointData(x, y, right) {
+            return {
+                id: ++wpCounter,
+                x: x !== undefined ? x : 50,
+                y: y !== undefined ? y : 50,
+                right: right !== undefined ? right : null,
+                cW: '',
+                cH: '',
+                cBorder: '',
+                cBg: '',
+                cRadius: '',
+                mW: '',
+                mH: '',
+                mBorder: '',
+                mBg: '',
+            };
+        }
+
+        function initWaypoints() {
+            wpCounter = 0;
+            waypoints = defaultWaypoints.map(d => newWaypointData(d.x, d.y, d.right));
+            renderWaypointList();
+        }
+
+        function addWaypoint() {
+            waypoints.push(newWaypointData(50, 50));
+            renderWaypointList();
+            applyAll();
+        }
+
+        function removeWaypoint(id) {
+            waypoints = waypoints.filter(w => w.id !== id);
+            renderWaypointList();
+            applyAll();
+        }
+
+        function resetAll() {
+            Object.keys(inputDefaults).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = inputDefaults[id];
+            });
+            initWaypoints();
+            applyAll();
+        }
+
+        // ── globals helpers ──
+        function gVal(id) {
+            return document.getElementById(id).value.trim();
+        }
+
+        // ── build DOM + animation ──
+        function applyAll() {
+            ctx && ctx.revert();
+
+            const main = document.getElementById('main');
+            // preserve final spacer after main
+            let finalSpacer = main.nextElementSibling;
+            if (!finalSpacer || !finalSpacer.classList.contains('final')) {
+                finalSpacer = document.querySelector('.spacer.final');
+            }
+            main.innerHTML = '';
+
+            // ── read initial waypoint values ──
+            const initX = gVal('initX');
+            const initY = gVal('initY');
+            const boxImage = gVal('boxImage') || 'https://assets.codepen.io/16327/flair-26.png';
+            const boxW = gVal('boxW');
+            const boxH = gVal('boxH');
+            const boxBorder = gVal('boxBorder');
+            const boxBg = gVal('boxBg');
+            const boxRadius = gVal('boxRadius');
+
+            // ── global container values ──
+            const gW = gVal('gW');
+            const gH = gVal('gH');
+            const gBorder = gVal('gBorder');
+            const gBg = gVal('gBg');
+            const gRadius = gVal('gRadius');
+            const gPadding = gVal('gPadding');
+
+            // ── global marker values ──
+            const gmW = gVal('gmW');
+            const gmH = gVal('gmH');
+            const gmBorder = gVal('gmBorder');
+            const gmBg = gVal('gmBg');
+            const gmRadius = gVal('gmRadius');
+
+            // Initial container
+            const initDiv = document.createElement('div');
+            initDiv.className = 'container initial';
+            initDiv.style.left = initX + '%';
+            initDiv.style.top = initY + '%';
+            if (gW) initDiv.style.width = gW + 'px';
+            if (gH) initDiv.style.height = gH + 'px';
+            if (gBorder) initDiv.style.border = gBorder;
+            if (gBg) initDiv.style.backgroundColor = gBg;
+            if (gRadius) initDiv.style.borderRadius = gRadius;
+            if (gPadding) initDiv.style.padding = gPadding;
+
+            const box = document.createElement('div');
+            box.className = 'box';
+            if (boxImage) box.style.backgroundImage = `url("${boxImage}")`;
+            if (boxW) box.style.width = boxW + 'px';
+            if (boxH) box.style.height = boxH + 'px';
+            if (boxBorder) box.style.border = boxBorder;
+            if (boxBg) box.style.backgroundColor = boxBg;
+            if (boxRadius) box.style.borderRadius = boxRadius;
+
+            initDiv.appendChild(box);
+            main.appendChild(initDiv);
+
+            // Waypoint containers
+            const containers = [];
+            waypoints.forEach(wp => {
+                const div = document.createElement('div');
+                div.className = 'container';
+
+                // position
+                div.style.top = wp.y + '%';
+                if (wp.right !== null && wp.right !== undefined && wp.right !== '') {
+                    div.style.right = wp.right + '%';
+                } else {
+                    div.style.left = wp.x + '%';
+                }
+
+                // container styles (override global)
+                div.style.width = (wp.cW || gW) ? (wp.cW || gW) + 'px' : '';
+                div.style.height = (wp.cH || gH) ? (wp.cH || gH) + 'px' : '';
+                div.style.border = wp.cBorder || gBorder || '';
+                div.style.backgroundColor = wp.cBg || gBg || '';
+                div.style.borderRadius = wp.cRadius || gRadius || '';
+                if (gPadding) div.style.padding = gPadding;
+
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.width = (wp.mW || gmW) ? (wp.mW || gmW) + 'px' : '';
+                marker.style.height = (wp.mH || gmH) ? (wp.mH || gmH) + 'px' : '';
+                marker.style.border = wp.mBorder || gmBorder || '';
+                marker.style.backgroundColor = wp.mBg || gmBg || '';
+                if (gmRadius) marker.style.borderRadius = gmRadius;
+
+                div.appendChild(marker);
+                main.appendChild(div);
+                containers.push(div);
+            });
+
+            // GSAP
+            ctx = gsap.context(() => {
+                const boxEl = document.querySelector('.box');
+                const boxStartRect = boxEl.getBoundingClientRect();
+
+                const allContainers = gsap.utils.toArray('.container:not(.initial)');
+                const points = allContainers.map(container => {
+                    const marker = container.querySelector('.marker') || container;
+                    const r = marker.getBoundingClientRect();
+                    return {
+                        x: r.left + r.width / 2 - (boxStartRect.left + boxStartRect.width / 2),
+                        y: r.top + r.height / 2 - (boxStartRect.top + boxStartRect.height / 2)
+                    };
+                });
+
+                const scrubVal = parseFloat(gVal('scrub'));
+                const durationVal = parseFloat(gVal('duration'));
+                const curvinessVal = parseFloat(gVal('curviness'));
+                const easeVal = gVal('ease');
+                const startVal = gVal('startTrigger');
+                const endVal = gVal('endTrigger');
+
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: '.container.initial',
+                        start: startVal || 'clamp(top center)',
+                        endTrigger: '.final',
+                        end: endVal || 'clamp(top center)',
+                        scrub: isNaN(scrubVal) ? 1 : scrubVal
+                    }
+                });
+
+                tl.to('.box', {
+                    duration: isNaN(durationVal) ? 1 : durationVal,
+                    ease: easeVal || 'none',
+                    motionPath: {
+                        path: points,
+                        curviness: isNaN(curvinessVal) ? 1.2 : curvinessVal
+                    }
+                });
+            });
+
+            // ensure final spacer stays
+            if (finalSpacer && finalSpacer.parentNode !== main.parentNode) {
+                main.parentNode.insertBefore(finalSpacer, main.nextSibling);
+            }
+        }
+
+        // ── bootstrap ──
+        const inputDefaults = {};
+        document.querySelectorAll('#panel input, #panel select').forEach(el => {
+            if (el.id) inputDefaults[el.id] = el.value;
+        });
+
+        initWaypoints();
+        applyAll();
+        window.addEventListener('resize', applyAll);
+    </script>
+</body>
+
+</html>
