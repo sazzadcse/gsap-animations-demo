@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arc Marquee — Fullstack Replica</title>
+    <script src="https://cdn.prod.website-files.com/gsap/3.15.0/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #e5e5e5;
+        font-family: sans-serif;
+        overflow-x: hidden;
+      }
+
+      .section {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .section-title {
+        font-size: clamp(28px, 4vw, 52px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #1a1a1a;
+        text-align: center;
+        padding-top: 80px;
+        margin-bottom: 10px;
+        user-select: none;
+      }
+
+      .arc-marquee_wrap {
+        pointer-events: none;
+        width: 100%;
+        height: 40em;
+        position: relative;
+      }
+
+      .arc-marquee_track {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        inset: 0;
+      }
+
+      .arc-marquee_item {
+        will-change: transform;
+        border-radius: 0.625em;
+        width: 28vh;
+        height: 28vh;
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+      }
+
+      .arc-marquee_image {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .section--reverse .arc-marquee_item {
+        width: 28vh;
+        height: 28vh;
+      }
+
+      .speed-control {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a1a1a;
+        user-select: none;
+      }
+
+      .speed-control input[type="range"] {
+        width: 140px;
+        accent-color: #1a1a1a;
+        cursor: pointer;
+      }
+
+      .speed-control_value {
+        min-width: 34px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="speed-control">
+      <label for="arc-marquee-speed">Speed</label>
+      <input id="arc-marquee-speed" type="range" min="10" max="300" step="10" value="60" />
+      <span class="speed-control_value">60</span>
+    </div>
+
+    <div class="section" id="section1">
+      <h2 class="section-title" style="margin-bottom: 400px">Elips Marquee with zoom effect</h2>
+
+      <div class="arc-marquee_wrap" data-arc-marquee data-arc-marquee-speed="60">
+        <div class="arc-marquee_track" data-arc-marquee-track></div>
+      </div>
+    </div>
+
+    <div class="section section--reverse" id="section2">
+      <h2 class="section-title" style="margin-bottom: 400px">Reverse Marquee Section without zoom effect</h2>
+      <div class="arc-marquee_wrap" data-arc-marquee data-arc-marquee-speed="60" data-arc-marquee-reverse="true">
+        <div class="arc-marquee_track" data-arc-marquee-track></div>
+      </div>
+    </div>
+
+    <script>
+      const IMAGES = [
+        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?w=600&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&h=800&fit=crop",
+      ];
+
+      function initArcMarquee() {
+        const marquees = document.querySelectorAll("[data-arc-marquee]");
+
+        const marqueeInstances = [];
+
+        marquees.forEach((marquee) => {
+          const track = marquee.querySelector("[data-arc-marquee-track]");
+          if (!track) return;
+
+          const isReverse = marquee.getAttribute("data-arc-marquee-reverse") === "true";
+          let speed = parseFloat(marquee.getAttribute("data-arc-marquee-speed")) || 60;
+
+          const items = [];
+          const COUNT = IMAGES.length;
+          for (let i = 0; i < COUNT; i++) {
+            const el = document.createElement("div");
+            el.className = "arc-marquee_item";
+            el.innerHTML = `<img class="arc-marquee_image" src="${IMAGES[i]}" alt="" draggable="false">`;
+            track.appendChild(el);
+            items.push(el);
+          }
+
+          let halfWrap = 0;
+          let itemSpacing = 0;
+          let totalWidth = 0;
+          let arcDepth = 0;
+          let baseY = 0;
+          let pixelsPerMs = 0;
+
+          function layout() {
+            const wrapHeight = marquee.offsetHeight;
+            halfWrap = marquee.offsetWidth / 2;
+            const itemWidth = window.innerHeight * 0.28;
+            const gap = window.innerHeight * 0.075;
+            itemSpacing = itemWidth + gap;
+            totalWidth = itemSpacing * COUNT;
+            pixelsPerMs = totalWidth / (speed * 500);
+            arcDepth = wrapHeight * 0.25;
+            baseY = wrapHeight * 0.25;
+          }
+
+          var offset = 0;
+          var speedMult = 1;
+          var targetSpeedMult = 1;
+          var lastScrollY = window.scrollY || 0;
+
+          function update() {
+            const dir = isReverse ? -1 : 1;
+            items.forEach((item, i) => {
+              let xArc = (((i * itemSpacing + dir * offset) % totalWidth) + totalWidth) % totalWidth;
+              if (xArc >= totalWidth / 2) xArc -= totalWidth;
+
+              const norm = xArc / halfWrap;
+              const y = baseY + arcDepth * norm * norm;
+              const slope = (2 * arcDepth * norm) / halfWrap;
+              const rotation = (Math.atan(slope) * 180) / Math.PI;
+
+              gsap.set(item, {
+                x: halfWrap + xArc,
+                y: y,
+                rotation: rotation,
+                xPercent: -50,
+                yPercent: -50,
+              });
+            });
+          }
+
+          function tickerUpdate(time, delta) {
+            var scrollY = window.scrollY || 0;
+            var scrollDelta = scrollY - lastScrollY;
+            lastScrollY = scrollY;
+
+            if (Math.abs(scrollDelta) > 0.5) {
+              var velocity = scrollDelta / delta;
+              var clamped = Math.max(-8, Math.min(8, velocity));
+              targetSpeedMult = 1 + clamped * 12;
+            } else {
+              targetSpeedMult += (1 - targetSpeedMult) * 0.02;
+            }
+
+            speedMult += (targetSpeedMult - speedMult) * 0.04;
+            offset += pixelsPerMs * delta * speedMult;
+            update();
+          }
+
+          layout();
+          update();
+          gsap.set(marquee, { opacity: 0 });
+          gsap.ticker.add(tickerUpdate);
+
+          gsap.to(marquee, {
+            opacity: 1,
+            duration: 1.5,
+            ease: "power1.inOut",
+            delay: 0.5,
+          });
+
+          window.addEventListener("resize", () => {
+            offset = 0;
+            layout();
+            update();
+          });
+
+          marqueeInstances.push({
+            setSpeed(value) {
+              speed = value;
+              layout();
+              update();
+            },
+          });
+        });
+
+        const speedInput = document.getElementById("arc-marquee-speed");
+        const speedValue = document.querySelector(".speed-control_value");
+        if (speedInput) {
+          speedInput.addEventListener("input", () => {
+            const value = parseFloat(speedInput.value) || 60;
+            if (speedValue) speedValue.textContent = value;
+            marqueeInstances.forEach((instance) => instance.setSpeed(value));
+          });
+        }
+      }
+
+      initArcMarquee();
+    </script>
+  </body>
+</html>

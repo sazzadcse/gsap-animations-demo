@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GSAP 3D Text Spin</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0b0b12;
+            --accent: #7c5cff;
+            --accent-2: #00e0ff;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            background:
+                radial-gradient(circle at 50% 40%, #1a1a2e 0%, var(--bg) 70%);
+            color: #fff;
+            font-family: "Arial", sans-serif;
+            overflow: hidden;
+        }
+
+        .scene {
+            perspective: 1200px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .scene:active {
+            cursor: grabbing;
+        }
+
+        .text {
+            display: flex;
+            font-size: clamp(48px, 11vw, 150px);
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            transform-style: preserve-3d;
+            /* Gradient text via background clip */
+            background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .char {
+            display: inline-block;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform;
+            /* Give each char a subtle face so the 3D is visible */
+            filter: drop-shadow(0 0 14px rgba(124, 92, 255, 0.35));
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+            pointer-events: none;
+        }
+
+        .hint kbd {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            margin: 0 0.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 6px;
+            font-family: inherit;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scene" id="scene">
+        <div class="text" id="text">GSAP SPIN</div>
+    </div>
+
+    <p class="hint">Drag to spin &nbsp;·&nbsp; or press <kbd>Space</kbd> to auto-rotate</p>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+    <script>
+        const text = document.querySelector("#text");
+        const scene = document.querySelector("#scene");
+
+        // Split the headline into individual characters
+        text.innerHTML = [...text.textContent]
+            .map((char) => `<span class="char">${char === " " ? "&nbsp;" : char}</span>`)
+            .join("");
+
+        const chars = text.querySelectorAll(".char");
+
+        gsap.set(chars, { transformPerspective: 900 });
+
+        // ---- Entrance: each character tumbles in on the X axis ----
+        gsap.fromTo(
+            chars,
+            {
+                rotationX: -90,
+                z: -160,
+                opacity: 0,
+                y: 40
+            },
+            {
+                rotationX: 0,
+                z: 0,
+                opacity: 1,
+                y: 0,
+                duration: 1.1,
+                ease: "back.out(1.6)",
+                stagger: { each: 0.06, from: "center" },
+                delay: 0.2
+            }
+        );
+
+        // ---- Continuous per-character Y-axis spin (barrel roll) ----
+        const spin = gsap.to(chars, {
+            rotationY: 360,
+            duration: 3.5,
+            ease: "none",
+            stagger: { each: 0.07, from: "start", repeat: -1 },
+            repeat: -1
+        });
+
+        // ---- Drag to manually rotate the whole word in 3D ----
+        let rotation = { y: 0, x: 0 };
+        let dragging = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        const rotProxy = gsap.quickTo(text, "rotationY", { duration: 0.4, ease: "power2.out" });
+        const rotXProxy = gsap.quickTo(text, "rotationX", { duration: 0.4, ease: "power2.out" });
+
+        scene.addEventListener("pointerdown", (e) => {
+            dragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            spin.pause(); // stop the auto barrel-roll while dragging
+            scene.setPointerCapture(e.pointerId);
+        });
+
+        scene.addEventListener("pointermove", (e) => {
+            if (!dragging) return;
+            rotation.y += (e.clientX - lastX) * 0.5;
+            rotation.x -= (e.clientY - lastY) * 0.5;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            rotProxy(rotation.y);
+            rotXProxy(rotation.x);
+        });
+
+        const endDrag = () => {
+            if (!dragging) return;
+            dragging = false;
+            // ease the word back to rest
+            gsap.to(rotation, {
+                y: 0,
+                x: 0,
+                duration: 0.8,
+                ease: "power3.out",
+                onUpdate: () => {
+                    rotProxy(rotation.y);
+                    rotXProxy(rotation.x);
+                }
+            });
+            spin.play();
+        };
+        scene.addEventListener("pointerup", endDrag);
+        scene.addEventListener("pointercancel", endDrag);
+
+        // ---- Spacebar toggles the auto barrel-roll ----
+        window.addEventListener("keydown", (e) => {
+            if (e.code !== "Space") return;
+            e.preventDefault();
+            if (spin.paused()) {
+                spin.play();
+            } else {
+                spin.pause();
+            }
+        });
+
+        // Keep the gradient shimmering
+        gsap.to(text, {
+            backgroundPosition: "200% 0",
+            duration: 6,
+            ease: "none",
+            repeat: -1
+        });
+    </script>
+
+</body>
+
+</html>
