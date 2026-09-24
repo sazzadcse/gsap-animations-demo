@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Sections</title>
+
+    <style type="text/css">
+        :root {
+            --bg-gradient: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0.6) 50%,
+                    rgba(0, 0, 0, 0.1) 100%);
+            --color-surface-white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        a {
+            color: var(--color-surface-white);
+            text-decoration: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            color: var(--color-surface-white);
+            text-transform: uppercase;
+            overflow: hidden;
+            background: #000;
+        }
+
+        section {
+            height: 100%;
+            width: 100%;
+            top: 0;
+            position: fixed;
+            visibility: hidden;
+        }
+
+        section .outer,
+        section .inner {
+            width: 100%;
+            height: 100%;
+            overflow-y: hidden;
+        }
+
+        section .bg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            background-size: cover;
+            background-position: center;
+            will-change: transform;
+        }
+
+        /* Put your own section content/animations inside .content */
+        section .content {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .first .bg {
+            background-image: var(--bg-gradient),
+                url("https://assets.codepen.io/16327/site-landscape-1.jpg");
+        }
+
+        .second .bg {
+            background-image: var(--bg-gradient),
+                url("https://assets.codepen.io/16327/site-landscape-2.jpg");
+        }
+
+        .third .bg {
+            background-image: var(--bg-gradient),
+                url("https://assets.codepen.io/16327/site-landscape-3.jpg");
+        }
+
+        .fourth .bg {
+            background-image: var(--bg-gradient),
+                url("https://assets.codepen.io/16327/site-landscape-4.jpg");
+        }
+
+        .fifth .bg {
+            background-image: var(--bg-gradient),
+                url("https://assets.codepen.io/16327/site-landscape-5.jpg");
+            background-position: 50% 45%;
+        }
+
+        /* ── SETTINGS PANEL ── */
+        .settings-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 10001;
+            background: #1a1a2e;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        .settings-toggle:hover {
+            background: #2a2a4e;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -380px;
+            width: 380px;
+            max-width: 100%;
+            height: 100vh;
+            background: #111122;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10000;
+            overflow-y: auto;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0;
+            color: #ccc;
+            font-size: 13px;
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .settings-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .sp-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #1a1a2e;
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sp-header h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            text-transform: none;
+        }
+
+        .sp-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .sp-close:hover {
+            color: #fff;
+        }
+
+        .sp-body {
+            padding: 16px 20px 30px;
+        }
+
+        .sp-section {
+            margin-bottom: 20px;
+        }
+
+        .sp-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sp-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .sp-row label {
+            flex: 0 0 130px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .sp-row input[type="text"],
+        .sp-row input[type="number"],
+        .sp-row select {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 7px 10px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .sp-row input:focus,
+        .sp-row select:focus {
+            border-color: rgba(100, 120, 255, 0.5);
+        }
+
+        .sp-row input[type="range"] {
+            flex: 1;
+            accent-color: #6478ff;
+            height: 4px;
+        }
+
+        .sp-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #6478ff;
+            flex: 0 0 auto;
+            cursor: pointer;
+        }
+
+        .sp-range-val {
+            flex: 0 0 44px;
+            text-align: right;
+            font-size: 11px;
+            color: #888;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sp-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1a1a2e;
+            color: #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sp-btn:hover {
+            background: #2a2a4e;
+            color: #fff;
+        }
+
+        .sp-btn-primary {
+            background: #6478ff;
+            border-color: #6478ff;
+            color: #fff;
+        }
+
+        .sp-btn-primary:hover {
+            background: #5566ee;
+        }
+
+        .sp-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .sp-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sp-desc {
+            font-size: 11px;
+            color: #778;
+            line-height: 1.5;
+            margin: -4px 0 10px 0;
+            padding-left: 140px;
+        }
+
+        .sp-actions-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <button class="settings-toggle" id="settingsToggle">&#9881;</button>
+    <div class="sp-overlay" id="settingsOverlay"></div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div class="sp-header">
+            <h2>Section Animation Settings</h2>
+            <button class="sp-close" id="settingsClose">&times;</button>
+        </div>
+        <div class="sp-body">
+
+            <!-- TRANSITION -->
+            <div class="sp-section">
+                <div class="sp-section-title">Transition</div>
+                <div class="sp-row">
+                    <label>Style</label>
+                    <select id="setType">
+                        <option value="slide">Slide (wrap)</option>
+                        <option value="fade">Fade</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                <p class="sp-desc">Slide moves the whole section vertically. Fade cross-fades. Zoom scales the background in.</p>
+                <div class="sp-row">
+                    <label>Duration (s)</label>
+                    <input type="range" id="setDuration" min="0.2" max="3" step="0.05" value="1.25">
+                    <span class="sp-range-val" id="setDurationVal">1.25</span>
+                </div>
+                <p class="sp-desc">Length of a single section transition, in seconds.</p>
+                <div class="sp-row">
+                    <label>Ease</label>
+                    <select id="setEase">
+                        <option value="power1.inOut">power1.inOut</option>
+                        <option value="power2.inOut">power2.inOut</option>
+                        <option value="power3.inOut">power3.inOut</option>
+                        <option value="power4.inOut">power4.inOut</option>
+                        <option value="sine.inOut">sine.inOut</option>
+                        <option value="expo.inOut">expo.inOut</option>
+                        <option value="circ.inOut">circ.inOut</option>
+                        <option value="back.inOut">back.inOut</option>
+                        <option value="none">none (linear)</option>
+                    </select>
+                </div>
+                <p class="sp-desc">GSAP easing curve applied to each transition.</p>
+                <div class="sp-row">
+                    <label>Background Move (%)</label>
+                    <input type="range" id="setBgMove" min="0" max="60" step="1" value="15">
+                    <span class="sp-range-val" id="setBgMoveVal">15</span>
+                </div>
+                <p class="sp-desc">Parallax distance of the background image during the transition. 0 disables parallax.</p>
+            </div>
+
+            <!-- INPUT -->
+            <div class="sp-section">
+                <div class="sp-section-title">Scroll Input</div>
+                <div class="sp-row">
+                    <label>Wheel Speed</label>
+                    <input type="range" id="setWheelSpeed" min="-3" max="3" step="0.5" value="-1">
+                    <span class="sp-range-val" id="setWheelSpeedVal">-1</span>
+                </div>
+                <p class="sp-desc">Native wheel delta multiplier. Negative values invert the wheel direction.</p>
+                <div class="sp-row">
+                    <label>Tolerance</label>
+                    <input type="range" id="setTolerance" min="0" max="50" step="1" value="10">
+                    <span class="sp-range-val" id="setToleranceVal">10</span>
+                </div>
+                <p class="sp-desc">Minimum wheel/touch distance required before a transition fires. Higher = less sensitive.</p>
+                <div class="sp-row">
+                    <label>Invert Direction</label>
+                    <input type="checkbox" id="setInvert">
+                </div>
+                <p class="sp-desc">Swaps what scrolling down and scrolling up do.</p>
+                <div class="sp-row">
+                    <label>Loop</label>
+                    <input type="checkbox" id="setLoop" checked>
+                </div>
+                <p class="sp-desc">When on, scrolling past the last section wraps to the first (and vice versa).</p>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="sp-section">
+                <div class="sp-section-title">Actions</div>
+                <div class="sp-actions-row">
+                    <button class="sp-btn" id="replayBtn">Replay Current</button>
+                    <button class="sp-btn sp-btn-primary" id="resetBtn">Reset Defaults</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <section class="first">
+        <div class="outer">
+            <div class="inner">
+                <div class="bg"></div>
+                <div class="content"><!-- your section animation/content --></div>
+            </div>
+        </div>
+    </section>
+    <section class="second">
+        <div class="outer">
+            <div class="inner">
+                <div class="bg"></div>
+                <div class="content"><!-- your section animation/content --></div>
+            </div>
+        </div>
+    </section>
+    <section class="third">
+        <div class="outer">
+            <div class="inner">
+                <div class="bg"></div>
+                <div class="content"><!-- your section animation/content --></div>
+            </div>
+        </div>
+    </section>
+    <section class="fourth">
+        <div class="outer">
+            <div class="inner">
+                <div class="bg"></div>
+                <div class="content"><!-- your section animation/content --></div>
+            </div>
+        </div>
+    </section>
+    <section class="fifth">
+        <div class="outer">
+            <div class="inner">
+                <div class="bg"></div>
+                <div class="content"><!-- your section animation/content --></div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Observer.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(Observer);
+
+        const sections = gsap.utils.toArray("section"),
+            images = gsap.utils.toArray(".bg"),
+            outerWrappers = gsap.utils.toArray(".outer"),
+            innerWrappers = gsap.utils.toArray(".inner");
+
+        const defaults = {
+            type: "slide",
+            duration: 1.25,
+            ease: "power1.inOut",
+            bgMove: 15,
+            wheelSpeed: -1,
+            tolerance: 10,
+            invert: false,
+            loop: true
+        };
+
+        const settings = Object.assign({}, defaults);
+
+        let currentIndex = -1,
+            animating = false,
+            observer;
+
+        const wrap = gsap.utils.wrap(0, sections.length);
+
+        function normalizeIndex(index) {
+            return settings.loop ? wrap(index) : Math.max(0, Math.min(sections.length - 1, index));
+        }
+
+        gsap.set(outerWrappers, { yPercent: 100 });
+        gsap.set(innerWrappers, { yPercent: -100 });
+
+        function gotoSection(rawIndex, direction) {
+            if (animating) return;
+            if (!settings.loop && (rawIndex < 0 || rawIndex >= sections.length)) return;
+
+            const index = normalizeIndex(rawIndex);
+            if (index === currentIndex) return;
+
+            animating = true;
+
+            const fromTop = direction === -1,
+                dFactor = fromTop ? -1 : 1,
+                tl = gsap.timeline({
+                    defaults: { duration: settings.duration, ease: settings.ease },
+                    onComplete: () => { animating = false; }
+                });
+
+            if (currentIndex >= 0) {
+                gsap.set(sections[currentIndex], { zIndex: 0 });
+                tl.to(images[currentIndex], { yPercent: -settings.bgMove * dFactor }, 0)
+                    .set(sections[currentIndex], { autoAlpha: 0 });
+            }
+
+            gsap.set(sections[index], { autoAlpha: 1, zIndex: 1 });
+
+            if (settings.type === "fade") {
+                gsap.set([outerWrappers[index], innerWrappers[index]], { yPercent: 0 });
+                tl.fromTo(sections[index], { autoAlpha: 0 }, { autoAlpha: 1 }, 0)
+                    .fromTo(images[index], { yPercent: settings.bgMove * dFactor }, { yPercent: 0 }, 0);
+            } else if (settings.type === "zoom") {
+                gsap.set([outerWrappers[index], innerWrappers[index]], { yPercent: 0 });
+                tl.fromTo(images[index], { scale: 1.15 }, { scale: 1, yPercent: 0 }, 0);
+            } else {
+                tl.fromTo([outerWrappers[index], innerWrappers[index]], {
+                    yPercent: i => i ? -100 * dFactor : 100 * dFactor
+                }, {
+                    yPercent: 0
+                }, 0)
+                    .fromTo(images[index], { yPercent: settings.bgMove * dFactor }, { yPercent: 0 }, 0);
+            }
+
+            currentIndex = index;
+        }
+
+        const dir = () => (settings.invert ? -1 : 1);
+
+        function createObserver() {
+            if (observer) observer.kill();
+            observer = Observer.create({
+                type: "wheel,touch",
+                wheelSpeed: settings.wheelSpeed,
+                onDown: (self) => {
+                    if (fromUI(self)) return;
+                    const d = dir();
+                    !animating && gotoSection(currentIndex - d, -d);
+                },
+                onUp: (self) => {
+                    if (fromUI(self)) return;
+                    const d = dir();
+                    !animating && gotoSection(currentIndex + d, d);
+                },
+                tolerance: settings.tolerance
+            });
+        }
+
+        function fromUI(self) {
+            const target = self && self.event && self.event.target;
+            return !!(target && target.closest &&
+                target.closest(".settings-panel, .settings-toggle, .sp-overlay"));
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (e.target.closest && e.target.closest(".settings-panel")) return;
+            const d = dir();
+            if (e.key === "ArrowDown") { e.preventDefault(); !animating && gotoSection(currentIndex + d, d); }
+            if (e.key === "ArrowUp") { e.preventDefault(); !animating && gotoSection(currentIndex - d, -d); }
+        });
+
+        /* ── SETTINGS PANEL WIRING ── */
+        const ui = {
+            type: document.getElementById("setType"),
+            duration: document.getElementById("setDuration"),
+            durationVal: document.getElementById("setDurationVal"),
+            ease: document.getElementById("setEase"),
+            bgMove: document.getElementById("setBgMove"),
+            bgMoveVal: document.getElementById("setBgMoveVal"),
+            wheelSpeed: document.getElementById("setWheelSpeed"),
+            wheelSpeedVal: document.getElementById("setWheelSpeedVal"),
+            tolerance: document.getElementById("setTolerance"),
+            toleranceVal: document.getElementById("setToleranceVal"),
+            invert: document.getElementById("setInvert"),
+            loop: document.getElementById("setLoop")
+        };
+
+        function syncUI() {
+            ui.type.value = settings.type;
+            ui.duration.value = settings.duration;
+            ui.durationVal.textContent = Number(settings.duration).toFixed(2);
+            ui.ease.value = settings.ease;
+            ui.bgMove.value = settings.bgMove;
+            ui.bgMoveVal.textContent = settings.bgMove;
+            ui.wheelSpeed.value = settings.wheelSpeed;
+            ui.wheelSpeedVal.textContent = settings.wheelSpeed;
+            ui.tolerance.value = settings.tolerance;
+            ui.toleranceVal.textContent = settings.tolerance;
+            ui.invert.checked = !!settings.invert;
+            ui.loop.checked = !!settings.loop;
+        }
+
+        ui.type.addEventListener("change", () => { settings.type = ui.type.value; });
+        ui.ease.addEventListener("change", () => { settings.ease = ui.ease.value; });
+        ui.duration.addEventListener("input", () => {
+            settings.duration = parseFloat(ui.duration.value);
+            ui.durationVal.textContent = settings.duration.toFixed(2);
+        });
+        ui.bgMove.addEventListener("input", () => {
+            settings.bgMove = parseFloat(ui.bgMove.value);
+            ui.bgMoveVal.textContent = settings.bgMove;
+        });
+        ui.wheelSpeed.addEventListener("input", () => {
+            settings.wheelSpeed = parseFloat(ui.wheelSpeed.value);
+            ui.wheelSpeedVal.textContent = settings.wheelSpeed;
+            createObserver();
+        });
+        ui.tolerance.addEventListener("input", () => {
+            settings.tolerance = parseFloat(ui.tolerance.value);
+            ui.toleranceVal.textContent = settings.tolerance;
+            createObserver();
+        });
+        ui.invert.addEventListener("change", () => { settings.invert = ui.invert.checked; });
+        ui.loop.addEventListener("change", () => { settings.loop = ui.loop.checked; });
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            Object.assign(settings, defaults);
+            gsap.set(images, { yPercent: 0, scale: 1 });
+            gsap.set(outerWrappers, { yPercent: 100 });
+            gsap.set(innerWrappers, { yPercent: -100 });
+            syncUI();
+            createObserver();
+            currentIndex = -1;
+            gotoSection(0, 1);
+        });
+
+        document.getElementById("replayBtn").addEventListener("click", () => {
+            gsap.set(sections, { autoAlpha: 0, zIndex: 0 });
+            gsap.set(images, { yPercent: 0, scale: 1 });
+            gsap.set(outerWrappers, { yPercent: 100 });
+            gsap.set(innerWrappers, { yPercent: -100 });
+            const index = currentIndex < 0 ? 0 : currentIndex;
+            currentIndex = -1;
+            gotoSection(index, 1);
+        });
+
+        const panel = document.getElementById("settingsPanel"),
+            overlay = document.getElementById("settingsOverlay");
+
+        document.getElementById("settingsToggle").addEventListener("click", () => {
+            panel.classList.add("open");
+            overlay.classList.add("visible");
+        });
+
+        function closePanel() {
+            panel.classList.remove("open");
+            overlay.classList.remove("visible");
+        }
+
+        document.getElementById("settingsClose").addEventListener("click", closePanel);
+        overlay.addEventListener("click", closePanel);
+
+        createObserver();
+        syncUI();
+        gotoSection(0, 1);
+
+        // original: https://codepen.io/BrianCross/pen/PoWapLP
+        // horizontal version: https://codepen.io/GreenSock/pen/xxWdeMK
+    </script>
+
+</html>
