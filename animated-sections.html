@@ -41,60 +41,32 @@
             position: fixed;
             visibility: hidden;
             overflow: hidden;
-        }
-
-        section .outer,
-        section .inner {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        section .bg {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            top: 0;
             background-size: cover;
             background-position: center;
             will-change: transform;
         }
 
-        /* Put your own section content/animations inside .content */
-        section .content {
-            position: absolute;
-            inset: 0;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-
-        .first .bg {
+        .ha-as-first {
             background-image: var(--bg-gradient),
                 url("https://assets.codepen.io/16327/site-landscape-1.jpg");
         }
 
-        .second .bg {
+        .ha-as-second {
             background-image: var(--bg-gradient),
                 url("https://assets.codepen.io/16327/site-landscape-2.jpg");
         }
 
-        .third .bg {
+        .ha-as-third {
             background-image: var(--bg-gradient),
                 url("https://assets.codepen.io/16327/site-landscape-3.jpg");
         }
 
-        .fourth .bg {
+        .ha-as-fourth {
             background-image: var(--bg-gradient),
                 url("https://assets.codepen.io/16327/site-landscape-4.jpg");
         }
 
-        .fifth .bg {
+        .ha-as-fifth {
             background-image: var(--bg-gradient),
                 url("https://assets.codepen.io/16327/site-landscape-5.jpg");
             background-position: 50% 45%;
@@ -423,46 +395,11 @@
         </div>
     </div>
 
-    <section class="first">
-        <div class="outer">
-            <div class="inner">
-                <div class="bg"></div>
-                <div class="content"><!-- your section animation/content --></div>
-            </div>
-        </div>
-    </section>
-    <section class="second">
-        <div class="outer">
-            <div class="inner">
-                <div class="bg"></div>
-                <div class="content"><!-- your section animation/content --></div>
-            </div>
-        </div>
-    </section>
-    <section class="third">
-        <div class="outer">
-            <div class="inner">
-                <div class="bg"></div>
-                <div class="content"><!-- your section animation/content --></div>
-            </div>
-        </div>
-    </section>
-    <section class="fourth">
-        <div class="outer">
-            <div class="inner">
-                <div class="bg"></div>
-                <div class="content"><!-- your section animation/content --></div>
-            </div>
-        </div>
-    </section>
-    <section class="fifth">
-        <div class="outer">
-            <div class="inner">
-                <div class="bg"></div>
-                <div class="content"><!-- your section animation/content --></div>
-            </div>
-        </div>
-    </section>
+    <section class="ha-as-first"></section>
+    <section class="ha-as-second"></section>
+    <section class="ha-as-third"></section>
+    <section class="ha-as-fourth"></section>
+    <section class="ha-as-fifth"></section>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Observer.min.js"></script>
@@ -470,10 +407,7 @@
     <script>
         gsap.registerPlugin(Observer);
 
-        const sections = gsap.utils.toArray("section"),
-            images = gsap.utils.toArray(".bg"),
-            outerWrappers = gsap.utils.toArray(".outer"),
-            innerWrappers = gsap.utils.toArray(".inner");
+        const sections = gsap.utils.toArray("section");
 
         const defaults = {
             type: "slide",
@@ -498,9 +432,6 @@
             return settings.loop ? wrap(index) : Math.max(0, Math.min(sections.length - 1, index));
         }
 
-        gsap.set(outerWrappers, { yPercent: 100 });
-        gsap.set(innerWrappers, { yPercent: -100 });
-
         function gotoSection(rawIndex, direction) {
             if (animating) return;
             if (!settings.loop && (rawIndex < 0 || rawIndex >= sections.length)) return;
@@ -519,26 +450,27 @@
 
             if (currentIndex >= 0) {
                 gsap.set(sections[currentIndex], { zIndex: 0 });
-                tl.to(images[currentIndex], { yPercent: -settings.bgMove * dFactor }, 0)
-                    .set(sections[currentIndex], { autoAlpha: 0 });
+                tl.set(sections[currentIndex], { autoAlpha: 0 }, settings.duration);
             }
 
             gsap.set(sections[index], { autoAlpha: 1, zIndex: 1 });
 
             if (settings.type === "fade") {
-                gsap.set([outerWrappers[index], innerWrappers[index]], { yPercent: 0 });
-                tl.fromTo(sections[index], { autoAlpha: 0 }, { autoAlpha: 1 }, 0)
-                    .fromTo(images[index], { yPercent: settings.bgMove * dFactor }, { yPercent: 0 }, 0);
+                tl.fromTo(sections[index], { yPercent: 0, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1 }, 0);
+                if (settings.bgMove) {
+                    tl.fromTo(sections[index],
+                        { backgroundPositionY: `${50 + settings.bgMove * dFactor}%` },
+                        { backgroundPositionY: "50%" }, 0);
+                }
             } else if (settings.type === "zoom") {
-                gsap.set([outerWrappers[index], innerWrappers[index]], { yPercent: 0 });
-                tl.fromTo(images[index], { scale: 1.15 }, { scale: 1, yPercent: 0 }, 0);
+                tl.fromTo(sections[index], { scale: 1.15, yPercent: 0 }, { scale: 1, yPercent: 0 }, 0);
             } else {
-                tl.fromTo([outerWrappers[index], innerWrappers[index]], {
-                    yPercent: i => i ? -100 * dFactor : 100 * dFactor
-                }, {
-                    yPercent: 0
-                }, 0)
-                    .fromTo(images[index], { yPercent: settings.bgMove * dFactor }, { yPercent: 0 }, 0);
+                tl.fromTo(sections[index], { yPercent: 100 * dFactor }, { yPercent: 0 }, 0);
+                if (settings.bgMove) {
+                    tl.fromTo(sections[index],
+                        { backgroundPositionY: `${50 + settings.bgMove * dFactor}%` },
+                        { backgroundPositionY: "50%" }, 0);
+                }
             }
 
             currentIndex = index;
@@ -634,9 +566,8 @@
 
         document.getElementById("resetBtn").addEventListener("click", () => {
             Object.assign(settings, defaults);
-            gsap.set(images, { yPercent: 0, scale: 1 });
-            gsap.set(outerWrappers, { yPercent: 100 });
-            gsap.set(innerWrappers, { yPercent: -100 });
+            gsap.set(sections, { yPercent: 0, scale: 1 });
+            gsap.set(sections, { clearProps: "backgroundPositionY" });
             syncUI();
             createObserver();
             currentIndex = -1;
@@ -644,10 +575,8 @@
         });
 
         document.getElementById("replayBtn").addEventListener("click", () => {
-            gsap.set(sections, { autoAlpha: 0, zIndex: 0 });
-            gsap.set(images, { yPercent: 0, scale: 1 });
-            gsap.set(outerWrappers, { yPercent: 100 });
-            gsap.set(innerWrappers, { yPercent: -100 });
+            gsap.set(sections, { autoAlpha: 0, zIndex: 0, yPercent: 0, scale: 1 });
+            gsap.set(sections, { clearProps: "backgroundPositionY" });
             const index = currentIndex < 0 ? 0 : currentIndex;
             currentIndex = -1;
             gotoSection(index, 1);
