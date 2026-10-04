@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Scroll Video — Happy Addons Style Demo</title>
+    <link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+    <style>
+        :root {
+            --ha-bg: #0b0e13;
+            --ha-bg-2: #12161d;
+            --ha-line: rgba(255, 255, 255, 0.08);
+            --ha-text: #e8ecf2;
+            --ha-dim: #8b94a3;
+            --ha-accent: #5eead4;
+            --ha-accent-2: #818cf8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: auto; }
+        body {
+            background: #000;
+            color: var(--ha-text);
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        ::selection { background: rgba(94, 234, 212, 0.3); }
+
+        /* ---------- full-viewport video frame ---------- */
+        .ha-video-stage { position: relative; width: 100%; }
+        .ha-video-frame {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        .ha-video-media { position: absolute; inset: 0; will-change: transform, opacity; transform-origin: 50% 50%; }
+        .ha-video-media video,
+        .ha-video-media .ha-iframe-wrap { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .ha-video-media video { display: block; object-fit: cover; object-position: center center; }
+        .ha-video-media .ha-iframe-wrap iframe { border: 0; display: block; width: 100%; height: 100%; }
+        .ha-video-poster {
+            position: absolute; inset: 0; z-index: 3; background: #000 center / cover no-repeat;
+            transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .ha-video-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .ha-video-poster.is-hidden { opacity: 0; }
+        .ha-video-loader {
+            position: absolute; inset: 0; z-index: 5; display: none;
+            align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+            background: rgba(5, 7, 10, 0.55); backdrop-filter: blur(3px); color: var(--ha-dim); font-size: 12px;
+            letter-spacing: 0.25em; text-transform: uppercase;
+        }
+        .ha-video-loader.is-active { display: flex; }
+        .ha-spinner {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.12); border-top-color: var(--ha-accent);
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .ha-video-error {
+            position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: none;
+            padding: 14px 18px; font-size: 13px; line-height: 1.5;
+            background: rgba(190, 40, 60, 0.92); color: #fff;
+        }
+        .ha-video-error.is-active { display: block; }
+
+        /* ---------- settings panel ---------- */
+        #panelToggle {
+            position: fixed; top: 16px; right: 16px; z-index: 130;
+            background: var(--ha-accent); color: #06251f; font-weight: 700; font-size: 12px;
+            letter-spacing: 0.14em; text-transform: uppercase; border: 0; border-radius: 999px;
+            padding: 10px 16px; cursor: pointer; box-shadow: 0 8px 30px rgba(94, 234, 212, 0.35);
+        }
+        #panel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 340px; z-index: 125;
+            background: var(--ha-bg-2); border-left: 1px solid var(--ha-line);
+            transform: translateX(102%); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            overflow-y: auto; overscroll-behavior: contain; padding: 64px 16px 40px;
+            font-size: 13px;
+        }
+        body.panel-open #panel { transform: translateX(0); }
+        @media (max-width: 480px) { #panel { width: 100vw; } }
+        #panel .panel-head { position: sticky; top: -64px; background: var(--ha-bg-2); padding: 14px 4px 10px; z-index: 2; }
+        #panel .panel-head h2 { font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; }
+        #panel .panel-head p { color: var(--ha-dim); font-size: 11px; margin-top: 6px; line-height: 1.5; }
+        .panel-sec { border: 1px solid var(--ha-line); border-radius: 12px; margin-top: 12px; background: rgba(255, 255, 255, 0.015); }
+        .panel-sec summary {
+            cursor: pointer; list-style: none; padding: 12px 14px; font-weight: 700; font-size: 11px;
+            letter-spacing: 0.16em; text-transform: uppercase; color: var(--ha-accent); display: flex; justify-content: space-between; align-items: center;
+        }
+        .panel-sec summary::-webkit-details-marker { display: none; }
+        .panel-sec summary::after { content: "+"; color: var(--ha-dim); font-size: 14px; }
+        .panel-sec[open] summary::after { content: "–"; }
+        .panel-sec .sec-body { padding: 4px 14px 14px; border-top: 1px solid var(--ha-line); }
+        .ctl { display: block; margin-top: 12px; }
+        .ctl > .lbl { display: block; font-size: 11px; color: var(--ha-dim); letter-spacing: 0.06em; margin-bottom: 6px; }
+        .ctl input[type="text"], .ctl input[type="number"], .ctl select, .ctl input[type="file"] {
+            width: 100%; background: #0c0f14; border: 1px solid var(--ha-line); color: var(--ha-text);
+            border-radius: 8px; padding: 8px 10px; font-size: 12px; outline: none;
+        }
+        .ctl input:focus, .ctl select:focus { border-color: var(--ha-accent); }
+        .ctl input[type="file"] { padding: 6px; font-size: 11px; }
+        .ctl .file-name { display: block; font-size: 10px; color: var(--ha-accent); margin-top: 5px; word-break: break-all; }
+        .ctl .check-row { display: flex; align-items: center; justify-content: space-between; }
+        .ctl .check-row input[type="checkbox"] { width: 34px; height: 18px; appearance: none; background: #0c0f14; border: 1px solid var(--ha-line); border-radius: 999px; position: relative; cursor: pointer; transition: background 0.2s; }
+        .ctl .check-row input[type="checkbox"]::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--ha-dim); transition: transform 0.2s, background 0.2s; }
+        .ctl .check-row input[type="checkbox"]:checked { background: rgba(94, 234, 212, 0.25); border-color: var(--ha-accent); }
+        .ctl .check-row input[type="checkbox"]:checked::after { transform: translateX(16px); background: var(--ha-accent); }
+        .ctl .help { display: block; font-size: 10px; color: #5c6572; margin-top: 5px; line-height: 1.5; }
+        .ctl.is-hidden { display: none; }
+        .panel-actions { margin-top: 16px; display: flex; gap: 8px; }
+        .btn {
+            flex: 1; border: 1px solid var(--ha-line); background: #0c0f14; color: var(--ha-text);
+            border-radius: 8px; padding: 9px 10px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+            cursor: pointer; font-weight: 600;
+        }
+        .btn:hover { border-color: var(--ha-accent); color: var(--ha-accent); }
+        #statusPill { margin-top: 14px; font-size: 11px; color: var(--ha-dim); border: 1px dashed var(--ha-line); border-radius: 10px; padding: 10px 12px; line-height: 1.6; }
+        #statusPill b { color: var(--ha-accent); font-weight: 600; }
+
+        noscript .ns {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            padding: 14px 18px; background: #16120b; color: #f0d9a8; border-bottom: 1px solid #4a3a1a;
+            font-family: system-ui, sans-serif; font-size: 13px; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <noscript>
+        <div class="ns">JavaScript is disabled — the scroll-scrubbed video is unavailable, but the page remains fully usable.</div>
+    </noscript>
+
+    <button id="panelToggle" aria-expanded="false" aria-controls="panel">Controls</button>
+
+    <!-- ============ VIDEO STAGE (100vw × 100vh) ============ -->
+    <section class="ha-video-stage" id="videoStage" aria-label="Scroll controlled video">
+        <div class="ha-video-frame" id="videoFrame">
+            <div class="ha-video-media" id="videoMedia"><!-- adapter mounts video / iframe here --></div>
+            <div class="ha-video-poster" id="videoPoster"><img id="videoPosterImg" alt=""></div>
+            <div class="ha-video-loader" id="videoLoader"><div class="ha-spinner" role="status" aria-label="Loading video"></div><span>Loading</span></div>
+            <div class="ha-video-error" id="videoError" role="alert"></div>
+        </div>
+    </section>
+
+    <!-- ============ SETTINGS PANEL ============ -->
+    <aside id="panel" aria-label="Widget settings">
+        <div class="panel-head">
+            <h2>Video Scroll</h2>
+            <p>Scroll length is derived automatically from the video duration — the video reaches its end exactly when the scroll animation ends, then unpins. Smooth scrolling (Lenis) is always active.</p>
+        </div>
+        <div id="panelBody"></div>
+        <div class="panel-actions">
+            <button class="btn" id="btnDefaults">Reset defaults</button>
+        </div>
+        <div id="statusPill">Status: <b id="statusText">idle</b><br>Scrub: <b id="scrubStat">–</b></div>
+    </aside>
+
+    <!-- GSAP -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+    <!-- Lenis -->
+    <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js" onerror="window.__HA_LENIS_FAILED__=true"></script>
+
+    <script>
+    (function () {
+        'use strict';
+        gsap.registerPlugin(ScrollTrigger);
+
+        /* =====================================================================
+         * 0. Utilities
+         * ===================================================================*/
+        const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+        const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+        const fmt = (t) => (isFinite(t) ? t : 0).toFixed(1) + 's';
+        function debounce(fn, wait) {
+            let t = 0;
+            return function () { clearTimeout(t); const a = arguments; t = setTimeout(() => fn.apply(null, a), wait); };
+        }
+        function withTimeout(promise, ms, msg) {
+            return Promise.race([
+                promise,
+                new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))
+            ]);
+        }
+        function parseYouTubeId(url) {
+            if (!url) return null;
+            const s = String(url).trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
+            const m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            return m ? m[1] : null;
+        }
+        function parseVimeoId(url) {
+            if (!url) return null;
+            const s = String(url).trim();
+            if (/^\d+$/.test(s)) return s;
+            const m = s.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/[^/]+\/videos\/|video\/)?(\d+)/);
+            return m ? m[1] : null;
+        }
+        function parseDailymotionId(url) {
+            if (!url) return null;
+            const s = String(url).trim();
+            if (/^x[a-zA-Z0-9]{5,11}$/.test(s)) return s;
+            const m = s.match(/(?:dailymotion\.com\/(?:video\/|.*[?&]video=)|dai\.ly\/)([a-zA-Z0-9]+)/);
+            return m ? m[1] : null;
+        }
+
+        /* =====================================================================
+         * 1. Shared Lenis manager — always active, single instance only
+         * ===================================================================*/
+        const LenisManager = {
+            instance: null,
+            rafFn: null,
+            enable() {
+                if (this.instance) return;
+                if (window.__HA_LENIS__) { // reuse a global instance already owned elsewhere
+                    this.instance = window.__HA_LENIS__;
+                    this.reused = true;
+                    document.documentElement.classList.add('lenis', 'lenis-active');
+                    return;
+                }
+                if (typeof Lenis === 'undefined' || window.__HA_LENIS_FAILED__) {
+                    const st = document.getElementById('statusText');
+                    if (st) st.textContent = 'Lenis unavailable — native scroll';
+                    return;
+                }
+                this.instance = new Lenis({
+                    duration: 1.15,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    smoothWheel: true
+                });
+                window.__HA_LENIS__ = this.instance;
+                this.instance.on('scroll', () => ScrollTrigger.update());
+                this.rafFn = (time) => { if (this.instance) this.instance.raf(time * 1000); };
+                gsap.ticker.add(this.rafFn);
+                gsap.ticker.lagSmoothing(0);
+                document.documentElement.classList.add('lenis', 'lenis-active');
+            }
+        };
+
+        /* =====================================================================
+         * 2. Provider adapters (isolated from all ScrollTrigger logic)
+         *    Common interface: mount() / getDuration() / seek() / pause() / destroy() / posterUrl()
+         * ===================================================================*/
+        class Html5Video {
+            constructor(cfg) {
+                this.cfg = cfg;
+                this.el = null;
+                this.seeking = false;
+                this.pendingTime = null;
+                this.lastTarget = -1;
+            }
+            mount(host) {
+                return new Promise((resolve, reject) => {
+                    const src = this.cfg.source === 'upload' ? this.cfg.uploadUrl : this.cfg.selfUrl;
+                    if (!src) { reject(new Error(this.cfg.source === 'upload' ? 'No video uploaded yet.' : 'Self-hosted video URL is empty.')); return; }
+                    const v = document.createElement('video');
+                    v.muted = true;
+                    v.playsInline = true;
+                    v.setAttribute('playsinline', '');
+                    v.preload = 'auto'; // seek scrubbing needs buffered ranges; metadata-only breaks seeking
+                    v.setAttribute('aria-label', 'Scroll controlled video');
+                    if (this.cfg.plain) { v.controls = true; v.muted = false; }
+                    if (this.cfg.customPoster) v.poster = this.cfg.customPoster;
+                    let settled = false;
+                    const metaOk = () => {
+                        if (settled) return; settled = true;
+                        if (!v.duration || !isFinite(v.duration) || v.duration <= 0) { reject(new Error('Video duration unavailable.')); return; }
+                        resolve();
+                    };
+                    const metaErr = () => { if (!settled) { settled = true; reject(new Error('Video failed to load (network, CORS or unsupported format).')); } };
+                    v.addEventListener('loadedmetadata', metaOk, { once: true });
+                    v.addEventListener('error', metaErr, { once: true });
+                    v.addEventListener('seeked', () => {
+                        this.seeking = false;
+                        if (this.pendingTime !== null) { const t = this.pendingTime; this.pendingTime = null; this.seek(t); }
+                    });
+                    if (!this.cfg.plain) {
+                        // scrub mode: the timeline is owned by scroll — never let it self-play
+                        v.addEventListener('play', () => { try { v.pause(); } catch (e) {} });
+                    }
+                    v.src = src;
+                    v.load();
+                    host.appendChild(v);
+                    this.el = v;
+                    setTimeout(metaErr, 20000);
+                });
+            }
+            getDuration() { return this.el && isFinite(this.el.duration) && this.el.duration > 0 ? this.el.duration : 0; }
+            seek(t) {
+                const v = this.el;
+                if (!v || !isFinite(t)) return;
+                if (Math.abs(t - this.lastTarget) < 0.005 && !this.seeking) return;
+                this.lastTarget = t;
+                if (this.seeking) { this.pendingTime = t; return; } // never queue more than one seek
+                if (v.readyState < 2) { this.pendingTime = t; return; }
+                if (Math.abs(v.currentTime - t) < 0.04) return;
+                this.seeking = true;
+                try { v.currentTime = clamp(t, 0, (v.duration || t) - 0.001); }
+                catch (e) { this.seeking = false; }
+            }
+            pause() { if (this.el) this.el.pause(); }
+            destroy() {
+                if (!this.el) return;
+                this.el.pause();
+                this.el.removeAttribute('src');
+                try { this.el.load(); } catch (e) {}
+                this.el.remove();
+                this.el = null;
+            }
+            posterUrl() { return this.cfg.customPoster || ''; }
+        }
+
+        let ytApiPromise = null;
+        function loadYouTubeApi() {
+            if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+            if (ytApiPromise) return ytApiPromise;
+            ytApiPromise = new Promise((resolve, reject) => {
+                const prev = window.onYouTubeIframeAPIReady;
+                window.onYouTubeIframeAPIReady = () => { if (prev) prev(); resolve(window.YT); };
+                const s = document.createElement('script');
+                s.src = 'https://www.youtube.com/iframe_api';
+                s.onerror = () => reject(new Error('Failed to load the YouTube IFrame API.'));
+                document.head.appendChild(s);
+                setTimeout(() => reject(new Error('YouTube IFrame API load timed out.')), 12000);
+            });
+            return ytApiPromise;
+        }
+
+        class YouTubeVideo {
+            constructor(cfg) {
+                this.cfg = cfg;
+                this.player = null;
+                this.host = null;
+                this.lastSeek = -1;
+                this.lastSeekAt = 0;
+                this.trailTimer = 0;
+                this.playing = false;
+            }
+            mount(host) {
+                return withTimeout(this._mount(host), 15000, 'YouTube player timed out.');
+            }
+            async _mount(host) {
+                if (!this.cfg.ytId) throw new Error('Invalid YouTube URL — could not detect a video ID.');
+                const YT = await loadYouTubeApi();
+                host.innerHTML = '';
+                const wrap = document.createElement('div');
+                wrap.className = 'ha-iframe-wrap';
+                const inner = document.createElement('div');
+                wrap.appendChild(inner);
+                host.appendChild(wrap);
+                this.host = wrap;
+                const plain = !!this.cfg.plain;
+                this.player = await new Promise((resolve, reject) => {
+                    let done = false;
+                    const player = new YT.Player(inner, {
+                        videoId: this.cfg.ytId,
+                        playerVars: {
+                            controls: plain ? 1 : 0,
+                            modestbranding: 1,
+                            rel: 0,
+                            playsinline: 1,
+                            autoplay: 0,
+                            mute: plain ? 0 : 1,
+                            disablekb: plain ? 0 : 1,
+                            fs: plain ? 1 : 0,
+                            iv_load_policy: 3
+                        },
+                        events: {
+                            onReady: () => { if (!done) { done = true; resolve(player); } },
+                            onError: (e) => {
+                                if (done) return; done = true;
+                                const map = { 2: 'Invalid YouTube video ID.', 5: 'YouTube embed request failed.', 100: 'YouTube video not found.', 101: 'This YouTube video does not allow embedding.', 150: 'This YouTube video does not allow embedding.' };
+                                reject(new Error(map[e.data] || ('YouTube error #' + e.data)));
+                            }
+                        }
+                    });
+                    setTimeout(() => { if (!done) { done = true; reject(new Error('YouTube player ready timed out.')); } }, 12000);
+                });
+                this.player.addEventListener('onStateChange', (e) => { this.playing = e.data === 1; });
+                if (!plain) { try { this.player.mute(); } catch (e) {} }
+            }
+            getDuration() {
+                return new Promise((resolve, reject) => {
+                    let tries = 0;
+                    const poll = setInterval(() => {
+                        const d = this.player && this.player.getDuration ? this.player.getDuration() : 0;
+                        if (d && isFinite(d) && d > 0) { clearInterval(poll); resolve(d); return; }
+                        if (++tries > 40) { clearInterval(poll); reject(new Error('YouTube duration unavailable (video may be live or age-restricted).')); }
+                    }, 250);
+                });
+            }
+            seek(t) {
+                const p = this.player;
+                if (!p || !p.seekTo || !isFinite(t)) return;
+                if (Math.abs(t - this.lastSeek) < 0.005) return;
+                const now = performance.now();
+                if (now - this.lastSeekAt < 90) {
+                    clearTimeout(this.trailTimer);
+                    this.trailTimer = setTimeout(() => { this.lastSeek = -1; this.seek(t); }, 90);
+                    return;
+                }
+                if (Math.abs(t - this.lastSeek) < 0.12 && this.playing) return;
+                this.lastSeek = t;
+                this.lastSeekAt = now;
+                try {
+                    p.seekTo(t, true);
+                    if (!this.cfg.plain && p.getPlayerState && p.getPlayerState() === 1) p.pauseVideo();
+                } catch (e) {}
+            }
+            pause() { try { this.player && this.player.pauseVideo && this.player.pauseVideo(); } catch (e) {} }
+            destroy() {
+                clearTimeout(this.trailTimer);
+                try { this.player && this.player.destroy && this.player.destroy(); } catch (e) {}
+                this.player = null;
+                if (this.host) this.host.remove();
+                this.host = null;
+            }
+            posterUrl() {
+                return this.cfg.ytId ? 'https://i.ytimg.com/vi/' + this.cfg.ytId + '/maxresdefault.jpg' : '';
+            }
+        }
+
+        let vimeoApiPromise = null;
+        function loadVimeoApi() {
+            if (window.Vimeo && window.Vimeo.Player) return Promise.resolve(window.Vimeo);
+            if (vimeoApiPromise) return vimeoApiPromise;
+            vimeoApiPromise = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://player.vimeo.com/api/player.js';
+                s.onload = () => resolve(window.Vimeo);
+                s.onerror = () => reject(new Error('Failed to load the Vimeo Player API.'));
+                document.head.appendChild(s);
+                setTimeout(() => reject(new Error('Vimeo Player API load timed out.')), 12000);
+            });
+            return vimeoApiPromise;
+        }
+
+        class VimeoVideo {
+            constructor(cfg) {
+                this.cfg = cfg;
+                this.player = null;
+                this.iframe = null;
+                this.lastSet = -1;
+                this.lastSetAt = 0;
+                this.trailTimer = 0;
+                this._poster = '';
+            }
+            mount(host) {
+                return withTimeout(this._mount(host), 15000, 'Vimeo player timed out.');
+            }
+            async _mount(host) {
+                if (!this.cfg.vimeoId) throw new Error('Invalid Vimeo URL — could not detect a video ID.');
+                const Vimeo = await loadVimeoApi();
+                if (!Vimeo || !Vimeo.Player) throw new Error('Failed to load the Vimeo Player API.');
+                host.innerHTML = '';
+                const plain = !!this.cfg.plain;
+                const params = 'title=0&byline=0&portrait=0&autoplay=0&loop=0&playsinline=1'
+                    + '&controls=' + (plain ? 1 : 0) + (plain ? '' : '&muted=1');
+                const iframe = document.createElement('iframe');
+                iframe.src = 'https://player.vimeo.com/video/' + this.cfg.vimeoId + '?' + params;
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.title = 'Vimeo video scroll player';
+                const wrap = document.createElement('div');
+                wrap.className = 'ha-iframe-wrap';
+                wrap.appendChild(iframe);
+                host.appendChild(wrap);
+                this.iframe = wrap;
+                this.player = new Vimeo.Player(iframe);
+                await this.player.ready();
+            }
+            getDuration() {
+                return this.player
+                    ? this.player.getDuration().then((d) => (d > 0 ? d : Promise.reject(new Error('Vimeo duration unavailable.'))))
+                    : Promise.reject(new Error('Vimeo player not ready.'));
+            }
+            seek(t) {
+                if (!this.player || !isFinite(t)) return;
+                if (Math.abs(t - this.lastSet) < 0.05) return;
+                const now = performance.now();
+                if (now - this.lastSetAt < 90) {
+                    clearTimeout(this.trailTimer);
+                    this.trailTimer = setTimeout(() => { this.lastSet = -1; this.seek(t); }, 90);
+                    return;
+                }
+                this.lastSet = t;
+                this.lastSetAt = now;
+                this.player.setCurrentTime(clamp(t, 0, 86400)).catch(() => {});
+            }
+            pause() { if (this.player) this.player.pause().catch(() => {}); }
+            destroy() {
+                clearTimeout(this.trailTimer);
+                if (this.player) { try { this.player.destroy && this.player.destroy(); } catch (e) {} }
+                this.player = null;
+                if (this.iframe) this.iframe.remove();
+                this.iframe = null;
+            }
+            posterUrl() {
+                if (!this.cfg.vimeoId) return '';
+                if (this._poster) return this._poster;
+                // provider thumbnail via oEmbed (best effort — custom poster overrides in UI)
+                const self = this;
+                this._poster = 'pending';
+                fetch('https://vimeo.com/api/oembed.json?url=https://vimeo.com/' + this.cfg.vimeoId)
+                    .then((r) => r.ok ? r.json() : null)
+                    .then((j) => { self._poster = j && j.thumbnail_large ? j.thumbnail_large : ''; })
+                    .catch(() => { self._poster = ''; });
+                return '';
+            }
+        }
+
+        /* Dailymotion — official embed player driven through the postMessage API.
+         * Duration comes from player events when available, with the public
+         * metadata API as a graceful fallback so ScrollTrigger is never built
+         * against an unknown duration. */
+        class DailymotionVideo {
+            constructor(cfg) {
+                this.cfg = cfg;
+                this.iframe = null;
+                this.host = null;
+                this.ready = false;
+                this.durationFromPlayer = 0;
+                this.pendingSeek = null;
+                this.lastSet = -1;
+                this.lastSetAt = 0;
+                this.trailTimer = 0;
+                this._poster = '';
+                this._onMessage = this._handleMessage.bind(this);
+            }
+            mount(host) {
+                return new Promise((resolve, reject) => {
+                    if (!this.cfg.dmId) { reject(new Error('Invalid Dailymotion URL — could not detect a video ID.')); return; }
+                    const plain = !!this.cfg.plain;
+                    host.innerHTML = '';
+                    const params = new URLSearchParams({
+                        api: '1', autoplay: '0', mute: plain ? '0' : '1',
+                        'sharing-enable': '0', 'queue-enable': '0', 'ui-logo': '0'
+                    });
+                    const iframe = document.createElement('iframe');
+                    iframe.src = 'https://www.dailymotion.com/embed/video/' + this.cfg.dmId + '?' + params.toString();
+                    iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    iframe.title = 'Dailymotion video scroll player';
+                    const wrap = document.createElement('div');
+                    wrap.className = 'ha-iframe-wrap';
+                    wrap.appendChild(iframe);
+                    host.appendChild(wrap);
+                    this.iframe = iframe;
+                    this.host = wrap;
+                    window.addEventListener('message', this._onMessage);
+                    let done = false;
+                    iframe.addEventListener('load', () => { if (!done) { done = true; resolve(); } });
+                    iframe.addEventListener('error', () => { if (!done) { done = true; reject(new Error('Dailymotion player failed to load.')); } });
+                    setTimeout(() => { if (done) return; done = true; resolve(); }, 12000); // never block the page
+                    setTimeout(() => { if (done) return; done = true; reject(new Error('Dailymotion player timed out.')); }, 16000);
+                });
+            }
+            _handleMessage(e) {
+                if (!this.iframe || !e || e.source !== this.iframe.contentWindow) return;
+                let d = e.data;
+                if (typeof d === 'string') { try { d = JSON.parse(d); } catch (x) { return; } }
+                if (!d || typeof d !== 'object' || !d.event) return;
+                if (d.origin && String(d.origin).indexOf('dailymotion.com') === -1) return;
+                if (d.event === 'apiready' || d.event === 'video_element_can_play') {
+                    this.ready = true;
+                    if (this.pendingSeek !== null) { this._send({ command: 'seek', value: this.pendingSeek }); this.pendingSeek = null; }
+                }
+                if (d.event === 'durationchange' || d.event === 'video_durationchange') {
+                    const v = parseFloat(d.duration !== undefined ? d.duration : d.value);
+                    if (v > 0) this.durationFromPlayer = v;
+                }
+                if (d.event === 'startplay' && !this.cfg.plain) this._send({ command: 'pause' }); // scrub mode: scroll owns playback
+            }
+            _send(msg) {
+                try { this.iframe.contentWindow.postMessage(msg, 'https://www.dailymotion.com'); } catch (e) {}
+            }
+            getDuration() {
+                return new Promise((resolve, reject) => {
+                    let tries = 0;
+                    const iv = setInterval(() => {
+                        if (this.durationFromPlayer > 0) { clearInterval(iv); resolve(this.durationFromPlayer); }
+                        else if (++tries > 12) { clearInterval(iv); reject(new Error('waiting on player')); }
+                    }, 250);
+                }).catch(() => withTimeout(
+                    fetch('https://api.dailymotion.com/video/' + this.cfg.dmId + '?fields=duration')
+                        .then((r) => { if (!r.ok) throw new Error('Dailymotion video unavailable.'); return r.json(); })
+                        .then((j) => (j && j.duration > 0) ? j.duration : Promise.reject(new Error('Dailymotion duration unavailable.'))),
+                    8000, 'Dailymotion duration unavailable.'
+                ));
+            }
+            seek(t) {
+                if (!this.iframe || !isFinite(t)) return;
+                if (!this.ready) { this.pendingSeek = clamp(t, 0, 86400); return; }
+                if (Math.abs(t - this.lastSet) < 0.05) return;
+                const now = performance.now();
+                if (now - this.lastSetAt < 120) {
+                    clearTimeout(this.trailTimer);
+                    this.trailTimer = setTimeout(() => { this.lastSet = -1; this.seek(t); }, 120);
+                    return;
+                }
+                this.lastSet = t;
+                this.lastSetAt = now;
+                this._send({ command: 'seek', value: clamp(t, 0, 86400) });
+            }
+            pause() { this._send({ command: 'pause' }); }
+            destroy() {
+                clearTimeout(this.trailTimer);
+                window.removeEventListener('message', this._onMessage);
+                this.iframe = null;
+                if (this.host) this.host.remove();
+                this.host = null;
+            }
+            posterUrl() {
+                if (!this.cfg.dmId) return '';
+                if (this._poster) return this._poster;
+                // provider thumbnail via metadata API (best effort — custom poster overrides in UI)
+                const self = this;
+                this._poster = 'pending';
+                fetch('https://api.dailymotion.com/video/' + this.cfg.dmId + '?fields=thumbnail_720_url')
+                    .then((r) => r.ok ? r.json() : null)
+                    .then((j) => { self._poster = j && j.thumbnail_720_url ? j.thumbnail_720_url : ''; })
+                    .catch(() => { self._poster = ''; });
+                return '';
+            }
+        }
+
+        function createAdapter(cfg) {
+            switch (cfg.source) {
+                case 'youtube': return new YouTubeVideo(cfg);
+                case 'vimeo': return new VimeoVideo(cfg);
+                case 'dailymotion': return new DailymotionVideo(cfg);
+                default: return new Html5Video(cfg);
+            }
+        }
+
+        /* =====================================================================
+         * 3. ScrollVideoController — ScrollTrigger lifecycle, separate from providers
+         * ===================================================================*/
+        class ScrollVideoController {
+            constructor(root) {
+                this.root = root;
+                this.stageEl = $('#videoStage', root);
+                this.frameEl = $('#videoFrame', root);
+                this.mediaEl = $('#videoMedia', root);
+                this.posterEl = $('#videoPoster', root);
+                this.posterImgEl = $('#videoPosterImg', root);
+                this.loaderEl = $('#videoLoader', root);
+                this.errorEl = $('#videoError', root);
+                this.adapter = null;
+                this.tl = null;
+                this.proxy = { p: 0 };
+                this.duration = 0;
+                this.progress = 0;
+                this.pendingT = 0;
+                this.rafId = 0;
+                this._token = 0;
+                this.settings = null;
+            }
+
+            /* ---- full destroy → init lifecycle, safe for re-render / editor ---- */
+            apply(settings) {
+                this.settings = settings;
+                this.rebuild();
+            }
+            destroyAnim() {
+                if (this.rafId) { cancelAnimationFrame(this.rafId); this.rafId = 0; }
+                if (this.tl) {
+                    if (this.tl.scrollTrigger) this.tl.scrollTrigger.kill();
+                    this.tl.kill();
+                    this.tl = null;
+                }
+                this.proxy = { p: 0 };
+                this.progress = 0;
+            }
+            destroyAdapter() {
+                if (this.adapter) { try { this.adapter.destroy(); } catch (e) {} this.adapter = null; }
+                this.mediaEl.innerHTML = '';
+            }
+
+            /* ---- scroll length derived from video duration:
+             *      the video hits its final frame exactly when the trigger ends ---- */
+            autoScrollDistance() {
+                return Math.round(clamp((this.duration || 30) * 45, 1500, 7000));
+            }
+
+            async rebuild() {
+                const token = ++this._token;
+                this.destroyAnim();
+                this.destroyAdapter();
+                this.hideError();
+                this.duration = 0;
+
+                const s = this.settings;
+                if (!s) return;
+                this.updateScrubStat();
+                this.showPoster(this.posterCandidate(s));
+
+                if (!s.enable) {
+                    // Normal playback fallback — video behaves like a regular embed
+                    this.setStatus('Normal video mode');
+                    this.plainMode(s, token);
+                    return;
+                }
+
+                this.showLoader(true);
+                this.setStatus('Loading video…');
+                try {
+                    const adapter = createAdapter(s);
+                    this.adapter = adapter;
+                    await adapter.mount(this.mediaEl);
+                    if (token !== this._token) { adapter.destroy(); return; }
+                    const dur = await adapter.getDuration();
+                    if (token !== this._token) { return; }
+                    if (!dur || !isFinite(dur) || dur <= 0) throw new Error('Video duration unavailable.');
+                    this.duration = dur;
+                    this.showLoader(false);
+                    this.hidePoster();
+                    this.buildTimeline();
+                    // Initial frame before any scroll enters the trigger
+                    const initT = s.initialFrame > 0 ? clamp(s.initialFrame, 0, dur) : this.computeTime(s.direction === 'reverse' ? 1 : 0);
+                    adapter.seek(initT);
+                    this.pendingT = initT;
+                    this.updateScrubStat();
+                    ScrollTrigger.refresh();
+                    this.setStatus('Ready — ' + fmt(dur) + ' · ' + this.autoScrollDistance() + 'px of scroll');
+                } catch (err) {
+                    if (token !== this._token) return;
+                    this.showLoader(false);
+                    this.destroyAdapter();
+                    this.showError(err && err.message ? err.message : 'Unknown video error.');
+                    const p = this.posterCandidate(s);
+                    if (p) this.showPoster(p);
+                    this.setStatus('Failed gracefully — page remains usable');
+                }
+            }
+
+            async plainMode(s, token) {
+                try {
+                    const cfg = Object.assign({}, s, { plain: true });
+                    const adapter = createAdapter(cfg);
+                    this.adapter = adapter;
+                    await adapter.mount(this.mediaEl);
+                    if (token !== this._token) { adapter.destroy(); return; }
+                    try { this.duration = await adapter.getDuration(); } catch (e) { this.duration = 0; }
+                    if (token !== this._token) return;
+                    this.showLoader(false);
+                    this.hidePoster();
+                    this.setStatus('Normal playback (controls enabled)');
+                } catch (err) {
+                    if (token !== this._token) return;
+                    this.showLoader(false);
+                    this.showError(err.message || 'Video unavailable.');
+                    const p = this.posterCandidate(s);
+                    if (p) this.showPoster(p);
+                    this.setStatus('Failed gracefully');
+                }
+            }
+
+            /* ---- one timeline + one ScrollTrigger: video scrub shares its progress ---- */
+            buildTimeline() {
+                const s = this.settings;
+                this.proxy = { p: 0 };
+                this.tl = gsap.timeline({
+                    defaults: { ease: 'none' },
+                    scrollTrigger: {
+                        id: 'ha-video-scroll',
+                        trigger: this.stageEl,
+                        start: s.triggerStart,
+                        end: '+=' + this.autoScrollDistance(), // ends when the video ends
+                        pin: s.pin ? this.frameEl : false,
+                        pinSpacing: true,
+                        anticipatePin: 1,
+                        scrub: s.scrubNum,
+                        invalidateOnRefresh: true,
+                        onUpdate: (self) => {
+                            this.progress = self.progress;
+                            this.scheduleSeek();
+                        },
+                        onToggle: (self) => {
+                            if (!self.isActive && s.pauseOutside && this.adapter) this.adapter.pause();
+                            this.setStatus(self.isActive ? 'Active — scrubbing' : 'Outside trigger');
+                        }
+                    }
+                });
+                this.tl.to(this.proxy, { p: 1, duration: 1 }, 0);
+            }
+
+            /* ---- progress → video time, rAF-synchronised, single seek per frame ---- */
+            computeTime(p) {
+                const d = this.duration;
+                if (!d) return 0;
+                const s = this.settings;
+                const t0 = clamp(s.playStart, 0, Math.max(0, d - 0.1));
+                const t1 = s.playEnd > 0 ? clamp(s.playEnd, t0 + 0.1, d) : d;
+                const dir = s.direction === 'reverse' ? 1 - p : p;
+                return t0 + dir * (t1 - t0);
+            }
+            scheduleSeek() {
+                if (this.rafId) return; // animation-frame synchronisation
+                this.rafId = requestAnimationFrame(() => {
+                    this.rafId = 0;
+                    this.pendingT = this.computeTime(this.proxy.p);
+                    if (this.adapter) this.adapter.seek(this.pendingT);
+                    this.updateScrubStat();
+                });
+            }
+
+            /* ---- overlays / poster / status ---- */
+            posterCandidate(s) {
+                if (s.customPoster) return s.customPoster;
+                if (this.adapter && this.adapter.posterUrl) { const p = this.adapter.posterUrl(); if (p && p !== 'pending') return p; }
+                if (s.source === 'youtube' && s.ytId) return 'https://i.ytimg.com/vi/' + s.ytId + '/maxresdefault.jpg';
+                return '';
+            }
+            showPoster(url) {
+                if (!url) { this.hidePoster(); return; }
+                this.posterImgEl.src = url;
+                this.posterImgEl.onerror = () => { if (url.indexOf('maxresdefault') > -1) { this.posterImgEl.src = url.replace('maxresdefault', 'hqdefault'); } };
+                this.posterEl.style.display = '';
+                this.posterEl.classList.remove('is-hidden');
+            }
+            hidePoster() {
+                this.posterEl.classList.add('is-hidden');
+                setTimeout(() => { if (this.posterEl.classList.contains('is-hidden')) this.posterEl.style.display = 'none'; }, 500);
+            }
+            showLoader(on) { this.loaderEl.classList.toggle('is-active', !!on); }
+            showError(msg) { this.errorEl.textContent = msg; this.errorEl.classList.add('is-active'); }
+            hideError() { this.errorEl.classList.remove('is-active'); this.errorEl.textContent = ''; }
+            setStatus(msg) { $('#statusText').textContent = msg; }
+            updateScrubStat() {
+                const el = $('#scrubStat');
+                if (!el) return;
+                el.textContent = this.duration
+                    ? Math.round(clamp(this.proxy.p, 0, 1) * 100) + '% · ' + fmt(this.pendingT) + ' / ' + fmt(this.duration)
+                    : '–';
+            }
+        }
+
+        const controller = new ScrollVideoController(document);
+        window.HAScrollVideoDemo = controller; // debug hook (editor-style global)
+
+        /* =====================================================================
+         * 4. Settings state + control schema (simplified, user-friendly)
+         * ===================================================================*/
+        const DEFAULT_SOURCE_URL = 'https://media.w3.org/2010/05/sintel/trailer.mp4';
+
+        const DEFAULTS = {
+            source: 'self',
+            ytUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
+            vimeoUrl: 'https://vimeo.com/76979871',
+            dmUrl: 'https://www.dailymotion.com/video/xb53wii',
+            selfUrl: DEFAULT_SOURCE_URL,
+            uploadUrl: '', uploadName: '',
+            customPoster: '',
+            enable: true,
+            pin: true,
+            startSel: 'top-top',
+            startCustom: 'top top',
+            scrub: '1',
+            playStart: 0, playEnd: 0,
+            direction: 'normal',
+            initialFrame: 0,
+            pauseOutside: true
+        };
+        const state = JSON.parse(JSON.stringify(DEFAULTS));
+
+        const START_OPTIONS = [
+            ['top-top', 'Top - Top'],
+            ['top-center', 'Top - Center'],
+            ['top-bottom', 'Top - Bottom'],
+            ['center-top', 'Center - Top'],
+            ['center-center', 'Center - Center'],
+            ['center-bottom', 'Center - Bottom'],
+            ['bottom-top', 'Bottom - Top'],
+            ['bottom-center', 'Bottom - Center'],
+            ['bottom-bottom', 'Bottom - Bottom'],
+            ['custom', 'Custom']
+        ];
+
+        const SCHEMA = [
+            { section: 'Video', items: [
+                { id: 'source', type: 'select', label: 'Video Source', options: [
+                    ['youtube', 'YouTube'], ['vimeo', 'Vimeo'], ['dailymotion', 'Dailymotion'], ['self', 'Self Hosted'], ['upload', 'Upload']
+                ] },
+                { id: 'ytUrl', type: 'text', label: 'YouTube URL', hint: 'watch?v= · youtu.be · embed · shorts — ID auto-detected', visible: s => s.source === 'youtube' },
+                { id: 'vimeoUrl', type: 'text', label: 'Vimeo URL', hint: 'vimeo.com/ID · channels/…/ID', visible: s => s.source === 'vimeo' },
+                { id: 'dmUrl', type: 'text', label: 'Dailymotion URL', hint: 'dailymotion.com/video/ID · dai.ly/ID', visible: s => s.source === 'dailymotion' },
+                { id: 'selfUrl', type: 'text', label: 'Video URL (MP4 / WebM / OGG)', visible: s => s.source === 'self' },
+                { id: 'uploadFile', type: 'file', label: 'Upload Video', hint: 'Uses the URL provided by the media uploader — never duplicated.', visible: s => s.source === 'upload' },
+                { id: 'customPoster', type: 'text', label: 'Poster Image URL', hint: 'Optional. Provider thumbnail is used when empty.' }
+            ] },
+            { section: 'Scroll Animation', items: [
+                { id: 'enable', type: 'check', label: 'Enable Scroll Video' },
+                { id: 'pin', type: 'check', label: 'Pin Video' },
+                { id: 'startSel', type: 'select', label: 'Start', options: START_OPTIONS },
+                { id: 'startCustom', type: 'text', label: 'Start (custom)', hint: 'ScrollTrigger syntax, e.g. “top 30%”', visible: s => s.startSel === 'custom' },
+                { id: 'scrub', type: 'text', label: 'Scrub', hint: 'true / false or 0 · 0.1 · 0.3 · 0.5 · 1 · 2 — higher = smoother lag' }
+            ] },
+            { section: 'Playback', items: [
+                { id: 'playStart', type: 'number', label: 'Start At (seconds)', min: 0, step: 0.5 },
+                { id: 'playEnd', type: 'number', label: 'End At (seconds)', min: 0, step: 0.5, hint: '0 = full video duration' },
+                { id: 'direction', type: 'select', label: 'Playback Direction', options: [['normal', 'Normal'], ['reverse', 'Reverse']] },
+                { id: 'initialFrame', type: 'number', label: 'Initial Frame (seconds)', min: 0, step: 0.5 },
+                { id: 'pauseOutside', type: 'check', label: 'Pause Outside Trigger' }
+            ] }
+        ];
+
+        /* ---------- panel builder ---------- */
+        const panelBody = $('#panelBody');
+        function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+        function buildPanel() {
+            SCHEMA.forEach((sec) => {
+                const details = el('details', 'panel-sec');
+                if (sec.section === 'Video') details.open = true;
+                const sum = el('summary', null, sec.section);
+                details.appendChild(sum);
+                const body = el('div', 'sec-body');
+                sec.items.forEach((it) => {
+                    const ctl = el('label', 'ctl');
+                    ctl.dataset.id = it.id;
+                    ctl.appendChild(el('span', 'lbl', it.label));
+                    const val = state[it.id];
+                    if (it.type === 'select') {
+                        const sel = document.createElement('select');
+                        sel.dataset.id = it.id;
+                        it.options.forEach((o) => { const op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; sel.appendChild(op); });
+                        sel.value = val;
+                        ctl.appendChild(sel);
+                    } else if (it.type === 'text') {
+                        const inp = document.createElement('input');
+                        inp.type = 'text'; inp.dataset.id = it.id; inp.value = val;
+                        ctl.appendChild(inp);
+                    } else if (it.type === 'number') {
+                        const inp = document.createElement('input');
+                        inp.type = 'number'; inp.dataset.id = it.id; inp.value = val;
+                        if (it.min != null) inp.min = it.min;
+                        if (it.max != null) inp.max = it.max;
+                        if (it.step != null) inp.step = it.step;
+                        ctl.appendChild(inp);
+                    } else if (it.type === 'check') {
+                        const row = el('div', 'check-row');
+                        const inp = document.createElement('input');
+                        inp.type = 'checkbox'; inp.dataset.id = it.id; inp.checked = !!val;
+                        row.appendChild(inp);
+                        ctl.appendChild(row);
+                    } else if (it.type === 'file') {
+                        const inp = document.createElement('input');
+                        inp.type = 'file'; inp.dataset.id = it.id; inp.accept = 'video/mp4,video/webm,video/ogg,video/*';
+                        ctl.appendChild(inp);
+                        ctl.appendChild(el('span', 'file-name', ''));
+                    }
+                    if (it.hint) ctl.appendChild(el('span', 'help', it.hint));
+                    body.appendChild(ctl);
+                });
+                details.appendChild(body);
+                panelBody.appendChild(details);
+            });
+        }
+        buildPanel();
+
+        function applyVisibility() {
+            SCHEMA.forEach((sec) => sec.items.forEach((it) => {
+                const ctl = panelBody.querySelector('.ctl[data-id="' + it.id + '"]');
+                if (!ctl) return;
+                ctl.classList.toggle('is-hidden', it.visible ? !it.visible(state) : false);
+            }));
+        }
+        applyVisibility();
+
+        /* ---------- normalize state → controller settings ---------- */
+        let lastObjectUrl = '';
+        function normalize() {
+            const scrubRaw = String(state.scrub).trim().toLowerCase();
+            let scrubNum;
+            if (scrubRaw === 'true' || scrubRaw === '') scrubNum = 1;
+            else if (scrubRaw === 'false') scrubNum = 0;
+            else scrubNum = clamp(parseFloat(scrubRaw) || 0, 0, 10);
+            const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
+            let triggerStart;
+            if (state.startSel === 'custom') {
+                triggerStart = String(state.startCustom).replace(/[^a-zA-Z0-9 %.,+\-]/g, '').trim() || 'top top';
+            } else {
+                triggerStart = state.startSel.replace('-', ' ');
+            }
+            return {
+                source: state.source,
+                ytId: parseYouTubeId(state.ytUrl),
+                vimeoId: parseVimeoId(state.vimeoUrl),
+                dmId: parseDailymotionId(state.dmUrl),
+                selfUrl: state.selfUrl.trim(),
+                uploadUrl: state.uploadUrl,
+                customPoster: state.customPoster.trim(),
+                enable: state.enable,
+                pin: state.pin,
+                triggerStart: triggerStart,
+                scrubNum: scrubNum,
+                playStart: num(state.playStart, 0),
+                playEnd: num(state.playEnd, 0),
+                direction: state.direction,
+                initialFrame: num(state.initialFrame, 0),
+                pauseOutside: state.pauseOutside
+            };
+        }
+        const queueRebuild = debounce(() => {
+            controller.apply(normalize());
+        }, 260);
+
+        /* ---------- panel events (delegated) ---------- */
+        function syncFromEvent(t) {
+            const id = t.dataset.id;
+            if (t.type === 'checkbox') state[id] = t.checked;
+            else state[id] = t.value;
+            applyVisibility();
+        }
+        panelBody.addEventListener('input', (e) => {
+            const t = e.target;
+            if (!t.dataset || !t.dataset.id || t.dataset.id === 'uploadFile') return;
+            syncFromEvent(t);
+            queueRebuild();
+        });
+        panelBody.addEventListener('change', (e) => {
+            const t = e.target;
+            if (!t.dataset || !t.dataset.id) return;
+            if (t.dataset.id === 'uploadFile') {
+                const file = t.files && t.files[0];
+                if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
+                if (file) {
+                    lastObjectUrl = URL.createObjectURL(file);
+                    state.uploadUrl = lastObjectUrl;
+                    state.uploadName = file.name;
+                } else {
+                    state.uploadUrl = ''; state.uploadName = '';
+                }
+                const nameEl = t.parentElement.querySelector('.file-name');
+                if (nameEl) nameEl.textContent = file ? 'Loaded: ' + file.type + ' — ' + file.name : '';
+            } else {
+                syncFromEvent(t);
+            }
+            queueRebuild();
+        });
+
+        $('#panelToggle').addEventListener('click', () => {
+            const open = document.body.classList.toggle('panel-open');
+            $('#panelToggle').setAttribute('aria-expanded', String(open));
+            $('#panelToggle').textContent = open ? 'Close' : 'Controls';
+        });
+        $('#btnDefaults').addEventListener('click', () => location.reload());
+
+        /* =====================================================================
+         * 5. Boot
+         * ===================================================================*/
+        const boot = () => {
+            LenisManager.enable(); // smooth scroll is always on
+            controller.apply(normalize());
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+        else boot();
+    })();
+    </script>
+</body>
+</html>
